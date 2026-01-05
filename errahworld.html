@@ -17,7 +17,7 @@
 }
 
 body {
-  font-family:Segoe UI,Arial,sans-serif;
+  font-family:Segoe UI, Arial, sans-serif;
   background:radial-gradient(circle at top,#12141b 0%,var(--bg-main) 60%);
   color:var(--text-main);
   padding:24px;
@@ -25,7 +25,11 @@ body {
 
 h1 { color:var(--accent); font-weight:500; }
 
-.bw { max-width:1020px; color:var(--accent); opacity:.85; }
+.bw {
+  max-width:1020px;
+  color:var(--accent);
+  opacity:.85;
+}
 
 .top-bar {
   display:flex;
@@ -62,7 +66,7 @@ table {
   box-shadow:0 0 0 1px var(--border);
 }
 
-th,td {
+th, td {
   border:1px solid var(--border);
   padding:11px;
   text-align:center;
@@ -77,13 +81,14 @@ th {
 
 td.left { text-align:left; padding-left:14px; }
 
-/* HARD READ ONLY */
+/* 🔒 TRUE READ-ONLY MODE */
 .locked, .locked * {
   pointer-events:none !important;
   user-select:none !important;
   caret-color:transparent !important;
 }
 
+/* ✏️ ADMIN EDIT MODE */
 [contenteditable="true"] {
   background:rgba(255,255,255,.05);
   user-select:text !important;
@@ -104,7 +109,7 @@ Current lifts don't include bar weight.
 <div class="top-bar">
   <div>
     <button id="loginBtn">Admin Login</button>
-    <button id="logoutBtn" style="display:none">Logout</button>
+    <button id="logoutBtn" style="display:none;">Logout</button>
   </div>
   <div id="lastUpdated" class="last-updated"></div>
 </div>
@@ -138,7 +143,6 @@ Current lifts don't include bar weight.
 </tbody>
 </table>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -147,13 +151,15 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
-  projectId: "strenght-a9f37",
   databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+
+const dataRef = ref(db, "strengthLog");
 
 const table = document.getElementById("table");
 const tbody = document.getElementById("tbody");
@@ -163,10 +169,9 @@ const lastUpdated = document.getElementById("lastUpdated");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-const dataRef = ref(db, "strengthLog");
-
+/* 🔁 LOAD DATA FROM FIREBASE ONLY */
 onValue(dataRef, snap => {
-  if(!snap.exists()) return;
+  if (!snap.exists()) return;
   const d = snap.val();
   tbody.innerHTML = d.table;
   title.innerText = d.title;
@@ -174,51 +179,64 @@ onValue(dataRef, snap => {
   lastUpdated.textContent = "Last updated: " + d.date;
 });
 
-function enableEdit(){
+/* 🔒 SAVE ONLY IF AUTHENTICATED */
+function saveAll() {
+  if (!auth.currentUser) return;
+
+  const n = new Date();
+  const formatted =
+    `${String(n.getDate()).padStart(2,"0")}/` +
+    `${String(n.getMonth()+1).padStart(2,"0")}/` +
+    `${n.getFullYear()} · ` +
+    `${String(n.getHours()).padStart(2,"0")}:` +
+    `${String(n.getMinutes()).padStart(2,"0")}`;
+
+  set(dataRef, {
+    table: tbody.innerHTML,
+    title: title.innerText,
+    desc: desc.innerHTML,
+    date: formatted
+  });
+}
+
+/* ✏️ ENABLE ADMIN MODE */
+function enableEdit() {
   table.classList.remove("locked");
-  [title,desc,...document.querySelectorAll("td")].forEach(el=>{
-    el.contentEditable="true";
-    el.oninput=saveAll;
+  [title, desc, ...document.querySelectorAll("td")].forEach(el => {
+    el.contentEditable = "true";
+    el.oninput = saveAll;
   });
 }
 
-function disableEdit(){
+/* 🚫 DISABLE EDIT MODE */
+function disableEdit() {
   table.classList.add("locked");
-  document.activeElement.blur();
-  [title,desc,...document.querySelectorAll("td")].forEach(el=>{
-    el.contentEditable="false";
-    el.oninput=null;
+  document.activeElement?.blur();
+  [title, desc, ...document.querySelectorAll("td")].forEach(el => {
+    el.contentEditable = "false";
+    el.oninput = null;
   });
 }
 
-function saveAll(){
-  const n=new Date();
-  const f=`${String(n.getDate()).padStart(2,"0")}/${String(n.getMonth()+1).padStart(2,"0")}/${n.getFullYear()} · ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
-  set(dataRef,{
-    table:tbody.innerHTML,
-    title:title.innerText,
-    desc:desc.innerHTML,
-    date:f
-  });
-}
-
-loginBtn.onclick=()=>{
-  const email=prompt("Admin email:");
-  const pass=prompt("Password:");
-  signInWithEmailAndPassword(auth,email,pass);
+/* 🔐 AUTH HANDLING */
+loginBtn.onclick = () => {
+  const email = prompt("Admin email:");
+  const pass = prompt("Password:");
+  if (!email || !pass) return;
+  signInWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
 };
 
-logoutBtn.onclick=()=>signOut(auth);
+logoutBtn.onclick = () => signOut(auth);
 
-onAuthStateChanged(auth,user=>{
-  if(user){
+onAuthStateChanged(auth, user => {
+  if (user) {
     enableEdit();
-    loginBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
   } else {
     disableEdit();
-    loginBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
   }
 });
 </script>
