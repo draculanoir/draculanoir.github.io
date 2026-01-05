@@ -16,14 +16,16 @@
   --accent:#bfc6d6;
 }
 
+/* 🚫 HIDE PAGE UNTIL FIREBASE LOADS */
 body {
-  visibility:hidden;
-  font-family:"Segoe UI",Arial,sans-serif;
-  background:radial-gradient(circle at top,#12141b,var(--bg-main));
-  color:var(--text);
+  visibility: hidden;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top,#12141b,var(--bg-main));
+  color: var(--text);
   padding:24px;
 }
 
+/* 🔒 LOCK ONLY CONTENT (NOT LOGIN) */
 .locked-content,
 .locked-content * {
   pointer-events:none !important;
@@ -31,7 +33,11 @@ body {
   caret-color:transparent !important;
 }
 
-*:focus { outline:none !important; }
+/* 🚫 Remove focus outline everywhere */
+*:focus {
+  outline:none !important;
+  box-shadow:none !important;
+}
 
 .top-bar {
   display:flex;
@@ -55,9 +61,10 @@ table {
   max-width:1020px;
   border-collapse:collapse;
   background:var(--bg-panel);
+  box-shadow:0 0 0 1px var(--border);
 }
 
-th, td {
+th,td {
   border:1px solid var(--border);
   padding:10px;
   text-align:center;
@@ -69,12 +76,8 @@ th {
   font-size:.75rem;
 }
 
-td.left { text-align:left; }
-
-.row-updated {
-  font-size:.7rem;
-  color:var(--muted);
-  user-select:none;
+td.left {
+  text-align:left;
 }
 
 .last-updated {
@@ -106,12 +109,12 @@ td.left { text-align:left; }
   <th>Current</th>
   <th>1RM</th>
   <th>Strength Level</th>
-  <th>Last updated</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -135,34 +138,38 @@ const tbody = document.getElementById("tbody");
 const title = document.getElementById("title");
 const desc = document.getElementById("desc");
 const lastUpdated = document.getElementById("lastUpdated");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
 
 let isAdmin = false;
 let firstLoad = true;
 
-/* 🔒 LOCK / UNLOCK */
+/* 🚫 Block keyboard except login */
+document.addEventListener("keydown", e => {
+  if (!isAdmin && !e.target.closest("#authBox")) e.preventDefault();
+});
+
+/* 🔒 LOCK */
 function lockAll() {
   isAdmin = false;
   table.classList.add("locked-content");
   title.contentEditable = "false";
   desc.contentEditable = "false";
-  setCellEdit(false);
+  document.querySelectorAll("td").forEach(td => {
+    td.contentEditable = "false";
+    td.blur();
+  });
 }
 
+/* ✏️ ENABLE EDIT */
 function enableEdit() {
   isAdmin = true;
   table.classList.remove("locked-content");
   title.contentEditable = "true";
   desc.contentEditable = "true";
-  setCellEdit(true);
-}
-
-/* ✅ ONLY FIRST 4 COLUMNS EDITABLE */
-function setCellEdit(on) {
-  tbody.querySelectorAll("tr").forEach(row => {
-    [...row.children].forEach((td, i) => {
-      td.contentEditable = on && i < 4 ? "true" : "false";
-    });
-  });
+  document.querySelectorAll("td").forEach(td => td.contentEditable = "true");
 }
 
 /* 🔐 AUTH */
@@ -173,57 +180,62 @@ loginBtn.onclick = () =>
 logoutBtn.onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(user => {
-  if (user) enableEdit();
-  else lockAll();
+  if (user) {
+    enableEdit();
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  } else {
+    lockAll();
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  }
 });
 
-/* 📥 LOAD */
+/* 📥 LOAD DATA — NO FLASH */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
   title.innerText = d.title;
   desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdated.innerText = "Last updated: " + d.updated;
-  setCellEdit(isAdmin);
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE (VIEWERS ONLY) */
+/* 🔁 LIVE UPDATES — FIXED (NO CURSOR JUMP) */
 db.ref("log").on("value", snap => {
-  if (firstLoad) { firstLoad = false; return; }
+  if (firstLoad) {
+    firstLoad = false;
+    return;
+  }
+
+  // 🛑 DO NOT overwrite DOM while admin is typing
   if (isAdmin) return;
 
   const d = snap.val();
+  title.innerText = d.title;
+  desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* ⏱ TIME */
-function stamp() {
-  const d = new Date();
-  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-}
-
-/* 💾 SAVE (AFTER INPUT STABILIZES) */
-let saveTimer;
-tbody.addEventListener("input", e => {
+/* 💾 SAVE */
+document.addEventListener("input", () => {
   if (!isAdmin) return;
 
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    const row = e.target.closest("tr");
-    if (!row) return;
+  const now = new Date();
+  const formatted =
+    String(now.getDate()).padStart(2,"0") + "/" +
+    String(now.getMonth()+1).padStart(2,"0") + "/" +
+    now.getFullYear() + " · " +
+    String(now.getHours()).padStart(2,"0") + ":" +
+    String(now.getMinutes()).padStart(2,"0");
 
-    const t = stamp();
-    row.querySelector(".row-updated").innerText = t;
-
-    db.ref("log").set({
-      title: title.innerText,
-      desc: desc.innerHTML,
-      table: tbody.innerHTML,
-      updated: t
-    });
-  }, 250);
+  db.ref("log").set({
+    title: title.innerText,
+    desc: desc.innerHTML,
+    table: tbody.innerHTML,
+    updated: formatted
+  });
 });
 
 lockAll();
