@@ -1,1 +1,188 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <title>Strength Log – 1RM Tracking</title> <meta name="viewport" content="width=device-width, initial-scale=1" /> <style> body { font-family: Arial, Helvetica, sans-serif; background: #0f1115; color: #eaeaea; padding: 20px; } h1 { margin-bottom: 5px; } .note { font-size: 0.9rem; color: #b5b5b5; max-width: 900px; line-height: 1.4; } .note strong { color: #ffffff; } table { border-collapse: collapse; margin-top: 25px; width: 100%; max-width: 1000px; background: #161a22; } th, td { border: 1px solid #2b2f3a; padding: 10px; text-align: center; } th { background: #1f2430; font-weight: 600; } tr:hover { background: #1b2030; } .left { text-align: left; } .bw { margin-top: 10px; font-weight: bold; } </style> </head> <body> <h1>Strength Tracking Table</h1> <p class="note"> <strong>Note:</strong> For all recorded lifts, the trap bar is assumed to weigh <strong>65 lb</strong> and the Olympic barbell is assumed to weigh <strong>45 lb</strong>. Bar weight is included in total load on <strong>1RM lifts only</strong>. <br><br> All lifts will be displayed on <strong>2026-02-05</strong> using my 1RM values. Strength ratings and comparisons are based on data from <strong>StrengthLevel.com</strong>. </p> <p class="bw">Current BW: 64 kg / 140 lb</p> <table> <thead> <tr> <th class="left">Lift</th> <th>Current (Will Update)</th> <th>1RM (2026-02-05)</th> <th>Strength Level</th> <th>Notes</th> </tr> </thead> <tbody> <tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td><td></td></tr> <tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td><td></td></tr> <tr><td class="left">Pull-Up</td><td>BW · 3×8-12</td><td></td><td></td><td></td></tr> <tr><td class="left">EZ Bicep Curl</td><td>80 lb · 3×6-9</td><td></td><td></td><td></td></tr> <tr><td class="left">Unilateral Bicep Curl</td><td>45 lb · 3×6-8</td><td></td><td></td><td></td></tr> <tr><td class="left">Dips</td><td>65 lb · 3×8-10</td><td></td><td></td><td></td></tr> <tr><td class="left">Flat Bench</td><td>90 lb · 3×6-9</td><td></td><td></td><td></td></tr> <tr><td class="left">Power Clean</td><td>70 lb · 3×3</td><td></td><td></td><td></td></tr> <tr><td class="left">Hex Bar Deadlift</td><td>210 lb · 3×3-4</td><td></td><td></td><td></td></tr> <tr><td class="left">Squat</td><td>210 lb · 3×5</td><td></td><td></td><td></td></tr> <tr><td class="left">Single-Leg RDL</td><td>90 lb · 3×8 / leg</td><td></td><td></td><td></td></tr> <tr><td class="left">Bulgarian Squat</td><td>140 lb · 3×8 / leg</td><td></td><td></td><td></td></tr> <tr><td class="left">Hip-Thrust (Barbell)</td><td></td><td></td><td></td><td></td></tr> <tr><td class="left">Single-Leg Box Squat</td><td>45 lb · 3×6 / leg</td><td></td><td></td><td></td></tr> <tr><td class="left">Pistol Squat</td><td>65 lb · 3×6 / leg</td><td></td><td></td><td></td></tr> </tbody> </table> </body> </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Strength Log – 1RM Tracking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --bg-main: #0b0e14;
+      --bg-panel: #161a22;
+      --bg-header: #1f2430;
+      --border: #2b2f3a;
+      --text-main: #eaeaea;
+      --text-muted: #b5b5b5;
+      --accent: #00e5ff;
+      --accent-soft: rgba(0, 229, 255, 0.15);
+    }
+
+    /* ===== Global ===== */
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(circle at top, #101827, var(--bg-main));
+      color: var(--text-main);
+      padding: 20px;
+      animation: fadeIn 1s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      margin-bottom: 5px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px var(--accent-soft);
+    }
+
+    /* ===== Notes ===== */
+    .note {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 900px;
+      line-height: 1.4;
+      animation: glowPulse 4s infinite alternate;
+    }
+
+    .note strong {
+      color: var(--accent);
+    }
+
+    @keyframes glowPulse {
+      from { text-shadow: 0 0 5px transparent; }
+      to { text-shadow: 0 0 8px var(--accent-soft); }
+    }
+
+    .bw {
+      margin-top: 10px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    /* ===== Table ===== */
+    table {
+      border-collapse: collapse;
+      margin-top: 25px;
+      width: 100%;
+      max-width: 1000px;
+      background: var(--bg-panel);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px var(--border),
+        0 0 25px rgba(0, 229, 255, 0.05);
+      animation: tableIn 1.2s ease-out;
+    }
+
+    @keyframes tableIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      text-align: center;
+      position: relative;
+    }
+
+    th {
+      background: linear-gradient(180deg, var(--bg-header), #151a26);
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+    }
+
+    td.left {
+      text-align: left;
+    }
+
+    /* ===== Row Hover Scan Effect ===== */
+    tbody tr {
+      transition: background 0.25s ease, transform 0.25s ease;
+    }
+
+    tbody tr:hover {
+      background: linear-gradient(
+        90deg,
+        transparent,
+        var(--accent-soft),
+        transparent
+      );
+      transform: scale(1.01);
+    }
+
+    tbody tr::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(0, 229, 255, 0.08),
+        transparent
+      );
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    tbody tr:hover::after {
+      opacity: 1;
+    }
+
+    /* ===== Cell Hover Glow ===== */
+    td:hover {
+      box-shadow: inset 0 0 12px rgba(0, 229, 255, 0.15);
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      table {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Strength Tracking Table</h1>
+
+  <p class="note">
+    <strong>Note:</strong> For all recorded lifts, the trap bar is assumed to weigh
+    <strong>65 lb</strong> and the Olympic barbell is assumed to weigh
+    <strong>45 lb</strong>. Bar weight is included in total load on
+    <strong>1RM lifts only</strong>.
+    <br><br>
+    All lifts will be displayed on <strong>2026-02-05</strong> using my 1RM values.
+    Strength ratings and comparisons are based on data from
+    <strong>StrengthLevel.com</strong>.
+  </p>
+
+  <p class="bw">Current BW: 64 kg / 140 lb</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="left">Lift</th>
+        <th>Current</th>
+        <th>1RM</th>
+        <th>Level</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td><td></td></tr>
+      <tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td><td></td></tr>
+      <tr><td class="left">Pull-Up</td><td>BW · 3×8-12</td><td></td><td></td><td></td></tr>
+      <tr><td class="left">EZ Bicep Curl</td><td>80 lb · 3×6-9</td><td></td><td></td><td></td></tr>
+      <tr><td class="
