@@ -6,6 +6,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
+/* 🔒 ABSOLUTE READ-ONLY DEFAULT */
+* {
+  pointer-events: none;
+  user-select: none;
+  caret-color: transparent;
+}
+
+/* ENABLE BUTTONS ONLY */
+button {
+  pointer-events: auto;
+}
+
+/* HIDE PAGE UNTIL DATA LOADS */
+body[data-loading="true"] {
+  visibility: hidden;
+}
+
 :root {
   --bg-main:#0c0e12;
   --bg-panel:#14161c;
@@ -14,11 +31,6 @@
   --text-main:#d9dbe1;
   --text-muted:#9da1ac;
   --accent:#bfc6d6;
-}
-
-/* 🔒 HIDE UNTIL FIREBASE LOADS */
-body[data-loading="true"] {
-  visibility: hidden;
 }
 
 body {
@@ -86,11 +98,17 @@ th {
 
 td.left { text-align:left; padding-left:14px; }
 
-/* 🔒 TRUE READ-ONLY MODE */
-.locked, .locked * {
-  pointer-events:none !important;
-  user-select:none !important;
-  caret-color:transparent !important;
+/* ✏️ ADMIN MODE ONLY */
+.admin * {
+  pointer-events: auto !important;
+  user-select: text !important;
+  caret-color: auto !important;
+}
+
+.admin td,
+.admin #title,
+.admin #desc {
+  background: rgba(255,255,255,0.05);
 }
 </style>
 </head>
@@ -109,7 +127,7 @@ td.left { text-align:left; padding-left:14px; }
   <div id="lastUpdated" class="last-updated"></div>
 </div>
 
-<table id="table" class="locked">
+<table>
 <thead>
 <tr>
   <th class="left">Lift</th>
@@ -139,49 +157,25 @@ const db = getDatabase(app);
 const dataRef = ref(db, "strengthLog");
 
 const body = document.body;
-const table = document.getElementById("table");
-const tbody = document.getElementById("tbody");
 const title = document.getElementById("title");
 const desc = document.getElementById("desc");
+const tbody = document.getElementById("tbody");
 const lastUpdated = document.getElementById("lastUpdated");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-/* 🔁 LOAD DATA — NO FLASH */
+/* LOAD DATA — NO FLASH */
 onValue(dataRef, snap => {
   if (!snap.exists()) return;
   const d = snap.val();
-  tbody.innerHTML = d.table;
-  title.innerText = d.title;
+  title.textContent = d.title;
   desc.innerHTML = d.desc;
+  tbody.innerHTML = d.table;
   lastUpdated.textContent = "Last updated: " + d.date;
-
-  body.removeAttribute("data-loading"); // SHOW PAGE
+  body.removeAttribute("data-loading");
 });
 
-/* 🔒 HARD LOCK */
-function hardLock() {
-  table.classList.add("locked");
-  document.activeElement?.blur();
-
-  [title, desc, ...document.querySelectorAll("td")].forEach(el => {
-    el.removeAttribute("contenteditable");
-    el.setAttribute("tabindex", "-1");
-  });
-}
-
-/* ✏️ ADMIN MODE */
-function enableEdit() {
-  table.classList.remove("locked");
-
-  [title, desc, ...document.querySelectorAll("td")].forEach(el => {
-    el.setAttribute("contenteditable", "true");
-    el.removeAttribute("tabindex");
-    el.oninput = saveAll;
-  });
-}
-
-/* 💾 SAVE ONLY IF AUTH */
+/* SAVE (ADMIN ONLY) */
 function saveAll() {
   if (!auth.currentUser) return;
 
@@ -194,14 +188,14 @@ function saveAll() {
     `${String(n.getMinutes()).padStart(2,"0")}`;
 
   set(dataRef,{
-    table: tbody.innerHTML,
-    title: title.innerText,
-    desc: desc.innerHTML,
-    date: f
+    title:title.textContent,
+    desc:desc.innerHTML,
+    table:tbody.innerHTML,
+    date:f
   });
 }
 
-/* 🔐 AUTH */
+/* AUTH */
 loginBtn.onclick = () => {
   const email = prompt("Admin email:");
   const pass = prompt("Password:");
@@ -211,15 +205,25 @@ loginBtn.onclick = () => {
 
 logoutBtn.onclick = () => signOut(auth);
 
-onAuthStateChanged(auth, user => {
-  if (user) {
-    enableEdit();
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
+onAuthStateChanged(auth,user=>{
+  if(user){
+    body.classList.add("admin");
+    loginBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
+
+    [title,desc,...document.querySelectorAll("td")].forEach(el=>{
+      el.contentEditable="true";
+      el.oninput=saveAll;
+    });
   } else {
-    hardLock();
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
+    body.classList.remove("admin");
+    loginBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
+
+    [title,desc,...document.querySelectorAll("td")].forEach(el=>{
+      el.removeAttribute("contenteditable");
+      el.oninput=null;
+    });
   }
 });
 </script>
