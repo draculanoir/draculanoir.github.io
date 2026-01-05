@@ -23,13 +23,15 @@ body {
   padding:24px;
 }
 
-/* 🔒 HARD READ-ONLY */
-.locked, .locked * {
+/* 🔒 LOCK ONLY CONTENT (NOT LOGIN) */
+.locked-content,
+.locked-content * {
   pointer-events:none !important;
   user-select:none !important;
   caret-color:transparent !important;
 }
 
+/* 🚫 Remove focus outline everywhere */
 *:focus {
   outline:none !important;
   box-shadow:none !important;
@@ -43,12 +45,13 @@ body {
   margin-bottom:12px;
 }
 
-button, input {
+#authBox input, #authBox button {
   background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
   padding:6px 10px;
   border-radius:6px;
+  margin-right:4px;
 }
 
 table {
@@ -88,7 +91,8 @@ td.left {
 
 <p id="desc">
 Current BW: 64 kg / 140 lb<br>
-Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
+Current lifts don't include bar weights.
+Trap bar = 65 lb, Olympic bar = 45 lb.
 </p>
 
 <div class="top-bar">
@@ -101,7 +105,7 @@ Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
   <div class="last-updated" id="lastUpdated"></div>
 </div>
 
-<table id="table" class="locked">
+<table id="table" class="locked-content">
 <thead>
 <tr>
   <th class="left">Lift</th>
@@ -110,6 +114,7 @@ Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
   <th>Strength Level</th>
 </tr>
 </thead>
+
 <tbody id="tbody">
 <tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td></tr>
 <tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td></tr>
@@ -129,7 +134,7 @@ Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
 </tbody>
 </table>
 
-<!-- Firebase -->
+<!-- 🔥 Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -153,39 +158,52 @@ const tbody = document.getElementById("tbody");
 const title = document.getElementById("title");
 const desc = document.getElementById("desc");
 const lastUpdated = document.getElementById("lastUpdated");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
 
 let isAdmin = false;
 
-/* HARD BLOCK KEYS */
+/* 🚫 Block keyboard everywhere EXCEPT login fields */
 document.addEventListener("keydown", e => {
-  if (!isAdmin) e.preventDefault();
+  if (!isAdmin && !e.target.closest("#authBox")) {
+    e.preventDefault();
+  }
 });
 
-/* LOCK */
+/* 🔒 LOCK */
 function lockAll() {
   isAdmin = false;
-  table.classList.add("locked");
+  table.classList.add("locked-content");
+
   title.contentEditable = "false";
   desc.contentEditable = "false";
+
   document.querySelectorAll("td").forEach(td => {
     td.contentEditable = "false";
     td.blur();
   });
 }
 
-/* ENABLE */
+/* ✏️ ENABLE EDIT */
 function enableEdit() {
   isAdmin = true;
-  table.classList.remove("locked");
+  table.classList.remove("locked-content");
+
   title.contentEditable = "true";
   desc.contentEditable = "true";
-  document.querySelectorAll("td").forEach(td => td.contentEditable = "true");
+
+  document.querySelectorAll("td").forEach(td => {
+    td.contentEditable = "true";
+  });
 }
 
-/* AUTH */
-loginBtn.onclick = () =>
+/* 🔐 AUTH */
+loginBtn.onclick = () => {
   auth.signInWithEmailAndPassword(email.value, password.value)
-  .catch(e => alert(e.message));
+    .catch(err => alert(err.message));
+};
 
 logoutBtn.onclick = () => auth.signOut();
 
@@ -201,7 +219,7 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* LOAD DATA (NO FLASH) */
+/* 📥 LOAD DATA (NO FLASH) */
 db.ref("log").on("value", snap => {
   if (!snap.exists()) return;
   const d = snap.val();
@@ -211,9 +229,10 @@ db.ref("log").on("value", snap => {
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* SAVE */
+/* 💾 SAVE */
 document.addEventListener("input", () => {
   if (!isAdmin) return;
+
   const now = new Date();
   const date =
     String(now.getDate()).padStart(2,"0") + "/" +
