@@ -116,6 +116,7 @@ td.left { text-align:left; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
@@ -129,6 +130,7 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.database();
 
+/* 📦 ELEMENTS */
 const table = document.getElementById("table");
 const tbody = document.getElementById("tbody");
 const title = document.getElementById("title");
@@ -187,34 +189,44 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* ⏳ COUNTDOWN */
-function daysUntil(dateStr) {
-  const today = new Date();
-  const target = new Date(dateStr);
-  today.setHours(0,0,0,0);
-  target.setHours(0,0,0,0);
-  return Math.max(0, Math.ceil((target - today) / 86400000));
+/* ⏱️ LIVE COUNTDOWN */
+const TARGET_DATE = new Date("2026-01-03T00:00:00");
+
+function formatCountdown(ms) {
+  if (ms <= 0) return "0d 0h 0m 0s";
+
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+
+  return `${d}d ${h}h ${m}m ${sec}s`;
 }
 
-function renderDesc(template) {
-  const days = daysUntil("2026-02-04");
+function renderCountdown(template) {
+  const diff = TARGET_DATE - new Date();
   return template.replace(
-    "{{COUNTDOWN_DAYS}}",
-    `<strong>${days}</strong>`
+    "{{COUNTDOWN}}",
+    `<strong>${formatCountdown(diff)}</strong>`
   );
 }
 
 /* 📥 LOAD */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
+
   title.innerText = d.title;
   tbody.innerHTML = d.table;
-  desc.innerHTML = renderDesc(d.desc);
+
+  desc.dataset.template = d.desc;
+  desc.innerHTML = renderCountdown(d.desc);
+
   lastUpdated.innerText = "Last updated: " + d.updated;
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE UPDATES (NO CURSOR JUMP) */
+/* 🔁 LIVE DB UPDATES (VIEWERS ONLY) */
 db.ref("log").on("value", snap => {
   if (firstLoad) {
     firstLoad = false;
@@ -225,11 +237,20 @@ db.ref("log").on("value", snap => {
   const d = snap.val();
   title.innerText = d.title;
   tbody.innerHTML = d.table;
-  desc.innerHTML = renderDesc(d.desc);
+
+  desc.dataset.template = d.desc;
+  desc.innerHTML = renderCountdown(d.desc);
+
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* 💾 SAVE (STORE TEMPLATE) */
+/* 🔄 UPDATE COUNTDOWN EVERY SECOND */
+setInterval(() => {
+  if (!desc.dataset.template) return;
+  desc.innerHTML = renderCountdown(desc.dataset.template);
+}, 1000);
+
+/* 💾 SAVE (TEMPLATE ONLY) */
 document.addEventListener("input", () => {
   if (!isAdmin) return;
 
@@ -242,8 +263,8 @@ document.addEventListener("input", () => {
     String(now.getMinutes()).padStart(2,"0");
 
   const cleanDesc = desc.innerHTML.replace(
-    /<strong>\d+<\/strong>/g,
-    "{{COUNTDOWN_DAYS}}"
+    /<strong>.*?<\/strong>/g,
+    "{{COUNTDOWN}}"
   );
 
   db.ref("log").set({
