@@ -35,10 +35,25 @@ body {
   box-shadow:none !important;
 }
 
+.top-bar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  max-width:1020px;
+  margin-bottom:12px;
+}
+
+button, input {
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:6px 10px;
+  border-radius:6px;
+}
+
 table {
   width:100%;
   max-width:1020px;
-  margin-top:24px;
   border-collapse:collapse;
   background:var(--bg-panel);
   box-shadow:0 0 0 1px var(--border);
@@ -60,22 +75,6 @@ td.left {
   text-align:left;
 }
 
-.top-bar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  max-width:1020px;
-}
-
-button {
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:6px 14px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
 .last-updated {
   font-size:.75rem;
   color:var(--muted);
@@ -89,12 +88,14 @@ button {
 
 <p id="desc">
 Current BW: 64 kg / 140 lb<br>
-Current lifts don't include bar weight.
+Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
 </p>
 
 <div class="top-bar">
-  <div>
-    <button id="loginBtn">Admin Login</button>
+  <div id="authBox">
+    <input id="email" placeholder="admin email">
+    <input id="password" type="password" placeholder="password">
+    <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
   <div class="last-updated" id="lastUpdated"></div>
@@ -106,19 +107,34 @@ Current lifts don't include bar weight.
   <th class="left">Lift</th>
   <th>Current</th>
   <th>1RM</th>
-  <th>Level</th>
+  <th>Strength Level</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="tbody">
+<tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td></tr>
+<tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td></tr>
+<tr><td class="left">Pull-Up</td><td>BW · 3×8-12</td><td></td><td></td></tr>
+<tr><td class="left">EZ Bicep Curl</td><td>80 lb · 3×6-9</td><td></td><td></td></tr>
+<tr><td class="left">Unilateral Bicep Curl</td><td>45 lb · 3×6-8</td><td></td><td></td></tr>
+<tr><td class="left">Dips</td><td>65 lb · 3×8-10</td><td></td><td></td></tr>
+<tr><td class="left">Flat Bench</td><td>90 lb · 3×6-9</td><td></td><td></td></tr>
+<tr><td class="left">Power Clean</td><td>70 lb · 3×3</td><td></td><td></td></tr>
+<tr><td class="left">Hex Bar Deadlift</td><td>210 lb · 3×3-4</td><td></td><td></td></tr>
+<tr><td class="left">Squat</td><td>210 lb · 3×5</td><td></td><td></td></tr>
+<tr><td class="left">Single-Leg RDL</td><td>90 lb · 3×8 / leg</td><td></td><td></td></tr>
+<tr><td class="left">Bulgarian Squat</td><td>140 lb · 3×8 / leg</td><td></td><td></td></tr>
+<tr><td class="left">Hip-Thrust (Barbell)</td><td>Looking into</td><td></td><td></td></tr>
+<tr><td class="left">Single-Leg Box Squat</td><td>45 lb · 3×6 / leg</td><td></td><td></td></tr>
+<tr><td class="left">Pistol Squat</td><td>65 lb · 3×6 / leg</td><td></td><td></td></tr>
+</tbody>
 </table>
 
-<!-- 🔥 Firebase SDKs -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* 🔥 Firebase Config */
 firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
@@ -132,22 +148,20 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.database();
 
-const title = document.getElementById("title");
-const desc = document.getElementById("desc");
 const table = document.getElementById("table");
 const tbody = document.getElementById("tbody");
+const title = document.getElementById("title");
+const desc = document.getElementById("desc");
 const lastUpdated = document.getElementById("lastUpdated");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
 
 let isAdmin = false;
 
-/* 🚫 HARD BLOCK KEYBOARD */
+/* HARD BLOCK KEYS */
 document.addEventListener("keydown", e => {
   if (!isAdmin) e.preventDefault();
 });
 
-/* 🔒 LOCK EVERYTHING */
+/* LOCK */
 function lockAll() {
   isAdmin = false;
   table.classList.add("locked");
@@ -159,7 +173,7 @@ function lockAll() {
   });
 }
 
-/* ✏️ ENABLE EDIT */
+/* ENABLE */
 function enableEdit() {
   isAdmin = true;
   table.classList.remove("locked");
@@ -168,9 +182,10 @@ function enableEdit() {
   document.querySelectorAll("td").forEach(td => td.contentEditable = "true");
 }
 
-/* 🔐 AUTH */
+/* AUTH */
 loginBtn.onclick = () =>
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  auth.signInWithEmailAndPassword(email.value, password.value)
+  .catch(e => alert(e.message));
 
 logoutBtn.onclick = () => auth.signOut();
 
@@ -186,52 +201,35 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* 📥 LOAD DATA (NO FLASH) */
-db.ref("data").on("value", snap => {
+/* LOAD DATA (NO FLASH) */
+db.ref("log").on("value", snap => {
+  if (!snap.exists()) return;
   const d = snap.val();
-  if (!d) return;
-
   title.innerText = d.title;
   desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* 💾 SAVE */
-function save() {
+/* SAVE */
+document.addEventListener("input", () => {
   if (!isAdmin) return;
-
   const now = new Date();
   const date =
     String(now.getDate()).padStart(2,"0") + "/" +
     String(now.getMonth()+1).padStart(2,"0") + "/" +
     now.getFullYear();
 
-  db.ref("data").set({
+  db.ref("log").set({
     title: title.innerText,
     desc: desc.innerHTML,
     table: tbody.innerHTML,
     updated: date
   });
-}
-
-document.addEventListener("input", save);
-
-/* 🧱 INITIAL DATA */
-db.ref("data").once("value").then(snap => {
-  if (snap.exists()) return;
-
-  tbody.innerHTML = `
-<tr><td class="left">Overhead Press</td><td>95 lb · 3×6</td><td></td><td></td></tr>
-<tr><td class="left">Incline Bench</td><td>70 lb · 3×8</td><td></td><td></td></tr>
-<tr><td class="left">Pull-Up</td><td>BW · 3×10</td><td></td><td></td></tr>
-<tr><td class="left">Hex Deadlift</td><td>210 lb · 3×4</td><td></td><td></td></tr>
-`;
-
-  save();
 });
 
 lockAll();
 </script>
+
 </body>
 </html>
