@@ -90,7 +90,6 @@ td.left {
 <body>
 
 <h1 id="title"></h1>
-
 <p id="desc"></p>
 
 <div class="top-bar">
@@ -112,7 +111,6 @@ td.left {
   <th>Strength Level</th>
 </tr>
 </thead>
-
 <tbody id="tbody"></tbody>
 </table>
 
@@ -196,21 +194,23 @@ auth.onAuthStateChanged(user => {
 /* 📥 LOAD DATA — NO FLASH */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
-
   title.innerText = d.title;
   desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdated.innerText = "Last updated: " + d.updated;
-
-  document.body.style.visibility = "visible"; // 👈 SHOW PAGE
+  document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE UPDATES */
+/* 🔁 LIVE UPDATES — FIXED (NO CURSOR JUMP) */
 db.ref("log").on("value", snap => {
   if (firstLoad) {
     firstLoad = false;
     return;
   }
+
+  // 🛑 DO NOT overwrite DOM while admin is typing
+  if (isAdmin) return;
+
   const d = snap.val();
   title.innerText = d.title;
   desc.innerHTML = d.desc;
