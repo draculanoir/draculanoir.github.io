@@ -25,6 +25,7 @@ h1{color:var(--accent);font-weight:500}
   justify-content:space-between;
   align-items:center;
   margin-top:12px;
+  gap:12px;
 }
 button{
   background:transparent;
@@ -69,7 +70,10 @@ Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
 </p>
 
 <div class="top-bar">
-  <button id="loginBtn">Admin Login</button>
+  <div>
+    <button id="loginBtn">Admin Login</button>
+    <button id="logoutBtn" style="display:none;">Logout</button>
+  </div>
   <div class="last-updated" id="lastUpdated"></div>
 </div>
 
@@ -106,29 +110,34 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain: "strenght-a9f37.firebaseapp.com",
-  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId: "strenght-a9f37",
-  storageBucket: "strenght-a9f37.firebasestorage.app",
-  messagingSenderId: "469926449178",
-  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+const firebaseConfig={
+  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain:"strenght-a9f37.firebaseapp.com",
+  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId:"strenght-a9f37",
+  storageBucket:"strenght-a9f37.firebasestorage.app",
+  messagingSenderId:"469926449178",
+  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getDatabase(app);
 
-const title = document.getElementById("title");
-const desc = document.getElementById("description");
-const table = document.getElementById("logTable");
-const tbody = document.getElementById("tableBody");
-const lastUpdated = document.getElementById("lastUpdated");
-const loginBtn = document.getElementById("loginBtn");
+const title=document.getElementById("title");
+const desc=document.getElementById("description");
+const table=document.getElementById("logTable");
+const tbody=document.getElementById("tableBody");
+const lastUpdated=document.getElementById("lastUpdated");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
 
-/* LOAD DATA (PUBLIC) */
-onValue(ref(db,"content"), snap=>{
+let isAdmin=false;
+let isTyping=false;
+
+/* 🔄 LOAD DATA (IGNORE WHILE ADMIN IS TYPING) */
+onValue(ref(db,"content"),snap=>{
+  if(isTyping) return;
   if(!snap.exists()) return;
   const d=snap.val();
   title.innerText=d.title;
@@ -137,23 +146,17 @@ onValue(ref(db,"content"), snap=>{
   lastUpdated.textContent="Last updated: "+d.updated;
 });
 
-/* AUTH STATE */
+/* 🔐 AUTH STATE */
 onAuthStateChanged(auth,user=>{
   if(user){
     enableAdmin();
-    loginBtn.textContent="Admin Mode";
-  } else {
+  }else{
     disableAdmin();
-    loginBtn.textContent="Admin Login";
   }
 });
 
 /* LOGIN */
 loginBtn.onclick=()=>{
-  if(auth.currentUser){
-    signOut(auth);
-    return;
-  }
   const email=prompt("Admin email:");
   const pass=prompt("Password:");
   if(!email||!pass) return;
@@ -161,32 +164,48 @@ loginBtn.onclick=()=>{
     .catch(()=>alert("Login failed"));
 };
 
+/* LOGOUT */
+logoutBtn.onclick=()=>{
+  signOut(auth);
+};
+
 function enableAdmin(){
+  isAdmin=true;
   table.classList.remove("locked");
   title.contentEditable=desc.contentEditable="true";
+  loginBtn.style.display="none";
+  logoutBtn.style.display="inline-block";
+
   document.querySelectorAll("td").forEach(td=>{
     td.contentEditable="true";
-    td.addEventListener("input",save);
+    td.oninput=save;
   });
-  title.addEventListener("input",save);
-  desc.addEventListener("input",save);
+  title.oninput=save;
+  desc.oninput=save;
 }
 
 function disableAdmin(){
+  isAdmin=false;
   table.classList.add("locked");
   title.contentEditable=desc.contentEditable="false";
+  loginBtn.style.display="inline-block";
+  logoutBtn.style.display="none";
   document.querySelectorAll("td").forEach(td=>td.contentEditable="false");
 }
 
 function save(){
+  if(!isAdmin) return;
+  isTyping=true;
+
   const n=new Date();
   const f=`${String(n.getDate()).padStart(2,"0")}/${String(n.getMonth()+1).padStart(2,"0")}/${n.getFullYear()} · ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+
   set(ref(db,"content"),{
     title:title.innerText,
     desc:desc.innerHTML,
     table:tbody.innerHTML,
     updated:f
-  });
+  }).then(()=>isTyping=false);
 }
 </script>
 
