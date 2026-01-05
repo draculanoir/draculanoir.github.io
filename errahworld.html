@@ -28,6 +28,7 @@
     h1 {
       color: var(--accent);
       font-weight: 500;
+      letter-spacing: 0.8px;
     }
 
     .bw {
@@ -67,8 +68,9 @@
       background: var(--bg-panel);
       border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 0 0 1px var(--border),
-                  0 20px 40px rgba(0,0,0,0.35);
+      box-shadow:
+        0 0 0 1px var(--border),
+        0 20px 40px rgba(0,0,0,0.35);
     }
 
     th, td {
@@ -112,7 +114,7 @@
 
 <p class="bw">
   Current BW: 64 kg / 140 lb<br>
-  Current lifts don't include bar weights.
+  Current lifts doesn't include bar weights, only 1RMS assuming a trap bar is 65lbs and olympic bar is 45lbs.
 </p>
 
 <div class="top-bar">
@@ -124,12 +126,13 @@
   <thead>
     <tr>
       <th class="left">Lift</th>
-      <th>Current</th>
-      <th>1RM</th>
+      <th>Current (Will Update)</th>
+      <th>1RM (2026-02-05)</th>
       <th>Strength Level</th>
     </tr>
   </thead>
-  <tbody>
+
+  <tbody id="tableBody">
     <tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td></tr>
     <tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td></tr>
     <tr><td class="left">Pull-Up</td><td>BW · 3×8-12</td><td></td><td></td></tr>
@@ -142,6 +145,8 @@
     <tr><td class="left">Squat</td><td>210 lb · 3×5</td><td></td><td></td></tr>
     <tr><td class="left">Single-Leg RDL</td><td>90 lb · 3×8 / leg</td><td></td><td></td></tr>
     <tr><td class="left">Bulgarian Squat</td><td>140 lb · 3×8 / leg</td><td></td><td></td></tr>
+    <tr><td class="left">Hip-Thrust (Barbell)</td><td>Looking into</td><td></td><td></td></tr>
+    <tr><td class="left">Single-Leg Box Squat</td><td>45 lb · 3×6 / leg</td><td></td><td></td></tr>
     <tr><td class="left">Pistol Squat</td><td>65 lb · 3×6 / leg</td><td></td><td></td></tr>
   </tbody>
 </table>
@@ -149,17 +154,23 @@
 <script>
   const ADMIN_PASSWORD = "admin123";
   const table = document.getElementById("logTable");
+  const tbody = document.getElementById("tableBody");
   const lastUpdated = document.getElementById("lastUpdated");
 
-  // 🔒 FORCE READ-ONLY ON LOAD
+  /* ===== RESTORE SAVED DATA SAFELY ===== */
+  const savedTable = localStorage.getItem("strengthLog_table");
+  const savedDate = localStorage.getItem("strengthLog_date");
+
+  if (savedTable) tbody.innerHTML = savedTable;
+  if (savedDate) lastUpdated.textContent = "Last updated: " + savedDate;
+
   lockTable();
 
   function lockTable() {
     table.classList.add("locked");
-    const cells = table.querySelectorAll("td");
-    cells.forEach(cell => {
-      cell.contentEditable = "false";
-      cell.setAttribute("tabindex", "-1");
+    tbody.querySelectorAll("td").forEach(td => {
+      td.contentEditable = "false";
+      td.setAttribute("tabindex", "-1");
     });
   }
 
@@ -168,20 +179,20 @@
     if (pass !== ADMIN_PASSWORD) return alert("Wrong password");
 
     table.classList.remove("locked");
-    const cells = table.querySelectorAll("td");
-    cells.forEach(cell => {
-      cell.contentEditable = "true";
-      cell.removeAttribute("tabindex");
-      cell.addEventListener("input", saveChanges);
+
+    tbody.querySelectorAll("td").forEach(td => {
+      td.contentEditable = "true";
+      td.removeAttribute("tabindex");
+      td.addEventListener("input", saveAll);
     });
 
     alert("Admin mode enabled");
   }
 
-  function saveChanges() {
+  function saveAll() {
     const now = new Date().toLocaleString();
-    localStorage.setItem("strengthLogHTML", table.querySelector("tbody").innerHTML);
-    localStorage.setItem("strengthLogUpdated", now);
+    localStorage.setItem("strengthLog_table", tbody.innerHTML);
+    localStorage.setItem("strengthLog_date", now);
     lastUpdated.textContent = "Last updated: " + now;
   }
 </script>
