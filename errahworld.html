@@ -6,28 +6,68 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-:root{
-  --bg-main:#0c0e12;--bg-panel:#14161c;--bg-header:#1b1e26;
-  --border:#2a2d36;--text-main:#d9dbe1;--text-muted:#9da1ac;
+:root {
+  --bg-main:#0c0e12;
+  --bg-panel:#14161c;
+  --bg-header:#1b1e26;
+  --border:#2a2d36;
+  --text:#d9dbe1;
+  --muted:#9da1ac;
   --accent:#bfc6d6;
 }
-body{
-  font-family:"Segoe UI",sans-serif;
-  background:radial-gradient(circle at top,#12141b 0%,var(--bg-main) 60%);
-  color:var(--text-main);
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top,#12141b,var(--bg-main));
+  color: var(--text);
   padding:24px;
-  display:none; /* 🔒 HIDE UNTIL FIREBASE READY */
 }
-h1{color:var(--accent);font-weight:500}
-.bw{color:var(--accent);opacity:.85;max-width:1020px}
-.top-bar{
+
+/* 🔒 HARD READ-ONLY */
+.locked, .locked * {
+  pointer-events:none !important;
+  user-select:none !important;
+  caret-color:transparent !important;
+}
+
+*:focus {
+  outline:none !important;
+  box-shadow:none !important;
+}
+
+table {
+  width:100%;
   max-width:1020px;
+  margin-top:24px;
+  border-collapse:collapse;
+  background:var(--bg-panel);
+  box-shadow:0 0 0 1px var(--border);
+}
+
+th,td {
+  border:1px solid var(--border);
+  padding:10px;
+  text-align:center;
+}
+
+th {
+  background:var(--bg-header);
+  color:var(--accent);
+  font-size:.75rem;
+}
+
+td.left {
+  text-align:left;
+}
+
+.top-bar {
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-top:12px;
+  max-width:1020px;
 }
-button{
+
+button {
   background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
@@ -35,180 +75,163 @@ button{
   border-radius:6px;
   cursor:pointer;
 }
-.last-updated{font-size:.75rem;color:var(--text-muted)}
-table{
-  margin-top:26px;
-  width:100%;
-  max-width:1020px;
-  border-collapse:collapse;
-  background:var(--bg-panel);
+
+.last-updated {
+  font-size:.75rem;
+  color:var(--muted);
 }
-th,td{
-  border:1px solid var(--border);
-  padding:11px;
-  text-align:center;
-}
-th{
-  background:var(--bg-header);
-  color:var(--accent);
-  font-size:.78rem;
-  text-transform:uppercase;
-}
-td.left{text-align:left;padding-left:14px}
-.locked{
-  pointer-events:none;
-  user-select:none;
-  caret-color:transparent;
-}
-[contenteditable="true"]{background:rgba(255,255,255,.05)}
 </style>
 </head>
 
 <body>
 
-<h1 id="title" contenteditable="false"></h1>
+<h1 id="title">Strength Log</h1>
 
-<p class="bw locked" id="description" contenteditable="false"></p>
+<p id="desc">
+Current BW: 64 kg / 140 lb<br>
+Current lifts don't include bar weight.
+</p>
 
 <div class="top-bar">
   <div>
     <button id="loginBtn">Admin Login</button>
-    <button id="logoutBtn" style="display:none;">Logout</button>
+    <button id="logoutBtn" style="display:none">Logout</button>
   </div>
   <div class="last-updated" id="lastUpdated"></div>
 </div>
 
-<table id="logTable" class="locked">
+<table id="table" class="locked">
 <thead>
 <tr>
-<th class="left">Lift</th>
-<th>Current</th>
-<th>1RM</th>
-<th>Strength Level</th>
+  <th class="left">Lift</th>
+  <th>Current</th>
+  <th>1RM</th>
+  <th>Level</th>
 </tr>
 </thead>
-<tbody id="tableBody"></tbody>
+<tbody id="tbody"></tbody>
 </table>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<!-- 🔥 Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-/* 🔥 FIREBASE CONFIG */
-const firebaseConfig={
-  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain:"strenght-a9f37.firebaseapp.com",
-  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId:"strenght-a9f37",
-  storageBucket:"strenght-a9f37.firebasestorage.app",
-  messagingSenderId:"469926449178",
-  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
-};
+<script>
+/* 🔥 Firebase Config */
+firebase.initializeApp({
+  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain: "strenght-a9f37.firebaseapp.com",
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+});
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getDatabase(app);
+const auth = firebase.auth();
+const db = firebase.database();
 
-/* DOM */
-const body=document.body;
-const title=document.getElementById("title");
-const desc=document.getElementById("description");
-const table=document.getElementById("logTable");
-const tbody=document.getElementById("tableBody");
-const lastUpdated=document.getElementById("lastUpdated");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
+const title = document.getElementById("title");
+const desc = document.getElementById("desc");
+const table = document.getElementById("table");
+const tbody = document.getElementById("tbody");
+const lastUpdated = document.getElementById("lastUpdated");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-let isAdmin=false;
-let isTyping=false;
-let dataLoaded=false;
+let isAdmin = false;
 
-/* 🔒 HARD LOCK EVERYTHING IMMEDIATELY */
-lockAll();
+/* 🚫 HARD BLOCK KEYBOARD */
+document.addEventListener("keydown", e => {
+  if (!isAdmin) e.preventDefault();
+});
 
-/* 🔄 LOAD DATA FIRST — THEN SHOW PAGE */
-onValue(ref(db,"content"),snap=>{
-  if(!snap.exists()) return;
-  if(isTyping) return;
+/* 🔒 LOCK EVERYTHING */
+function lockAll() {
+  isAdmin = false;
+  table.classList.add("locked");
+  title.contentEditable = "false";
+  desc.contentEditable = "false";
+  document.querySelectorAll("td").forEach(td => {
+    td.contentEditable = "false";
+    td.blur();
+  });
+}
 
-  const d=snap.val();
-  title.innerText=d.title;
-  desc.innerHTML=d.desc;
-  tbody.innerHTML=d.table;
-  lastUpdated.textContent="Last updated: "+d.updated;
+/* ✏️ ENABLE EDIT */
+function enableEdit() {
+  isAdmin = true;
+  table.classList.remove("locked");
+  title.contentEditable = "true";
+  desc.contentEditable = "true";
+  document.querySelectorAll("td").forEach(td => td.contentEditable = "true");
+}
 
-  if(!dataLoaded){
-    dataLoaded=true;
-    body.style.display="block"; // 👈 SHOW ONLY NOW
+/* 🔐 AUTH */
+loginBtn.onclick = () =>
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+
+logoutBtn.onclick = () => auth.signOut();
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    enableEdit();
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  } else {
+    lockAll();
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
   }
 });
 
-/* 🔐 AUTH STATE */
-onAuthStateChanged(auth,user=>{
-  if(user) enableAdmin();
-  else disableAdmin();
+/* 📥 LOAD DATA (NO FLASH) */
+db.ref("data").on("value", snap => {
+  const d = snap.val();
+  if (!d) return;
+
+  title.innerText = d.title;
+  desc.innerHTML = d.desc;
+  tbody.innerHTML = d.table;
+  lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* LOGIN */
-loginBtn.onclick=()=>{
-  const email=prompt("Admin email:");
-  const pass=prompt("Password:");
-  if(!email||!pass) return;
-  signInWithEmailAndPassword(auth,email,pass)
-    .catch(()=>alert("Login failed"));
-};
+/* 💾 SAVE */
+function save() {
+  if (!isAdmin) return;
 
-/* LOGOUT */
-logoutBtn.onclick=()=>signOut(auth);
+  const now = new Date();
+  const date =
+    String(now.getDate()).padStart(2,"0") + "/" +
+    String(now.getMonth()+1).padStart(2,"0") + "/" +
+    now.getFullYear();
 
-/* FUNCTIONS */
-function lockAll(){
-  title.contentEditable="false";
-  desc.contentEditable="false";
-  table.classList.add("locked");
-}
-
-function enableAdmin(){
-  isAdmin=true;
-  table.classList.remove("locked");
-  title.contentEditable="true";
-  desc.contentEditable="true";
-  desc.classList.remove("locked");
-
-  loginBtn.style.display="none";
-  logoutBtn.style.display="inline-block";
-
-  document.querySelectorAll("td").forEach(td=>{
-    td.contentEditable="true";
-    td.oninput=save;
+  db.ref("data").set({
+    title: title.innerText,
+    desc: desc.innerHTML,
+    table: tbody.innerHTML,
+    updated: date
   });
-  title.oninput=save;
-  desc.oninput=save;
 }
 
-function disableAdmin(){
-  isAdmin=false;
-  lockAll();
-  loginBtn.style.display="inline-block";
-  logoutBtn.style.display="none";
-}
+document.addEventListener("input", save);
 
-function save(){
-  if(!isAdmin) return;
-  isTyping=true;
+/* 🧱 INITIAL DATA */
+db.ref("data").once("value").then(snap => {
+  if (snap.exists()) return;
 
-  const n=new Date();
-  const f=`${String(n.getDate()).padStart(2,"0")}/${String(n.getMonth()+1).padStart(2,"0")}/${n.getFullYear()} · ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+  tbody.innerHTML = `
+<tr><td class="left">Overhead Press</td><td>95 lb · 3×6</td><td></td><td></td></tr>
+<tr><td class="left">Incline Bench</td><td>70 lb · 3×8</td><td></td><td></td></tr>
+<tr><td class="left">Pull-Up</td><td>BW · 3×10</td><td></td><td></td></tr>
+<tr><td class="left">Hex Deadlift</td><td>210 lb · 3×4</td><td></td><td></td></tr>
+`;
 
-  set(ref(db,"content"),{
-    title:title.innerText,
-    desc:desc.innerHTML,
-    table:tbody.innerHTML,
-    updated:f
-  }).then(()=>isTyping=false);
-}
+  save();
+});
+
+lockAll();
 </script>
-
 </body>
 </html>
