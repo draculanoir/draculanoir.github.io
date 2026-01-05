@@ -16,6 +16,7 @@ body{
   background:radial-gradient(circle at top,#12141b 0%,var(--bg-main) 60%);
   color:var(--text-main);
   padding:24px;
+  display:none; /* 🔒 HIDE UNTIL FIREBASE READY */
 }
 h1{color:var(--accent);font-weight:500}
 .bw{color:var(--accent);opacity:.85;max-width:1020px}
@@ -25,7 +26,6 @@ h1{color:var(--accent);font-weight:500}
   justify-content:space-between;
   align-items:center;
   margin-top:12px;
-  gap:12px;
 }
 button{
   background:transparent;
@@ -55,19 +55,20 @@ th{
   text-transform:uppercase;
 }
 td.left{text-align:left;padding-left:14px}
-.locked{pointer-events:none;user-select:none}
+.locked{
+  pointer-events:none;
+  user-select:none;
+  caret-color:transparent;
+}
 [contenteditable="true"]{background:rgba(255,255,255,.05)}
 </style>
 </head>
 
 <body>
 
-<h1 id="title">Strength Log</h1>
+<h1 id="title" contenteditable="false"></h1>
 
-<p class="bw" id="description">
-Current BW: 64 kg / 140 lb<br>
-Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
-</p>
+<p class="bw locked" id="description" contenteditable="false"></p>
 
 <div class="top-bar">
   <div>
@@ -86,23 +87,7 @@ Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
 <th>Strength Level</th>
 </tr>
 </thead>
-<tbody id="tableBody">
-<tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td></tr>
-<tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td></tr>
-<tr><td class="left">Pull-Up</td><td>BW · 3×8-12</td><td></td><td></td></tr>
-<tr><td class="left">EZ Bicep Curl</td><td>80 lb · 3×6-9</td><td></td><td></td></tr>
-<tr><td class="left">Unilateral Bicep Curl</td><td>45 lb · 3×6-8</td><td></td><td></td></tr>
-<tr><td class="left">Dips</td><td>65 lb · 3×8-10</td><td></td><td></td></tr>
-<tr><td class="left">Flat Bench</td><td>90 lb · 3×6-9</td><td></td><td></td></tr>
-<tr><td class="left">Power Clean</td><td>70 lb · 3×3</td><td></td><td></td></tr>
-<tr><td class="left">Hex Bar Deadlift</td><td>210 lb · 3×3-4</td><td></td><td></td></tr>
-<tr><td class="left">Squat</td><td>210 lb · 3×5</td><td></td><td></td></tr>
-<tr><td class="left">Single-Leg RDL</td><td>90 lb · 3×8 / leg</td><td></td><td></td></tr>
-<tr><td class="left">Bulgarian Squat</td><td>140 lb · 3×8 / leg</td><td></td><td></td></tr>
-<tr><td class="left">Hip-Thrust (Barbell)</td><td>Looking into</td><td></td><td></td></tr>
-<tr><td class="left">Single-Leg Box Squat</td><td>45 lb · 3×6 / leg</td><td></td><td></td></tr>
-<tr><td class="left">Pistol Squat</td><td>65 lb · 3×6 / leg</td><td></td><td></td></tr>
-</tbody>
+<tbody id="tableBody"></tbody>
 </table>
 
 <script type="module">
@@ -110,6 +95,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+/* 🔥 FIREBASE CONFIG */
 const firebaseConfig={
   apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain:"strenght-a9f37.firebaseapp.com",
@@ -124,6 +110,8 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getDatabase(app);
 
+/* DOM */
+const body=document.body;
 const title=document.getElementById("title");
 const desc=document.getElementById("description");
 const table=document.getElementById("logTable");
@@ -134,25 +122,32 @@ const logoutBtn=document.getElementById("logoutBtn");
 
 let isAdmin=false;
 let isTyping=false;
+let dataLoaded=false;
 
-/* 🔄 LOAD DATA (IGNORE WHILE ADMIN IS TYPING) */
+/* 🔒 HARD LOCK EVERYTHING IMMEDIATELY */
+lockAll();
+
+/* 🔄 LOAD DATA FIRST — THEN SHOW PAGE */
 onValue(ref(db,"content"),snap=>{
-  if(isTyping) return;
   if(!snap.exists()) return;
+  if(isTyping) return;
+
   const d=snap.val();
   title.innerText=d.title;
   desc.innerHTML=d.desc;
   tbody.innerHTML=d.table;
   lastUpdated.textContent="Last updated: "+d.updated;
+
+  if(!dataLoaded){
+    dataLoaded=true;
+    body.style.display="block"; // 👈 SHOW ONLY NOW
+  }
 });
 
 /* 🔐 AUTH STATE */
 onAuthStateChanged(auth,user=>{
-  if(user){
-    enableAdmin();
-  }else{
-    disableAdmin();
-  }
+  if(user) enableAdmin();
+  else disableAdmin();
 });
 
 /* LOGIN */
@@ -165,14 +160,22 @@ loginBtn.onclick=()=>{
 };
 
 /* LOGOUT */
-logoutBtn.onclick=()=>{
-  signOut(auth);
-};
+logoutBtn.onclick=()=>signOut(auth);
+
+/* FUNCTIONS */
+function lockAll(){
+  title.contentEditable="false";
+  desc.contentEditable="false";
+  table.classList.add("locked");
+}
 
 function enableAdmin(){
   isAdmin=true;
   table.classList.remove("locked");
-  title.contentEditable=desc.contentEditable="true";
+  title.contentEditable="true";
+  desc.contentEditable="true";
+  desc.classList.remove("locked");
+
   loginBtn.style.display="none";
   logoutBtn.style.display="inline-block";
 
@@ -186,11 +189,9 @@ function enableAdmin(){
 
 function disableAdmin(){
   isAdmin=false;
-  table.classList.add("locked");
-  title.contentEditable=desc.contentEditable="false";
+  lockAll();
   loginBtn.style.display="inline-block";
   logoutBtn.style.display="none";
-  document.querySelectorAll("td").forEach(td=>td.contentEditable="false");
 }
 
 function save(){
