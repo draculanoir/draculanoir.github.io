@@ -16,16 +16,14 @@
   --accent:#bfc6d6;
 }
 
-/* 🚫 HIDE PAGE UNTIL FIREBASE LOADS */
 body {
-  visibility: hidden;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: radial-gradient(circle at top,#12141b,var(--bg-main));
-  color: var(--text);
+  visibility:hidden;
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:radial-gradient(circle at top,#12141b,var(--bg-main));
+  color:var(--text);
   padding:24px;
 }
 
-/* 🔒 LOCK ONLY CONTENT (NOT LOGIN) */
 .locked-content,
 .locked-content * {
   pointer-events:none !important;
@@ -33,7 +31,6 @@ body {
   caret-color:transparent !important;
 }
 
-/* 🚫 Remove focus outline everywhere */
 *:focus {
   outline:none !important;
   box-shadow:none !important;
@@ -47,7 +44,8 @@ body {
   margin-bottom:12px;
 }
 
-#authBox input, #authBox button {
+#authBox input,
+#authBox button {
   background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
@@ -76,9 +74,7 @@ th {
   font-size:.75rem;
 }
 
-td.left {
-  text-align:left;
-}
+td.left { text-align:left; }
 
 .last-updated {
   font-size:.75rem;
@@ -146,7 +142,7 @@ const password = document.getElementById("password");
 let isAdmin = false;
 let firstLoad = true;
 
-/* 🚫 Block keyboard except login */
+/* ⛔ BLOCK INPUT WHEN NOT ADMIN */
 document.addEventListener("keydown", e => {
   if (!isAdmin && !e.target.closest("#authBox")) e.preventDefault();
 });
@@ -163,7 +159,7 @@ function lockAll() {
   });
 }
 
-/* ✏️ ENABLE EDIT */
+/* ✏️ EDIT */
 function enableEdit() {
   isAdmin = true;
   table.classList.remove("locked-content");
@@ -191,34 +187,49 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* 📥 LOAD DATA — NO FLASH */
+/* ⏳ COUNTDOWN */
+function daysUntil(dateStr) {
+  const today = new Date();
+  const target = new Date(dateStr);
+  today.setHours(0,0,0,0);
+  target.setHours(0,0,0,0);
+  return Math.max(0, Math.ceil((target - today) / 86400000));
+}
+
+function renderDesc(template) {
+  const days = daysUntil("2026-02-04");
+  return template.replace(
+    "{{COUNTDOWN_DAYS}}",
+    `<strong>${days}</strong>`
+  );
+}
+
+/* 📥 LOAD */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
   title.innerText = d.title;
-  desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
+  desc.innerHTML = renderDesc(d.desc);
   lastUpdated.innerText = "Last updated: " + d.updated;
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE UPDATES — FIXED (NO CURSOR JUMP) */
+/* 🔁 LIVE UPDATES (NO CURSOR JUMP) */
 db.ref("log").on("value", snap => {
   if (firstLoad) {
     firstLoad = false;
     return;
   }
-
-  // 🛑 DO NOT overwrite DOM while admin is typing
   if (isAdmin) return;
 
   const d = snap.val();
   title.innerText = d.title;
-  desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
+  desc.innerHTML = renderDesc(d.desc);
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* 💾 SAVE */
+/* 💾 SAVE (STORE TEMPLATE) */
 document.addEventListener("input", () => {
   if (!isAdmin) return;
 
@@ -230,9 +241,14 @@ document.addEventListener("input", () => {
     String(now.getHours()).padStart(2,"0") + ":" +
     String(now.getMinutes()).padStart(2,"0");
 
+  const cleanDesc = desc.innerHTML.replace(
+    /<strong>\d+<\/strong>/g,
+    "{{COUNTDOWN_DAYS}}"
+  );
+
   db.ref("log").set({
     title: title.innerText,
-    desc: desc.innerHTML,
+    desc: cleanDesc,
     table: tbody.innerHTML,
     updated: formatted
   });
