@@ -1,8 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Strength Log</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root {
+  --bg:#0c0e12;
+  --panel:#14161c;
+  --text:#eaeaea;
+  --muted:#8a8f98;
+  --accent:#5a5aff;
+}
+
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:system-ui, sans-serif;
+}
+
+/* 🔒 LOCK EVERYTHING BY DEFAULT */
+body:not(.admin) {
+  pointer-events:none;
+  user-select:none;
+}
+
+/* Allow buttons always */
+#authBar { pointer-events:auto; }
+
+.container {
+  max-width:1100px;
+  margin:auto;
+  padding:24px;
+}
+
+.panel {
+  background:var(--panel);
+  border-radius:14px;
+  padding:20px;
+}
+
+h1 { margin:0 0 10px }
+p { color:var(--muted) }
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+
+td,th {
+  padding:10px;
+  border-bottom:1px solid #222;
+}
+
+/* Editable only for admin */
+.admin [contenteditable] {
+  outline:1px dashed var(--accent);
+}
+
+/* Loading overlay (prevents flash) */
+#loading {
+  position:fixed;
+  inset:0;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.hidden { display:none; }
+
+button {
+  background:var(--accent);
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  color:white;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">Loading…</div>
+
+<div id="authBar" style="padding:10px;text-align:right">
+  <button id="loginBtn">Admin Login</button>
+  <button id="logoutBtn" class="hidden">Logout</button>
+</div>
+
+<div class="container">
+  <div class="panel">
+    <h1 id="title">Strength Log</h1>
+    <p id="desc">Personal performance tracking</p>
+
+    <table>
+      <thead>
+        <tr><th>Exercise</th><th>Value</th></tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td>Bench Press</td><td>100kg</td></tr>
+        <tr><td>Squat</td><td>140kg</td></tr>
+        <tr><td>Deadlift</td><td>180kg</td></tr>
+      </tbody>
+    </table>
+
+    <p id="lastUpdated" style="margin-top:12px;color:var(--muted)"></p>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+/* 🔧 FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
@@ -15,21 +132,26 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 const dataRef = ref(db, "strengthLog");
 
-const body = document.body;
+/* DOM */
 const title = document.getElementById("title");
 const desc = document.getElementById("desc");
 const tbody = document.getElementById("tbody");
 const lastUpdated = document.getElementById("lastUpdated");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const loading = document.getElementById("loading");
 
 let isAdmin = false;
-let saveTimer = null;
+let saveTimer;
 
-/* 🔁 LOAD DATA (READERS ONLY) */
+/* 🔁 LOAD DATA (NO FLASH) */
 onValue(dataRef, snap => {
-  if (!snap.exists()) return;
-  if (isAdmin) return; // ⛔ DO NOT OVERRIDE ADMIN INPUT
+  if (!snap.exists()) {
+    loading.classList.add("hidden");
+    return;
+  }
+
+  if (isAdmin) return;
 
   const d = snap.val();
   title.textContent = d.title;
@@ -37,68 +159,69 @@ onValue(dataRef, snap => {
   tbody.innerHTML = d.table;
   lastUpdated.textContent = "Last updated: " + d.date;
 
-  body.removeAttribute("data-loading");
+  loading.classList.add("hidden");
 });
 
-/* ⏳ DEBOUNCED SAVE */
-function scheduleSave() {
+/* ⏳ SAVE (FAST & SAFE) */
+function scheduleSave(){
   if (!isAdmin) return;
-
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveAll, 400);
+  saveTimer = setTimeout(saveAll, 300);
 }
 
-/* 💾 FAST UPDATE */
-function saveAll() {
+function saveAll(){
   if (!auth.currentUser) return;
 
   const n = new Date();
-  const f =
-    `${String(n.getDate()).padStart(2,"0")}/` +
-    `${String(n.getMonth()+1).padStart(2,"0")}/` +
-    `${n.getFullYear()} · ` +
-    `${String(n.getHours()).padStart(2,"0")}:` +
+  const date =
+    `${String(n.getDate()).padStart(2,"0")}/`+
+    `${String(n.getMonth()+1).padStart(2,"0")}/`+
+    `${n.getFullYear()} · `+
+    `${String(n.getHours()).padStart(2,"0")}:`+
     `${String(n.getMinutes()).padStart(2,"0")}`;
 
-  update(dataRef, {
-    title: title.textContent,
-    desc: desc.innerHTML,
-    table: tbody.innerHTML,
-    date: f
+  update(dataRef,{
+    title:title.textContent,
+    desc:desc.innerHTML,
+    table:tbody.innerHTML,
+    date
   });
 }
 
 /* 🔐 AUTH */
-loginBtn.onclick = () => {
-  const email = prompt("Admin email:");
-  const pass = prompt("Password:");
+loginBtn.onclick = async () => {
+  const email = prompt("Admin email");
+  const pass = prompt("Password");
   if (!email || !pass) return;
-  signInWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
+  await signInWithEmailAndPassword(auth,email,pass)
+    .catch(e=>alert(e.message));
 };
 
 logoutBtn.onclick = () => signOut(auth);
 
-onAuthStateChanged(auth, user => {
-  if (user) {
+onAuthStateChanged(auth,user=>{
+  if(user){
     isAdmin = true;
-    body.classList.add("admin");
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
+    document.body.classList.add("admin");
+    loginBtn.classList.add("hidden");
+    logoutBtn.classList.remove("hidden");
 
-    [title, desc, ...document.querySelectorAll("td")].forEach(el => {
+    [title,desc,...document.querySelectorAll("td")].forEach(el=>{
       el.contentEditable = "true";
       el.oninput = scheduleSave;
     });
   } else {
     isAdmin = false;
-    body.classList.remove("admin");
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
+    document.body.classList.remove("admin");
+    loginBtn.classList.remove("hidden");
+    logoutBtn.classList.add("hidden");
 
-    [title, desc, ...document.querySelectorAll("td")].forEach(el => {
+    [title,desc,...document.querySelectorAll("td")].forEach(el=>{
       el.removeAttribute("contenteditable");
       el.oninput = null;
     });
   }
 });
 </script>
+</body>
+</html>
