@@ -16,14 +16,16 @@
   --accent:#bfc6d6;
 }
 
+/* 🚫 HIDE PAGE UNTIL FIREBASE LOADS */
 body {
-  visibility:hidden;
-  font-family:"Segoe UI",Arial,sans-serif;
-  background:radial-gradient(circle at top,#12141b,var(--bg-main));
-  color:var(--text);
+  visibility: hidden;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top,#12141b,var(--bg-main));
+  color: var(--text);
   padding:24px;
 }
 
+/* 🔒 LOCK ONLY CONTENT (NOT LOGIN) */
 .locked-content,
 .locked-content * {
   pointer-events:none !important;
@@ -31,6 +33,7 @@ body {
   caret-color:transparent !important;
 }
 
+/* 🚫 Remove focus outline everywhere */
 *:focus {
   outline:none !important;
   box-shadow:none !important;
@@ -44,8 +47,7 @@ body {
   margin-bottom:12px;
 }
 
-#authBox input,
-#authBox button {
+#authBox input, #authBox button {
   background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
@@ -74,7 +76,9 @@ th {
   font-size:.75rem;
 }
 
-td.left { text-align:left; }
+td.left {
+  text-align:left;
+}
 
 .last-updated {
   font-size:.75rem;
@@ -116,7 +120,6 @@ td.left { text-align:left; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
@@ -130,7 +133,6 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.database();
 
-/* 📦 ELEMENTS */
 const table = document.getElementById("table");
 const tbody = document.getElementById("tbody");
 const title = document.getElementById("title");
@@ -144,7 +146,7 @@ const password = document.getElementById("password");
 let isAdmin = false;
 let firstLoad = true;
 
-/* ⛔ BLOCK INPUT WHEN NOT ADMIN */
+/* 🚫 Block keyboard except login */
 document.addEventListener("keydown", e => {
   if (!isAdmin && !e.target.closest("#authBox")) e.preventDefault();
 });
@@ -161,7 +163,7 @@ function lockAll() {
   });
 }
 
-/* ✏️ EDIT */
+/* ✏️ ENABLE EDIT */
 function enableEdit() {
   isAdmin = true;
   table.classList.remove("locked-content");
@@ -189,68 +191,34 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* ⏱️ LIVE COUNTDOWN */
-const TARGET_DATE = new Date("2026-01-03T00:00:00");
-
-function formatCountdown(ms) {
-  if (ms <= 0) return "0d 0h 0m 0s";
-
-  const s = Math.floor(ms / 1000);
-  const d = Math.floor(s / 86400);
-  const h = Math.floor((s % 86400) / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-
-  return `${d}d ${h}h ${m}m ${sec}s`;
-}
-
-function renderCountdown(template) {
-  const diff = TARGET_DATE - new Date();
-  return template.replace(
-    "{{COUNTDOWN}}",
-    `<strong>${formatCountdown(diff)}</strong>`
-  );
-}
-
-/* 📥 LOAD */
+/* 📥 LOAD DATA — NO FLASH */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
-
   title.innerText = d.title;
+  desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
-
-  desc.dataset.template = d.desc;
-  desc.innerHTML = renderCountdown(d.desc);
-
   lastUpdated.innerText = "Last updated: " + d.updated;
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE DB UPDATES (VIEWERS ONLY) */
+/* 🔁 LIVE UPDATES — FIXED (NO CURSOR JUMP) */
 db.ref("log").on("value", snap => {
   if (firstLoad) {
     firstLoad = false;
     return;
   }
+
+  // 🛑 DO NOT overwrite DOM while admin is typing
   if (isAdmin) return;
 
   const d = snap.val();
   title.innerText = d.title;
+  desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
-
-  desc.dataset.template = d.desc;
-  desc.innerHTML = renderCountdown(d.desc);
-
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* 🔄 UPDATE COUNTDOWN EVERY SECOND */
-setInterval(() => {
-  if (!desc.dataset.template) return;
-  desc.innerHTML = renderCountdown(desc.dataset.template);
-}, 1000);
-
-/* 💾 SAVE (TEMPLATE ONLY) */
+/* 💾 SAVE */
 document.addEventListener("input", () => {
   if (!isAdmin) return;
 
@@ -262,14 +230,9 @@ document.addEventListener("input", () => {
     String(now.getHours()).padStart(2,"0") + ":" +
     String(now.getMinutes()).padStart(2,"0");
 
-  const cleanDesc = desc.innerHTML.replace(
-    /<strong>.*?<\/strong>/g,
-    "{{COUNTDOWN}}"
-  );
-
   db.ref("log").set({
     title: title.innerText,
-    desc: cleanDesc,
+    desc: desc.innerHTML,
     table: tbody.innerHTML,
     updated: formatted
   });
