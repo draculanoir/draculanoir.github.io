@@ -1,91 +1,62 @@
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain: "strenght-a9f37.firebaseapp.com",
-  projectId: "strenght-a9f37",
-  storageBucket: "strenght-a9f37.firebasestorage.app",
-  messagingSenderId: "469926449178",
-  appId: "1:469926449178:web:b9623947a1c1865b0f81a3",
-  measurementId: "G-FXWY0F6SND"
-};
-</script>
-</body>
-</html>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Strength Log – 1RM Tracking</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8" />
+<title>Strength Log – 1RM Tracking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <style>
-    :root {
-      --bg-main:#0c0e12; --bg-panel:#14161c; --bg-header:#1b1e26;
-      --border:#2a2d36; --text-main:#d9dbe1; --text-muted:#9da1ac;
-      --accent:#bfc6d6;
-    }
-
-    body {
-      font-family:"Segoe UI",sans-serif;
-      background:radial-gradient(circle at top,#12141b 0%,var(--bg-main) 60%);
-      color:var(--text-main);
-      padding:24px;
-    }
-
-    h1 { color:var(--accent); font-weight:500; }
-    .bw { color:var(--accent); opacity:.85; max-width:1020px; }
-
-    .top-bar {
-      max-width:1020px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-top:12px;
-    }
-
-    button {
-      background:transparent;
-      border:1px solid var(--border);
-      color:var(--accent);
-      padding:6px 14px;
-      border-radius:6px;
-      cursor:pointer;
-    }
-
-    .last-updated {
-      font-size:.75rem;
-      color:var(--text-muted);
-    }
-
-    table {
-      margin-top:26px;
-      width:100%;
-      max-width:1020px;
-      border-collapse:collapse;
-      background:var(--bg-panel);
-    }
-
-    th,td {
-      border:1px solid var(--border);
-      padding:11px;
-      text-align:center;
-    }
-
-    th {
-      background:var(--bg-header);
-      color:var(--accent);
-      text-transform:uppercase;
-      font-size:.78rem;
-    }
-
-    td.left { text-align:left; padding-left:14px; }
-
-    .locked { pointer-events:none; user-select:none; }
-    [contenteditable="true"] { background:rgba(255,255,255,.05); }
-  </style>
+<style>
+:root{
+  --bg-main:#0c0e12;--bg-panel:#14161c;--bg-header:#1b1e26;
+  --border:#2a2d36;--text-main:#d9dbe1;--text-muted:#9da1ac;
+  --accent:#bfc6d6;
+}
+body{
+  font-family:"Segoe UI",sans-serif;
+  background:radial-gradient(circle at top,#12141b 0%,var(--bg-main) 60%);
+  color:var(--text-main);
+  padding:24px;
+}
+h1{color:var(--accent);font-weight:500}
+.bw{color:var(--accent);opacity:.85;max-width:1020px}
+.top-bar{
+  max-width:1020px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:12px;
+}
+button{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:6px 14px;
+  border-radius:6px;
+  cursor:pointer;
+}
+.last-updated{font-size:.75rem;color:var(--text-muted)}
+table{
+  margin-top:26px;
+  width:100%;
+  max-width:1020px;
+  border-collapse:collapse;
+  background:var(--bg-panel);
+}
+th,td{
+  border:1px solid var(--border);
+  padding:11px;
+  text-align:center;
+}
+th{
+  background:var(--bg-header);
+  color:var(--accent);
+  font-size:.78rem;
+  text-transform:uppercase;
+}
+td.left{text-align:left;padding-left:14px}
+.locked{pointer-events:none;user-select:none}
+[contenteditable="true"]{background:rgba(255,255,255,.05)}
+</style>
 </head>
 
 <body>
@@ -93,8 +64,8 @@ const firebaseConfig = {
 <h1 id="title">Strength Log</h1>
 
 <p class="bw" id="description">
-  Current BW: 64 kg / 140 lb<br>
-  Current lifts don't include bar weights.
+Current BW: 64 kg / 140 lb<br>
+Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
 </p>
 
 <div class="top-bar">
@@ -103,34 +74,46 @@ const firebaseConfig = {
 </div>
 
 <table id="logTable" class="locked">
-  <thead>
-    <tr>
-      <th class="left">Lift</th>
-      <th>Current</th>
-      <th>1RM</th>
-      <th>Level</th>
-    </tr>
-  </thead>
-  <tbody id="tableBody">
-    <tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td></tr>
-    <tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td></tr>
-    <tr><td class="left">Pull-Up</td><td>BW · 3×8-12</td><td></td><td></td></tr>
-    <tr><td class="left">EZ Bicep Curl</td><td>80 lb · 3×6-9</td><td></td><td></td></tr>
-    <tr><td class="left">Hex Bar Deadlift</td><td>210 lb · 3×3-4</td><td></td><td></td></tr>
-  </tbody>
+<thead>
+<tr>
+<th class="left">Lift</th>
+<th>Current</th>
+<th>1RM</th>
+<th>Strength Level</th>
+</tr>
+</thead>
+<tbody id="tableBody">
+<tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td></tr>
+<tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td></tr>
+<tr><td class="left">Pull-Up</td><td>BW · 3×8-12</td><td></td><td></td></tr>
+<tr><td class="left">EZ Bicep Curl</td><td>80 lb · 3×6-9</td><td></td><td></td></tr>
+<tr><td class="left">Unilateral Bicep Curl</td><td>45 lb · 3×6-8</td><td></td><td></td></tr>
+<tr><td class="left">Dips</td><td>65 lb · 3×8-10</td><td></td><td></td></tr>
+<tr><td class="left">Flat Bench</td><td>90 lb · 3×6-9</td><td></td><td></td></tr>
+<tr><td class="left">Power Clean</td><td>70 lb · 3×3</td><td></td><td></td></tr>
+<tr><td class="left">Hex Bar Deadlift</td><td>210 lb · 3×3-4</td><td></td><td></td></tr>
+<tr><td class="left">Squat</td><td>210 lb · 3×5</td><td></td><td></td></tr>
+<tr><td class="left">Single-Leg RDL</td><td>90 lb · 3×8 / leg</td><td></td><td></td></tr>
+<tr><td class="left">Bulgarian Squat</td><td>140 lb · 3×8 / leg</td><td></td><td></td></tr>
+<tr><td class="left">Hip-Thrust (Barbell)</td><td>Looking into</td><td></td><td></td></tr>
+<tr><td class="left">Single-Leg Box Squat</td><td>45 lb · 3×6 / leg</td><td></td><td></td></tr>
+<tr><td class="left">Pistol Squat</td><td>65 lb · 3×6 / leg</td><td></td><td></td></tr>
+</tbody>
 </table>
 
-<!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  databaseURL: "YOUR_DB_URL",
-  projectId: "YOUR_ID",
+  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain: "strenght-a9f37.firebaseapp.com",
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -144,65 +127,68 @@ const tbody = document.getElementById("tableBody");
 const lastUpdated = document.getElementById("lastUpdated");
 const loginBtn = document.getElementById("loginBtn");
 
-/* 🔄 LOAD DATA */
-onValue(ref(db, "content"), snap => {
-  if (!snap.exists()) return;
-  const d = snap.val();
-  title.innerText = d.title;
-  desc.innerHTML = d.desc;
-  tbody.innerHTML = d.table;
-  lastUpdated.textContent = "Last updated: " + d.updated;
+/* LOAD DATA (PUBLIC) */
+onValue(ref(db,"content"), snap=>{
+  if(!snap.exists()) return;
+  const d=snap.val();
+  title.innerText=d.title;
+  desc.innerHTML=d.desc;
+  tbody.innerHTML=d.table;
+  lastUpdated.textContent="Last updated: "+d.updated;
 });
 
-/* 🔐 AUTH */
-onAuthStateChanged(auth, user => {
-  if (!user) return;
-  unlock();
-  loginBtn.textContent = "Admin Mode";
+/* AUTH STATE */
+onAuthStateChanged(auth,user=>{
+  if(user){
+    enableAdmin();
+    loginBtn.textContent="Admin Mode";
+  } else {
+    disableAdmin();
+    loginBtn.textContent="Admin Login";
+  }
 });
 
 /* LOGIN */
-loginBtn.onclick = () => {
-  const email = prompt("Admin email:");
-  const pass = prompt("Password:");
-  signInWithEmailAndPassword(auth, email, pass)
-    .catch(() => alert("Login failed"));
+loginBtn.onclick=()=>{
+  if(auth.currentUser){
+    signOut(auth);
+    return;
+  }
+  const email=prompt("Admin email:");
+  const pass=prompt("Password:");
+  if(!email||!pass) return;
+  signInWithEmailAndPassword(auth,email,pass)
+    .catch(()=>alert("Login failed"));
 };
 
-/* EDIT MODE */
-function unlock() {
+function enableAdmin(){
   table.classList.remove("locked");
-  title.contentEditable = desc.contentEditable = "true";
-  document.querySelectorAll("td").forEach(td => {
-    td.contentEditable = "true";
-    td.addEventListener("input", save);
+  title.contentEditable=desc.contentEditable="true";
+  document.querySelectorAll("td").forEach(td=>{
+    td.contentEditable="true";
+    td.addEventListener("input",save);
   });
-  title.addEventListener("input", save);
-  desc.addEventListener("input", save);
+  title.addEventListener("input",save);
+  desc.addEventListener("input",save);
 }
 
-/* SAVE */
-function save() {
-  const now = new Date();
-  const formatted =
-    `${String(now.getDate()).padStart(2,"0")}/` +
-    `${String(now.getMonth()+1).padStart(2,"0")}/` +
-    `${now.getFullYear()} · ` +
-    `${String(now.getHours()).padStart(2,"0")}:` +
-    `${String(now.getMinutes()).padStart(2,"0")}`;
+function disableAdmin(){
+  table.classList.add("locked");
+  title.contentEditable=desc.contentEditable="false";
+  document.querySelectorAll("td").forEach(td=>td.contentEditable="false");
+}
 
-  set(ref(db, "content"), {
-    title: title.innerText,
-    desc: desc.innerHTML,
-    table: tbody.innerHTML,
-    updated: formatted
+function save(){
+  const n=new Date();
+  const f=`${String(n.getDate()).padStart(2,"0")}/${String(n.getMonth()+1).padStart(2,"0")}/${n.getFullYear()} · ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+  set(ref(db,"content"),{
+    title:title.innerText,
+    desc:desc.innerHTML,
+    table:tbody.innerHTML,
+    updated:f
   });
 }
 </script>
-
-</body>
-</html>
-
 
 </body>
 </html>
