@@ -18,14 +18,14 @@
 
 /* 🚫 HIDE PAGE UNTIL FIREBASE LOADS */
 body {
-  visibility: hidden;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: radial-gradient(circle at top,#12141b,var(--bg-main));
-  color: var(--text);
+  visibility:hidden;
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:radial-gradient(circle at top,#12141b,var(--bg-main));
+  color:var(--text);
   padding:24px;
 }
 
-/* 🔒 LOCK ONLY CONTENT (NOT LOGIN) */
+/* 🔒 LOCK CONTENT */
 .locked-content,
 .locked-content * {
   pointer-events:none !important;
@@ -33,7 +33,7 @@ body {
   caret-color:transparent !important;
 }
 
-/* 🚫 Remove focus outline everywhere */
+/* 🚫 Remove focus outline */
 *:focus {
   outline:none !important;
   box-shadow:none !important;
@@ -43,7 +43,7 @@ body {
   display:flex;
   justify-content:space-between;
   align-items:center;
-  max-width:1020px;
+  max-width:1100px;
   margin-bottom:12px;
 }
 
@@ -58,7 +58,7 @@ body {
 
 table {
   width:100%;
-  max-width:1020px;
+  max-width:1100px;
   border-collapse:collapse;
   background:var(--bg-panel);
   box-shadow:0 0 0 1px var(--border);
@@ -80,8 +80,9 @@ td.left {
   text-align:left;
 }
 
-.last-updated {
-  font-size:.75rem;
+.last-updated,
+.row-updated {
+  font-size:.7rem;
   color:var(--muted);
 }
 </style>
@@ -109,6 +110,7 @@ td.left {
   <th>Current</th>
   <th>1RM</th>
   <th>Strength Level</th>
+  <th>Last updated</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -157,10 +159,7 @@ function lockAll() {
   table.classList.add("locked-content");
   title.contentEditable = "false";
   desc.contentEditable = "false";
-  document.querySelectorAll("td").forEach(td => {
-    td.contentEditable = "false";
-    td.blur();
-  });
+  document.querySelectorAll("td").forEach(td => td.contentEditable = "false");
 }
 
 /* ✏️ ENABLE EDIT */
@@ -191,50 +190,63 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* 📥 LOAD DATA — NO FLASH */
+/* 📥 LOAD DATA */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
-  title.innerText = d.title;
-  desc.innerHTML = d.desc;
-  tbody.innerHTML = d.table;
-  lastUpdated.innerText = "Last updated: " + d.updated;
+  title.innerText = d.title || "";
+  desc.innerHTML = d.desc || "";
+  tbody.innerHTML = d.table || "";
+  lastUpdated.innerText = d.updated ? "Last updated: " + d.updated : "";
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE UPDATES — FIXED (NO CURSOR JUMP) */
+/* 🔁 LIVE UPDATES (NO CURSOR JUMP) */
 db.ref("log").on("value", snap => {
   if (firstLoad) {
     firstLoad = false;
     return;
   }
-
-  // 🛑 DO NOT overwrite DOM while admin is typing
   if (isAdmin) return;
 
   const d = snap.val();
-  title.innerText = d.title;
-  desc.innerHTML = d.desc;
-  tbody.innerHTML = d.table;
+  title.innerText = d.title || "";
+  desc.innerHTML = d.desc || "";
+  tbody.innerHTML = d.table || "";
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* 💾 SAVE */
-document.addEventListener("input", () => {
+/* 🕒 FORMAT TIME */
+function getTime() {
+  const n = new Date();
+  return (
+    String(n.getDate()).padStart(2,"0") + "/" +
+    String(n.getMonth()+1).padStart(2,"0") + "/" +
+    n.getFullYear() + " · " +
+    String(n.getHours()).padStart(2,"0") + ":" +
+    String(n.getMinutes()).padStart(2,"0")
+  );
+}
+
+/* 💾 SAVE + ROW TIMESTAMP */
+document.addEventListener("input", e => {
   if (!isAdmin) return;
 
-  const now = new Date();
-  const formatted =
-    String(now.getDate()).padStart(2,"0") + "/" +
-    String(now.getMonth()+1).padStart(2,"0") + "/" +
-    now.getFullYear() + " · " +
-    String(now.getHours()).padStart(2,"0") + ":" +
-    String(now.getMinutes()).padStart(2,"0");
+  const row = e.target.closest("tr");
+  if (row) {
+    let cell = row.querySelector(".row-updated");
+    if (!cell) {
+      cell = document.createElement("td");
+      cell.className = "row-updated";
+      row.appendChild(cell);
+    }
+    cell.innerText = getTime();
+  }
 
   db.ref("log").set({
     title: title.innerText,
     desc: desc.innerHTML,
     table: tbody.innerHTML,
-    updated: formatted
+    updated: getTime()
   });
 });
 
