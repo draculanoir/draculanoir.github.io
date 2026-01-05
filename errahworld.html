@@ -113,6 +113,7 @@ td.left { text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -197,10 +198,9 @@ db.ref("log").once("value").then(snap => {
   tbody.innerHTML = d.table;
   lastUpdated.innerText = "Last updated: " + d.updated;
 
-  // 🔧 Normalize old rows
+  // normalize old rows
   tbody.querySelectorAll("tr").forEach(row => {
-    const last = row.children[row.children.length - 1];
-    last.classList.add("row-updated");
+    row.children[row.children.length - 1].classList.add("row-updated");
   });
 
   setCellEdit(isAdmin);
@@ -229,7 +229,7 @@ function stamp() {
   );
 }
 
-/* 💾 SAVE — GUARANTEED PER-ROW UPDATE */
+/* 💾 SAVE — UPDATE ONLY THE ROW'S "LAST UPDATED" COLUMN */
 let saveTimer;
 tbody.addEventListener("input", e => {
   if (!isAdmin) return;
@@ -241,17 +241,16 @@ tbody.addEventListener("input", e => {
 
     const t = stamp();
 
-    // ✅ ALWAYS update LAST CELL
-    const cells = row.children;
-    const lastCell = cells[cells.length - 1];
+    // ✅ update ONLY the column "Last updated"
+    const lastCell = row.children[row.children.length - 1];
     lastCell.innerText = t;
     lastCell.classList.add("row-updated");
 
-    db.ref("log").set({
+    // ❗ do NOT touch global timestamp here
+    db.ref("log").update({
       title: title.innerText,
       desc: desc.innerHTML,
-      table: tbody.innerHTML,
-      updated: t
+      table: tbody.innerHTML
     });
   }, 200);
 });
