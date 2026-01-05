@@ -18,14 +18,14 @@
 
 /* 🚫 HIDE PAGE UNTIL FIREBASE LOADS */
 body {
-  visibility: hidden;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: radial-gradient(circle at top,#12141b,var(--bg-main));
-  color: var(--text);
+  visibility:hidden;
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:radial-gradient(circle at top,#12141b,var(--bg-main));
+  color:var(--text);
   padding:24px;
 }
 
-/* 🔒 LOCK ONLY CONTENT (NOT LOGIN) */
+/* 🔒 LOCK CONTENT */
 .locked-content,
 .locked-content * {
   pointer-events:none !important;
@@ -33,7 +33,7 @@ body {
   caret-color:transparent !important;
 }
 
-/* 🚫 Remove focus outline everywhere */
+/* 🚫 REMOVE FOCUS OUTLINES */
 *:focus {
   outline:none !important;
   box-shadow:none !important;
@@ -64,7 +64,7 @@ table {
   box-shadow:0 0 0 1px var(--border);
 }
 
-th,td {
+th, td {
   border:1px solid var(--border);
   padding:10px;
   text-align:center;
@@ -76,8 +76,11 @@ th {
   font-size:.75rem;
 }
 
-td.left {
-  text-align:left;
+td.left { text-align:left; }
+
+.row-updated {
+  font-size:.7rem;
+  color:var(--muted);
 }
 
 .last-updated {
@@ -109,12 +112,13 @@ td.left {
   <th>Current</th>
   <th>1RM</th>
   <th>Strength Level</th>
+  <th>Last updated</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 
-<!-- Firebase -->
+<!-- 🔥 Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -146,7 +150,7 @@ const password = document.getElementById("password");
 let isAdmin = false;
 let firstLoad = true;
 
-/* 🚫 Block keyboard except login */
+/* 🚫 BLOCK KEYBOARD EXCEPT LOGIN */
 document.addEventListener("keydown", e => {
   if (!isAdmin && !e.target.closest("#authBox")) e.preventDefault();
 });
@@ -191,7 +195,7 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* 📥 LOAD DATA — NO FLASH */
+/* 📥 LOAD DATA (NO FLASH) */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
   title.innerText = d.title;
@@ -201,14 +205,9 @@ db.ref("log").once("value").then(snap => {
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE UPDATES — FIXED (NO CURSOR JUMP) */
+/* 🔁 LIVE UPDATES (NO CURSOR JUMP) */
 db.ref("log").on("value", snap => {
-  if (firstLoad) {
-    firstLoad = false;
-    return;
-  }
-
-  // 🛑 DO NOT overwrite DOM while admin is typing
+  if (firstLoad) { firstLoad = false; return; }
   if (isAdmin) return;
 
   const d = snap.val();
@@ -218,23 +217,36 @@ db.ref("log").on("value", snap => {
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* 💾 SAVE */
-document.addEventListener("input", () => {
+/* ⏱ TIMESTAMP */
+function nowStamp() {
+  const n = new Date();
+  return (
+    String(n.getDate()).padStart(2,"0") + "/" +
+    String(n.getMonth()+1).padStart(2,"0") + "/" +
+    n.getFullYear() + " · " +
+    String(n.getHours()).padStart(2,"0") + ":" +
+    String(n.getMinutes()).padStart(2,"0")
+  );
+}
+
+/* 💾 SAVE — PER ROW */
+tbody.addEventListener("input", e => {
   if (!isAdmin) return;
 
-  const now = new Date();
-  const formatted =
-    String(now.getDate()).padStart(2,"0") + "/" +
-    String(now.getMonth()+1).padStart(2,"0") + "/" +
-    now.getFullYear() + " · " +
-    String(now.getHours()).padStart(2,"0") + ":" +
-    String(now.getMinutes()).padStart(2,"0");
+  const row = e.target.closest("tr");
+  if (!row) return;
+
+  const stamp = nowStamp();
+  row.dataset.updated = stamp;
+
+  const cell = row.querySelector(".row-updated");
+  if (cell) cell.innerText = stamp;
 
   db.ref("log").set({
     title: title.innerText,
     desc: desc.innerHTML,
     table: tbody.innerHTML,
-    updated: formatted
+    updated: stamp
   });
 });
 
