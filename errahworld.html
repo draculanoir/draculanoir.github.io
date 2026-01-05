@@ -110,18 +110,26 @@
       padding-left: 14px;
     }
 
+    tbody tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    /* 🔒 LOCKED MODE */
+    .locked td {
+      pointer-events: none;
+      user-select: none;
+      cursor: default;
+    }
+
+    /* ✏️ EDIT MODE */
     td[contenteditable="true"] {
       outline: none;
-      cursor: text;
       background: rgba(255,255,255,0.03);
+      cursor: text;
     }
 
     td[contenteditable="true"]:focus {
       background: rgba(255,255,255,0.07);
-    }
-
-    tbody tr:hover {
-      background: rgba(255,255,255,0.02);
     }
   </style>
 </head>
@@ -140,7 +148,7 @@
   <div class="last-updated" id="lastUpdated"></div>
 </div>
 
-<table id="logTable">
+<table id="logTable" class="locked">
   <thead>
     <tr>
       <th class="left">Lift</th>
@@ -174,11 +182,11 @@
   const table = document.getElementById("logTable");
   const lastUpdated = document.getElementById("lastUpdated");
 
-  // Restore saved data if exists
-  const savedTable = localStorage.getItem("strengthLogHTML");
+  // Restore saved content
+  const savedHTML = localStorage.getItem("strengthLogHTML");
   const savedTime = localStorage.getItem("strengthLogUpdated");
 
-  if (savedTable) table.querySelector("tbody").innerHTML = savedTable;
+  if (savedHTML) table.querySelector("tbody").innerHTML = savedHTML;
   if (savedTime) lastUpdated.textContent = "Last updated: " + savedTime;
 
   function adminLogin() {
@@ -187,16 +195,16 @@
       alert("Wrong password");
       return;
     }
-    enableEditing();
-    alert("Admin mode enabled");
-  }
 
-  function enableEditing() {
+    table.classList.remove("locked");
+
     const cells = table.querySelectorAll("tbody td");
     cells.forEach(cell => {
       cell.contentEditable = "true";
       cell.addEventListener("input", saveChanges);
     });
+
+    alert("Admin mode enabled");
   }
 
   function saveChanges() {
