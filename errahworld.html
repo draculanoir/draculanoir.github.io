@@ -1,33 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Strength Log – 1RM Tracking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-:root{
-  --bg-main:#0c0e12;--bg-panel:#14161c;--bg-header:#1b1e26;
-  --border:#2a2d36;--text-main:#d9dbe1;--text-muted:#9da1ac;
+:root {
+  --bg-main:#0c0e12;
+  --bg-panel:#14161c;
+  --bg-header:#1b1e26;
+  --border:#2a2d36;
+  --text-main:#d9dbe1;
+  --text-muted:#9da1ac;
   --accent:#bfc6d6;
 }
-body{
-  font-family:"Segoe UI",sans-serif;
+
+body {
+  font-family:Segoe UI,Arial,sans-serif;
   background:radial-gradient(circle at top,#12141b 0%,var(--bg-main) 60%);
   color:var(--text-main);
   padding:24px;
 }
-h1{color:var(--accent);font-weight:500}
-.bw{color:var(--accent);opacity:.85;max-width:1020px}
-.top-bar{
-  max-width:1020px;
+
+h1 { color:var(--accent); font-weight:500; }
+
+.bw { max-width:1020px; color:var(--accent); opacity:.85; }
+
+.top-bar {
   display:flex;
   justify-content:space-between;
   align-items:center;
+  max-width:1020px;
   margin-top:12px;
-  gap:12px;
 }
-button{
+
+button {
   background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
@@ -35,28 +43,52 @@ button{
   border-radius:6px;
   cursor:pointer;
 }
-.last-updated{font-size:.75rem;color:var(--text-muted)}
-table{
+
+button:hover { background:rgba(255,255,255,.05); }
+
+.last-updated {
+  font-size:.75rem;
+  color:var(--text-muted);
+}
+
+table {
   margin-top:26px;
   width:100%;
   max-width:1020px;
   border-collapse:collapse;
   background:var(--bg-panel);
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 0 0 1px var(--border);
 }
-th,td{
+
+th,td {
   border:1px solid var(--border);
   padding:11px;
   text-align:center;
 }
-th{
+
+th {
   background:var(--bg-header);
   color:var(--accent);
   font-size:.78rem;
   text-transform:uppercase;
 }
-td.left{text-align:left;padding-left:14px}
-.locked{pointer-events:none;user-select:none}
-[contenteditable="true"]{background:rgba(255,255,255,.05)}
+
+td.left { text-align:left; padding-left:14px; }
+
+/* HARD READ ONLY */
+.locked, .locked * {
+  pointer-events:none !important;
+  user-select:none !important;
+  caret-color:transparent !important;
+}
+
+[contenteditable="true"] {
+  background:rgba(255,255,255,.05);
+  user-select:text !important;
+  pointer-events:auto !important;
+}
 </style>
 </head>
 
@@ -64,29 +96,30 @@ td.left{text-align:left;padding-left:14px}
 
 <h1 id="title">Strength Log</h1>
 
-<p class="bw" id="description">
+<p class="bw" id="desc">
 Current BW: 64 kg / 140 lb<br>
-Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
+Current lifts don't include bar weight.
 </p>
 
 <div class="top-bar">
   <div>
     <button id="loginBtn">Admin Login</button>
-    <button id="logoutBtn" style="display:none;">Logout</button>
+    <button id="logoutBtn" style="display:none">Logout</button>
   </div>
-  <div class="last-updated" id="lastUpdated"></div>
+  <div id="lastUpdated" class="last-updated"></div>
 </div>
 
-<table id="logTable" class="locked">
+<table id="table" class="locked">
 <thead>
 <tr>
-<th class="left">Lift</th>
-<th>Current</th>
-<th>1RM</th>
-<th>Strength Level</th>
+  <th class="left">Lift</th>
+  <th>Current</th>
+  <th>1RM</th>
+  <th>Strength Level</th>
 </tr>
 </thead>
-<tbody id="tableBody">
+
+<tbody id="tbody">
 <tr><td class="left">Overhead Shoulder Press</td><td>95 lb · 3×6-7</td><td></td><td></td></tr>
 <tr><td class="left">Incline Bench</td><td>70 lb · 3×6-8</td><td></td><td></td></tr>
 <tr><td class="left">Pull-Up</td><td>BW · 3×8-12</td><td></td><td></td></tr>
@@ -99,114 +132,95 @@ Current lifts don't include bar weights. Trap bar = 65 lb, Olympic bar = 45 lb.
 <tr><td class="left">Squat</td><td>210 lb · 3×5</td><td></td><td></td></tr>
 <tr><td class="left">Single-Leg RDL</td><td>90 lb · 3×8 / leg</td><td></td><td></td></tr>
 <tr><td class="left">Bulgarian Squat</td><td>140 lb · 3×8 / leg</td><td></td><td></td></tr>
-<tr><td class="left">Hip-Thrust (Barbell)</td><td>Looking into</td><td></td><td></td></tr>
+<tr><td class="left">Hip Thrust</td><td>Looking into</td><td></td><td></td></tr>
 <tr><td class="left">Single-Leg Box Squat</td><td>45 lb · 3×6 / leg</td><td></td><td></td></tr>
 <tr><td class="left">Pistol Squat</td><td>65 lb · 3×6 / leg</td><td></td><td></td></tr>
 </tbody>
 </table>
 
+<!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain:"strenght-a9f37.firebaseapp.com",
-  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId:"strenght-a9f37",
-  storageBucket:"strenght-a9f37.firebasestorage.app",
-  messagingSenderId:"469926449178",
-  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
+const firebaseConfig = {
+  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain: "strenght-a9f37.firebaseapp.com",
+  projectId: "strenght-a9f37",
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
 };
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-const title=document.getElementById("title");
-const desc=document.getElementById("description");
-const table=document.getElementById("logTable");
-const tbody=document.getElementById("tableBody");
-const lastUpdated=document.getElementById("lastUpdated");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
+const table = document.getElementById("table");
+const tbody = document.getElementById("tbody");
+const title = document.getElementById("title");
+const desc = document.getElementById("desc");
+const lastUpdated = document.getElementById("lastUpdated");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-let isAdmin=false;
-let isTyping=false;
+const dataRef = ref(db, "strengthLog");
 
-/* 🔄 LOAD DATA (IGNORE WHILE ADMIN IS TYPING) */
-onValue(ref(db,"content"),snap=>{
-  if(isTyping) return;
+onValue(dataRef, snap => {
   if(!snap.exists()) return;
-  const d=snap.val();
-  title.innerText=d.title;
-  desc.innerHTML=d.desc;
-  tbody.innerHTML=d.table;
-  lastUpdated.textContent="Last updated: "+d.updated;
+  const d = snap.val();
+  tbody.innerHTML = d.table;
+  title.innerText = d.title;
+  desc.innerHTML = d.desc;
+  lastUpdated.textContent = "Last updated: " + d.date;
 });
 
-/* 🔐 AUTH STATE */
-onAuthStateChanged(auth,user=>{
-  if(user){
-    enableAdmin();
-  }else{
-    disableAdmin();
-  }
-});
+function enableEdit(){
+  table.classList.remove("locked");
+  [title,desc,...document.querySelectorAll("td")].forEach(el=>{
+    el.contentEditable="true";
+    el.oninput=saveAll;
+  });
+}
 
-/* LOGIN */
+function disableEdit(){
+  table.classList.add("locked");
+  document.activeElement.blur();
+  [title,desc,...document.querySelectorAll("td")].forEach(el=>{
+    el.contentEditable="false";
+    el.oninput=null;
+  });
+}
+
+function saveAll(){
+  const n=new Date();
+  const f=`${String(n.getDate()).padStart(2,"0")}/${String(n.getMonth()+1).padStart(2,"0")}/${n.getFullYear()} · ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
+  set(dataRef,{
+    table:tbody.innerHTML,
+    title:title.innerText,
+    desc:desc.innerHTML,
+    date:f
+  });
+}
+
 loginBtn.onclick=()=>{
   const email=prompt("Admin email:");
   const pass=prompt("Password:");
-  if(!email||!pass) return;
-  signInWithEmailAndPassword(auth,email,pass)
-    .catch(()=>alert("Login failed"));
+  signInWithEmailAndPassword(auth,email,pass);
 };
 
-/* LOGOUT */
-logoutBtn.onclick=()=>{
-  signOut(auth);
-};
+logoutBtn.onclick=()=>signOut(auth);
 
-function enableAdmin(){
-  isAdmin=true;
-  table.classList.remove("locked");
-  title.contentEditable=desc.contentEditable="true";
-  loginBtn.style.display="none";
-  logoutBtn.style.display="inline-block";
-
-  document.querySelectorAll("td").forEach(td=>{
-    td.contentEditable="true";
-    td.oninput=save;
-  });
-  title.oninput=save;
-  desc.oninput=save;
-}
-
-function disableAdmin(){
-  isAdmin=false;
-  table.classList.add("locked");
-  title.contentEditable=desc.contentEditable="false";
-  loginBtn.style.display="inline-block";
-  logoutBtn.style.display="none";
-  document.querySelectorAll("td").forEach(td=>td.contentEditable="false");
-}
-
-function save(){
-  if(!isAdmin) return;
-  isTyping=true;
-
-  const n=new Date();
-  const f=`${String(n.getDate()).padStart(2,"0")}/${String(n.getMonth()+1).padStart(2,"0")}/${n.getFullYear()} · ${String(n.getHours()).padStart(2,"0")}:${String(n.getMinutes()).padStart(2,"0")}`;
-
-  set(ref(db,"content"),{
-    title:title.innerText,
-    desc:desc.innerHTML,
-    table:tbody.innerHTML,
-    updated:f
-  }).then(()=>isTyping=false);
-}
+onAuthStateChanged(auth,user=>{
+  if(user){
+    enableEdit();
+    loginBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
+  } else {
+    disableEdit();
+    loginBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
+  }
+});
 </script>
 
 </body>
