@@ -96,27 +96,28 @@
       padding-left: 14px;
     }
 
-    /* 🔒 READ-ONLY MODE */
-    .locked td {
+    /* 🔒 LOCKED MODE */
+    .locked {
       pointer-events: none;
       user-select: none;
       caret-color: transparent;
     }
 
     /* ✏️ EDIT MODE */
-    td[contenteditable="true"] {
+    [contenteditable="true"] {
       background: rgba(255,255,255,0.05);
       caret-color: auto;
-      cursor: text;
+      pointer-events: auto;
+      user-select: text;
     }
   </style>
 </head>
 
 <body>
 
-<h1>Strength Log</h1>
+<h1 contenteditable="false" id="title">Strength Log</h1>
 
-<p class="bw">
+<p class="bw" id="description" contenteditable="false">
   Current BW: 64 kg / 140 lb<br>
   Current lifts doesn't include bar weights, only 1RMS assuming a trap bar is 65lbs and olympic bar is 45lbs.
 </p>
@@ -156,25 +157,36 @@
 </table>
 
 <script>
-  const ADMIN_PASSWORD = "admin123"; // change this
+  const ADMIN_PASSWORD = "admin123";
+
   const table = document.getElementById("logTable");
   const tbody = document.getElementById("tableBody");
   const lastUpdated = document.getElementById("lastUpdated");
+  const description = document.getElementById("description");
+  const title = document.getElementById("title");
 
   /* Restore saved data */
-  const savedTable = localStorage.getItem("strengthLog_table");
-  const savedDate = localStorage.getItem("strengthLog_date");
+  if (localStorage.getItem("strengthLog_table"))
+    tbody.innerHTML = localStorage.getItem("strengthLog_table");
 
-  if (savedTable) tbody.innerHTML = savedTable;
-  if (savedDate) lastUpdated.textContent = "Last updated: " + savedDate;
+  if (localStorage.getItem("strengthLog_desc"))
+    description.innerHTML = localStorage.getItem("strengthLog_desc");
 
-  lockTable();
+  if (localStorage.getItem("strengthLog_title"))
+    title.innerText = localStorage.getItem("strengthLog_title");
 
-  function lockTable() {
+  if (localStorage.getItem("strengthLog_date"))
+    lastUpdated.textContent = "Last updated: " + localStorage.getItem("strengthLog_date");
+
+  lockAll();
+
+  function lockAll() {
     table.classList.add("locked");
-    tbody.querySelectorAll("td").forEach(td => {
-      td.contentEditable = "false";
-      td.setAttribute("tabindex", "-1");
+    description.classList.add("locked");
+    title.classList.add("locked");
+
+    document.querySelectorAll("[contenteditable]").forEach(el => {
+      el.contentEditable = "false";
     });
   }
 
@@ -183,11 +195,12 @@
     if (pass !== ADMIN_PASSWORD) return alert("Wrong password");
 
     table.classList.remove("locked");
+    description.classList.remove("locked");
+    title.classList.remove("locked");
 
-    tbody.querySelectorAll("td").forEach(td => {
-      td.contentEditable = "true";
-      td.removeAttribute("tabindex");
-      td.addEventListener("input", saveAll);
+    document.querySelectorAll("td, #description, #title").forEach(el => {
+      el.contentEditable = "true";
+      el.addEventListener("input", saveAll);
     });
 
     alert("Admin mode enabled");
@@ -195,17 +208,19 @@
 
   function saveAll() {
     const now = new Date();
+    const d = String(now.getDate()).padStart(2, "0");
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const y = now.getFullYear();
+    const h = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
 
-    const day = String(now.getDate()).padStart(2, "0");
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-
-    const formatted = `${day}/${month}/${year} · ${hours}:${minutes}`;
+    const formatted = `${d}/${m}/${y} · ${h}:${min}`;
 
     localStorage.setItem("strengthLog_table", tbody.innerHTML);
+    localStorage.setItem("strengthLog_desc", description.innerHTML);
+    localStorage.setItem("strengthLog_title", title.innerText);
     localStorage.setItem("strengthLog_date", formatted);
+
     lastUpdated.textContent = "Last updated: " + formatted;
   }
 </script>
