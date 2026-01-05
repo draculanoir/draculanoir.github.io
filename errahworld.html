@@ -28,28 +28,16 @@
       color: #ffffff;
     }
 
-    .bw {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-
-    /* ---------- TABLE ---------- */
-
-    .table-wrapper {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
     table {
       border-collapse: collapse;
       margin-top: 25px;
       width: 100%;
-      min-width: 700px; /* prevents squishing on mobile */
       max-width: 1000px;
       background: #161a22;
     }
 
-    th, td {
+    th,
+    td {
       border: 1px solid #2b2f3a;
       padding: 10px;
       text-align: center;
@@ -68,66 +56,43 @@
       text-align: left;
     }
 
-    /* ---------- EDITABLE CELLS ---------- */
+    .bw {
+      margin-top: 10px;
+      font-weight: bold;
+    }
 
-    td[contenteditable="true"],
-    p[contenteditable="true"] {
+    /* Editable cell visual hint */
+    td[contenteditable="true"] {
       outline: 1px dashed #2b2f3a;
       cursor: text;
-      min-height: 44px; /* finger-friendly */
     }
 
-    td[contenteditable="true"]:focus,
-    p[contenteditable="true"]:focus {
+    td[contenteditable="true"]:focus {
       outline: 1px solid #5da9ff;
       background: #1b2030;
-    }
-
-    /* ---------- MOBILE OPTIMIZATION ---------- */
-
-    @media (max-width: 768px) {
-      body {
-        padding: 12px;
-      }
-
-      h1 {
-        font-size: 1.4rem;
-      }
-
-      .note {
-        font-size: 0.85rem;
-      }
-
-      th, td {
-        padding: 8px;
-        font-size: 0.85rem;
-      }
-
-      .bw {
-        font-size: 0.9rem;
-      }
     }
   </style>
 </head>
 
 <body>
+  <h1>Errah's table</h1>
 
-<h1>Strength Tracking Table</h1>
+  <p class="note">
+    <strong>Note:</strong> For all recorded lifts, the trap bar is assumed to weigh
+    <strong>65 lb</strong> and the Olympic barbell is assumed to weigh
+    <strong>45 lb</strong>. Bar weight is included in total load on
+    <strong>1RM lifts only</strong>. Current lifts don't include bar weight for
+    simplicity reasons.
+    <br /><br />
+    All lifts will be displayed on <strong>2026-02-05</strong> using my
+    <strong>1RM values</strong>. Strength ratings and comparisons are based on data
+    from <strong>StrengthLevel.com</strong>.
+  </p>
 
-<p class="note">
-  <strong>Note:</strong> For all recorded lifts, the trap bar is assumed to weigh
-  <strong>65 lb</strong> and the Olympic barbell is assumed to weigh
-  <strong>45 lb</strong>. Bar weight is included in total load on
-  <strong>1RM lifts only</strong>. Current lifts don't include bar weight for simplicity reasons.
-  <br><br>
-  All lifts will be displayed on <strong>2026-02-05</strong> using my 1RM values.
-  Strength ratings and comparisons are based on data from
-  <strong>StrengthLevel.com</strong>.
-</p>
+  <p class="bw" contenteditable="true">
+    Current BW: 64 kg / 140 lb
+  </p>
 
-<p class="bw" contenteditable="true">Current BW: 64 kg / 140 lb</p>
-
-<div class="table-wrapper">
   <table>
     <thead>
       <tr>
@@ -141,42 +106,42 @@
     <tbody>
       <tr>
         <td class="left" contenteditable="true">Overhead Shoulder Press</td>
-        <td contenteditable="true">95 lb · 3×6-7</td>
+        <td contenteditable="true">95 lb · 3×6–7</td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
       </tr>
 
       <tr>
         <td class="left" contenteditable="true">Incline Bench</td>
-        <td contenteditable="true">70 lb · 3×6-8</td>
+        <td contenteditable="true">70 lb · 3×6–8</td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
       </tr>
 
       <tr>
         <td class="left" contenteditable="true">Pull-Up</td>
-        <td contenteditable="true">BW · 3×8-12</td>
+        <td contenteditable="true">BW · 3×8–12</td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
       </tr>
 
       <tr>
         <td class="left" contenteditable="true">EZ Bicep Curl</td>
-        <td contenteditable="true">80 lb · 3×6-9</td>
+        <td contenteditable="true">80 lb · 3×6–9</td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
       </tr>
 
       <tr>
         <td class="left" contenteditable="true">Unilateral Bicep Curl</td>
-        <td contenteditable="true">45 lb · 3×6-8</td>
+        <td contenteditable="true">45 lb · 3×6–8</td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
       </tr>
 
       <tr>
         <td class="left" contenteditable="true">Hex Bar Deadlift</td>
-        <td contenteditable="true">210 lb · 3×3-4</td>
+        <td contenteditable="true">210 lb · 3×3–4</td>
         <td contenteditable="true"></td>
         <td contenteditable="true"></td>
       </tr>
@@ -189,7 +154,5 @@
       </tr>
     </tbody>
   </table>
-</div>
-
 </body>
 </html>
