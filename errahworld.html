@@ -1,148 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Strength Log – 1RM Tracking</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-
-<style>
-/* 🔒 ABSOLUTE READ-ONLY DEFAULT */
-* {
-  pointer-events: none;
-  user-select: none;
-  caret-color: transparent;
-}
-
-/* ENABLE BUTTONS ONLY */
-button {
-  pointer-events: auto;
-}
-
-/* HIDE PAGE UNTIL DATA LOADS */
-body[data-loading="true"] {
-  visibility: hidden;
-}
-
-:root {
-  --bg-main:#0c0e12;
-  --bg-panel:#14161c;
-  --bg-header:#1b1e26;
-  --border:#2a2d36;
-  --text-main:#d9dbe1;
-  --text-muted:#9da1ac;
-  --accent:#bfc6d6;
-}
-
-body {
-  font-family:Segoe UI,Arial,sans-serif;
-  background:radial-gradient(circle at top,#12141b 0%,var(--bg-main) 60%);
-  color:var(--text-main);
-  padding:24px;
-}
-
-h1 { color:var(--accent); font-weight:500; }
-
-.bw {
-  max-width:1020px;
-  color:var(--accent);
-  opacity:.85;
-}
-
-.top-bar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  max-width:1020px;
-  margin-top:12px;
-}
-
-button {
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:6px 14px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-button:hover { background:rgba(255,255,255,.05); }
-
-.last-updated {
-  font-size:.75rem;
-  color:var(--text-muted);
-}
-
-table {
-  margin-top:26px;
-  width:100%;
-  max-width:1020px;
-  border-collapse:collapse;
-  background:var(--bg-panel);
-  border-radius:8px;
-  overflow:hidden;
-  box-shadow:0 0 0 1px var(--border);
-}
-
-th, td {
-  border:1px solid var(--border);
-  padding:11px;
-  text-align:center;
-}
-
-th {
-  background:var(--bg-header);
-  color:var(--accent);
-  font-size:.78rem;
-  text-transform:uppercase;
-}
-
-td.left { text-align:left; padding-left:14px; }
-
-/* ✏️ ADMIN MODE ONLY */
-.admin * {
-  pointer-events: auto !important;
-  user-select: text !important;
-  caret-color: auto !important;
-}
-
-.admin td,
-.admin #title,
-.admin #desc {
-  background: rgba(255,255,255,0.05);
-}
-</style>
-</head>
-
-<body data-loading="true">
-
-<h1 id="title"></h1>
-
-<p class="bw" id="desc"></p>
-
-<div class="top-bar">
-  <div>
-    <button id="loginBtn">Admin Login</button>
-    <button id="logoutBtn" style="display:none;">Logout</button>
-  </div>
-  <div id="lastUpdated" class="last-updated"></div>
-</div>
-
-<table>
-<thead>
-<tr>
-  <th class="left">Lift</th>
-  <th>Current</th>
-  <th>1RM</th>
-  <th>Strength Level</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-</table>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
@@ -164,18 +23,32 @@ const lastUpdated = document.getElementById("lastUpdated");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-/* LOAD DATA — NO FLASH */
+let isAdmin = false;
+let saveTimer = null;
+
+/* 🔁 LOAD DATA (READERS ONLY) */
 onValue(dataRef, snap => {
   if (!snap.exists()) return;
+  if (isAdmin) return; // ⛔ DO NOT OVERRIDE ADMIN INPUT
+
   const d = snap.val();
   title.textContent = d.title;
   desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdated.textContent = "Last updated: " + d.date;
+
   body.removeAttribute("data-loading");
 });
 
-/* SAVE (ADMIN ONLY) */
+/* ⏳ DEBOUNCED SAVE */
+function scheduleSave() {
+  if (!isAdmin) return;
+
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveAll, 400);
+}
+
+/* 💾 FAST UPDATE */
 function saveAll() {
   if (!auth.currentUser) return;
 
@@ -187,46 +60,45 @@ function saveAll() {
     `${String(n.getHours()).padStart(2,"0")}:` +
     `${String(n.getMinutes()).padStart(2,"0")}`;
 
-  set(dataRef,{
-    title:title.textContent,
-    desc:desc.innerHTML,
-    table:tbody.innerHTML,
-    date:f
+  update(dataRef, {
+    title: title.textContent,
+    desc: desc.innerHTML,
+    table: tbody.innerHTML,
+    date: f
   });
 }
 
-/* AUTH */
+/* 🔐 AUTH */
 loginBtn.onclick = () => {
   const email = prompt("Admin email:");
   const pass = prompt("Password:");
   if (!email || !pass) return;
-  signInWithEmailAndPassword(auth,email,pass).catch(e=>alert(e.message));
+  signInWithEmailAndPassword(auth, email, pass).catch(e => alert(e.message));
 };
 
 logoutBtn.onclick = () => signOut(auth);
 
-onAuthStateChanged(auth,user=>{
-  if(user){
+onAuthStateChanged(auth, user => {
+  if (user) {
+    isAdmin = true;
     body.classList.add("admin");
-    loginBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
 
-    [title,desc,...document.querySelectorAll("td")].forEach(el=>{
-      el.contentEditable="true";
-      el.oninput=saveAll;
+    [title, desc, ...document.querySelectorAll("td")].forEach(el => {
+      el.contentEditable = "true";
+      el.oninput = scheduleSave;
     });
   } else {
+    isAdmin = false;
     body.classList.remove("admin");
-    loginBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
 
-    [title,desc,...document.querySelectorAll("td")].forEach(el=>{
+    [title, desc, ...document.querySelectorAll("td")].forEach(el => {
       el.removeAttribute("contenteditable");
-      el.oninput=null;
+      el.oninput = null;
     });
   }
 });
 </script>
-
-</body>
-</html>
