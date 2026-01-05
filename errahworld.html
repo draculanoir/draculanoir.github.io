@@ -16,7 +16,6 @@
   --accent:#bfc6d6;
 }
 
-/* 🚫 HIDE PAGE UNTIL FIREBASE LOADS */
 body {
   visibility:hidden;
   font-family:"Segoe UI",Arial,sans-serif;
@@ -25,7 +24,6 @@ body {
   padding:24px;
 }
 
-/* 🔒 LOCK CONTENT */
 .locked-content,
 .locked-content * {
   pointer-events:none !important;
@@ -33,11 +31,7 @@ body {
   caret-color:transparent !important;
 }
 
-/* 🚫 REMOVE FOCUS OUTLINES */
-*:focus {
-  outline:none !important;
-  box-shadow:none !important;
-}
+*:focus { outline:none !important; }
 
 .top-bar {
   display:flex;
@@ -81,6 +75,7 @@ td.left { text-align:left; }
 .row-updated {
   font-size:.7rem;
   color:var(--muted);
+  user-select:none;
 }
 
 .last-updated {
@@ -118,7 +113,6 @@ td.left { text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
-<!-- 🔥 Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -150,30 +144,30 @@ const password = document.getElementById("password");
 let isAdmin = false;
 let firstLoad = true;
 
-/* 🚫 BLOCK KEYBOARD EXCEPT LOGIN */
-document.addEventListener("keydown", e => {
-  if (!isAdmin && !e.target.closest("#authBox")) e.preventDefault();
-});
-
-/* 🔒 LOCK */
+/* 🔒 LOCK / UNLOCK */
 function lockAll() {
   isAdmin = false;
   table.classList.add("locked-content");
   title.contentEditable = "false";
   desc.contentEditable = "false";
-  document.querySelectorAll("td").forEach(td => {
-    td.contentEditable = "false";
-    td.blur();
-  });
+  setCellEdit(false);
 }
 
-/* ✏️ ENABLE EDIT */
 function enableEdit() {
   isAdmin = true;
   table.classList.remove("locked-content");
   title.contentEditable = "true";
   desc.contentEditable = "true";
-  document.querySelectorAll("td").forEach(td => td.contentEditable = "true");
+  setCellEdit(true);
+}
+
+/* ✅ ONLY FIRST 4 COLUMNS EDITABLE */
+function setCellEdit(on) {
+  tbody.querySelectorAll("tr").forEach(row => {
+    [...row.children].forEach((td, i) => {
+      td.contentEditable = on && i < 4 ? "true" : "false";
+    });
+  });
 }
 
 /* 🔐 AUTH */
@@ -195,59 +189,71 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* 📥 LOAD DATA (NO FLASH) */
+/* 📥 LOAD DATA */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
   title.innerText = d.title;
   desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdated.innerText = "Last updated: " + d.updated;
+
+  // 🔧 Normalize old rows
+  tbody.querySelectorAll("tr").forEach(row => {
+    const last = row.children[row.children.length - 1];
+    last.classList.add("row-updated");
+  });
+
+  setCellEdit(isAdmin);
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE UPDATES (NO CURSOR JUMP) */
+/* 🔁 LIVE UPDATES (VIEWERS ONLY) */
 db.ref("log").on("value", snap => {
   if (firstLoad) { firstLoad = false; return; }
   if (isAdmin) return;
 
   const d = snap.val();
-  title.innerText = d.title;
-  desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
 /* ⏱ TIMESTAMP */
-function nowStamp() {
-  const n = new Date();
+function stamp() {
+  const d = new Date();
   return (
-    String(n.getDate()).padStart(2,"0") + "/" +
-    String(n.getMonth()+1).padStart(2,"0") + "/" +
-    n.getFullYear() + " · " +
-    String(n.getHours()).padStart(2,"0") + ":" +
-    String(n.getMinutes()).padStart(2,"0")
+    String(d.getDate()).padStart(2,"0") + "/" +
+    String(d.getMonth()+1).padStart(2,"0") + "/" +
+    d.getFullYear() + " · " +
+    String(d.getHours()).padStart(2,"0") + ":" +
+    String(d.getMinutes()).padStart(2,"0")
   );
 }
 
-/* 💾 SAVE — PER ROW */
+/* 💾 SAVE — GUARANTEED PER-ROW UPDATE */
+let saveTimer;
 tbody.addEventListener("input", e => {
   if (!isAdmin) return;
 
-  const row = e.target.closest("tr");
-  if (!row) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const row = e.target.closest("tr");
+    if (!row) return;
 
-  const stamp = nowStamp();
-  row.dataset.updated = stamp;
+    const t = stamp();
 
-  const cell = row.querySelector(".row-updated");
-  if (cell) cell.innerText = stamp;
+    // ✅ ALWAYS update LAST CELL
+    const cells = row.children;
+    const lastCell = cells[cells.length - 1];
+    lastCell.innerText = t;
+    lastCell.classList.add("row-updated");
 
-  db.ref("log").set({
-    title: title.innerText,
-    desc: desc.innerHTML,
-    table: tbody.innerHTML,
-    updated: stamp
-  });
+    db.ref("log").set({
+      title: title.innerText,
+      desc: desc.innerHTML,
+      table: tbody.innerHTML,
+      updated: t
+    });
+  }, 200);
 });
 
 lockAll();
