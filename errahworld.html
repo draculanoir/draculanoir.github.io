@@ -55,7 +55,6 @@ table {
   max-width:1020px;
   border-collapse:collapse;
   background:var(--bg-panel);
-  box-shadow:0 0 0 1px var(--border);
 }
 
 th, td {
@@ -136,10 +135,6 @@ const tbody = document.getElementById("tbody");
 const title = document.getElementById("title");
 const desc = document.getElementById("desc");
 const lastUpdated = document.getElementById("lastUpdated");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const email = document.getElementById("email");
-const password = document.getElementById("password");
 
 let isAdmin = false;
 let firstLoad = true;
@@ -178,36 +173,22 @@ loginBtn.onclick = () =>
 logoutBtn.onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(user => {
-  if (user) {
-    enableEdit();
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-  } else {
-    lockAll();
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-  }
+  if (user) enableEdit();
+  else lockAll();
 });
 
-/* 📥 LOAD DATA */
+/* 📥 LOAD */
 db.ref("log").once("value").then(snap => {
   const d = snap.val();
   title.innerText = d.title;
   desc.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdated.innerText = "Last updated: " + d.updated;
-
-  // 🔧 Normalize old rows
-  tbody.querySelectorAll("tr").forEach(row => {
-    const last = row.children[row.children.length - 1];
-    last.classList.add("row-updated");
-  });
-
   setCellEdit(isAdmin);
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE UPDATES (VIEWERS ONLY) */
+/* 🔁 LIVE (VIEWERS ONLY) */
 db.ref("log").on("value", snap => {
   if (firstLoad) { firstLoad = false; return; }
   if (isAdmin) return;
@@ -217,19 +198,13 @@ db.ref("log").on("value", snap => {
   lastUpdated.innerText = "Last updated: " + d.updated;
 });
 
-/* ⏱ TIMESTAMP */
+/* ⏱ TIME */
 function stamp() {
   const d = new Date();
-  return (
-    String(d.getDate()).padStart(2,"0") + "/" +
-    String(d.getMonth()+1).padStart(2,"0") + "/" +
-    d.getFullYear() + " · " +
-    String(d.getHours()).padStart(2,"0") + ":" +
-    String(d.getMinutes()).padStart(2,"0")
-  );
+  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 }
 
-/* 💾 SAVE — GUARANTEED PER-ROW UPDATE */
+/* 💾 SAVE (AFTER INPUT STABILIZES) */
 let saveTimer;
 tbody.addEventListener("input", e => {
   if (!isAdmin) return;
@@ -240,12 +215,7 @@ tbody.addEventListener("input", e => {
     if (!row) return;
 
     const t = stamp();
-
-    // ✅ ALWAYS update LAST CELL
-    const cells = row.children;
-    const lastCell = cells[cells.length - 1];
-    lastCell.innerText = t;
-    lastCell.classList.add("row-updated");
+    row.querySelector(".row-updated").innerText = t;
 
     db.ref("log").set({
       title: title.innerText,
@@ -253,7 +223,7 @@ tbody.addEventListener("input", e => {
       table: tbody.innerHTML,
       updated: t
     });
-  }, 200);
+  }, 250);
 });
 
 lockAll();
