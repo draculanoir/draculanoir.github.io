@@ -7,147 +7,125 @@
 
   <style>
     :root {
-      --bg-main: #0b0e14;
-      --bg-panel: #161a22;
-      --bg-header: #1f2430;
-      --border: #2b2f3a;
-      --text-main: #eaeaea;
-      --text-muted: #b5b5b5;
-      --accent: #00e5ff;
-      --accent-soft: rgba(0, 229, 255, 0.15);
+      --bg-main: #0c0e12;
+      --bg-panel: #14161c;
+      --bg-header: #1b1e26;
+      --border: #2a2d36;
+      --text-main: #d9dbe1;
+      --text-muted: #9da1ac;
+      --accent: #bfc6d6;
+      --accent-soft: rgba(191, 198, 214, 0.15);
     }
 
-    /* ===== Global ===== */
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: radial-gradient(circle at top, #101827, var(--bg-main));
+      font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, #12141b 0%, var(--bg-main) 60%),
+        linear-gradient(180deg, #0b0d12, #0c0e12);
       color: var(--text-main);
-      padding: 20px;
-      animation: fadeIn 1s ease-out forwards;
+      padding: 24px;
+      letter-spacing: 0.2px;
+      animation: fadeIn 1.4s ease-out forwards;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     h1 {
-      margin-bottom: 5px;
-      letter-spacing: 1px;
-      text-shadow: 0 0 10px var(--accent-soft);
+      margin-bottom: 6px;
+      font-weight: 500;
+      letter-spacing: 0.8px;
+      color: var(--accent);
     }
 
-    /* ===== Notes ===== */
+    /* ===== Text Blocks ===== */
     .note {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--text-muted);
-      max-width: 900px;
-      line-height: 1.4;
-      animation: glowPulse 4s infinite alternate;
+      max-width: 920px;
+      line-height: 1.55;
     }
 
     .note strong {
-      color: var(--accent);
-    }
-
-    @keyframes glowPulse {
-      from { text-shadow: 0 0 5px transparent; }
-      to { text-shadow: 0 0 8px var(--accent-soft); }
+      color: var(--text-main);
+      font-weight: 500;
     }
 
     .bw {
-      margin-top: 10px;
-      font-weight: bold;
+      margin-top: 12px;
+      font-weight: 500;
       color: var(--accent);
+      opacity: 0.85;
     }
 
     /* ===== Table ===== */
     table {
       border-collapse: collapse;
-      margin-top: 25px;
+      margin-top: 28px;
       width: 100%;
-      max-width: 1000px;
+      max-width: 1020px;
       background: var(--bg-panel);
-      border-radius: 10px;
+      border-radius: 8px;
       overflow: hidden;
       box-shadow:
         0 0 0 1px var(--border),
-        0 0 25px rgba(0, 229, 255, 0.05);
-      animation: tableIn 1.2s ease-out;
+        0 20px 40px rgba(0, 0, 0, 0.35);
+      animation: tableIn 1.6s ease-out;
     }
 
     @keyframes tableIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     th, td {
       border: 1px solid var(--border);
-      padding: 10px;
+      padding: 11px 10px;
       text-align: center;
-      position: relative;
+      font-size: 0.9rem;
     }
 
     th {
-      background: linear-gradient(180deg, var(--bg-header), #151a26);
-      font-weight: 600;
+      background: var(--bg-header);
+      font-weight: 500;
       color: var(--accent);
+      letter-spacing: 0.06em;
+      font-size: 0.78rem;
       text-transform: uppercase;
-      font-size: 0.85rem;
-      letter-spacing: 0.08em;
     }
 
-    td.left {
+    .left {
       text-align: left;
+      padding-left: 14px;
     }
 
-    /* ===== Row Hover Scan Effect ===== */
+    /* ===== Subtle Interaction ===== */
     tbody tr {
-      transition: background 0.25s ease, transform 0.25s ease;
+      transition: background 0.25s ease;
     }
 
     tbody tr:hover {
-      background: linear-gradient(
-        90deg,
-        transparent,
-        var(--accent-soft),
-        transparent
-      );
-      transform: scale(1.01);
+      background: rgba(255, 255, 255, 0.02);
     }
 
-    tbody tr::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      background: linear-gradient(
-        120deg,
-        transparent,
-        rgba(0, 229, 255, 0.08),
-        transparent
-      );
-      transition: opacity 0.3s;
-      pointer-events: none;
+    td {
+      transition: color 0.2s ease;
     }
 
-    tbody tr:hover::after {
-      opacity: 1;
-    }
-
-    /* ===== Cell Hover Glow ===== */
     td:hover {
-      box-shadow: inset 0 0 12px rgba(0, 229, 255, 0.15);
+      color: #ffffff;
     }
 
-    /* ===== Responsive ===== */
+    /* ===== Mobile ===== */
     @media (max-width: 600px) {
       body {
-        padding: 12px;
+        padding: 14px;
       }
 
       table {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
       }
     }
   </style>
@@ -173,9 +151,9 @@
     <thead>
       <tr>
         <th class="left">Lift</th>
-        <th>Current</th>
-        <th>1RM</th>
-        <th>Level</th>
+        <th>Current (Will Update)</th>
+        <th>1RM (2026-02-05)</th>
+        <th>Strength Level</th>
         <th>Notes</th>
       </tr>
     </thead>
