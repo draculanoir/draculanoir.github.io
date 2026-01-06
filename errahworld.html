@@ -16,6 +16,7 @@
   --accent:#bfc6d6;
 }
 
+/* 🚫 HIDE PAGE UNTIL FIREBASE LOADS */
 body {
   visibility:hidden;
   font-family:"Segoe UI",Arial,sans-serif;
@@ -24,6 +25,7 @@ body {
   padding:24px;
 }
 
+/* 🔒 LOCK CONTENT */
 .locked-content,
 .locked-content * {
   pointer-events:none !important;
@@ -31,7 +33,11 @@ body {
   caret-color:transparent !important;
 }
 
-*:focus { outline:none !important; }
+/* 🚫 Remove focus outline */
+*:focus {
+  outline:none !important;
+  box-shadow:none !important;
+}
 
 .top-bar {
   display:flex;
@@ -70,7 +76,9 @@ th {
   font-size:.75rem;
 }
 
-td.left { text-align:left; }
+td.left {
+  text-align:left;
+}
 
 .last-updated,
 .row-updated {
@@ -108,6 +116,7 @@ td.left { text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -116,4 +125,133 @@ td.left { text-align:left; }
 firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
-  databaseURL: "https://strenght-a9f37-default-
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+});
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+const table = document.getElementById("table");
+const tbody = document.getElementById("tbody");
+const title = document.getElementById("title");
+const desc = document.getElementById("desc");
+const lastUpdated = document.getElementById("lastUpdated");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+
+let isAdmin = false;
+let firstLoad = true;
+
+/* 🚫 Block keyboard except login */
+document.addEventListener("keydown", e => {
+  if (!isAdmin && !e.target.closest("#authBox")) e.preventDefault();
+});
+
+/* 🔒 LOCK */
+function lockAll() {
+  isAdmin = false;
+  table.classList.add("locked-content");
+  title.contentEditable = "false";
+  desc.contentEditable = "false";
+  document.querySelectorAll("td").forEach(td => td.contentEditable = "false");
+}
+
+/* ✏️ ENABLE EDIT */
+function enableEdit() {
+  isAdmin = true;
+  table.classList.remove("locked-content");
+  title.contentEditable = "true";
+  desc.contentEditable = "true";
+  document.querySelectorAll("td").forEach(td => td.contentEditable = "true");
+}
+
+/* 🔐 AUTH */
+loginBtn.onclick = () =>
+  auth.signInWithEmailAndPassword(email.value, password.value)
+    .catch(e => alert(e.message));
+
+logoutBtn.onclick = () => auth.signOut();
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    enableEdit();
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  } else {
+    lockAll();
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  }
+});
+
+/* 📥 LOAD DATA */
+db.ref("log").once("value").then(snap => {
+  const d = snap.val();
+  title.innerText = d.title || "";
+  desc.innerHTML = d.desc || "";
+  tbody.innerHTML = d.table || "";
+  lastUpdated.innerText = d.updated ? "Last updated: " + d.updated : "";
+  document.body.style.visibility = "visible";
+});
+
+/* 🔁 LIVE UPDATES (NO CURSOR JUMP) */
+db.ref("log").on("value", snap => {
+  if (firstLoad) {
+    firstLoad = false;
+    return;
+  }
+  if (isAdmin) return;
+
+  const d = snap.val();
+  title.innerText = d.title || "";
+  desc.innerHTML = d.desc || "";
+  tbody.innerHTML = d.table || "";
+  lastUpdated.innerText = "Last updated: " + d.updated;
+});
+
+/* 🕒 FORMAT TIME */
+function getTime() {
+  const n = new Date();
+  return (
+    String(n.getDate()).padStart(2,"0") + "/" +
+    String(n.getMonth()+1).padStart(2,"0") + "/" +
+    n.getFullYear() + " · " +
+    String(n.getHours()).padStart(2,"0") + ":" +
+    String(n.getMinutes()).padStart(2,"0")
+  );
+}
+
+/* 💾 SAVE + ROW TIMESTAMP */
+document.addEventListener("input", e => {
+  if (!isAdmin) return;
+
+  const row = e.target.closest("tr");
+  if (row) {
+    let cell = row.querySelector(".row-updated");
+    if (!cell) {
+      cell = document.createElement("td");
+      cell.className = "row-updated";
+      row.appendChild(cell);
+    }
+    cell.innerText = getTime();
+  }
+
+  db.ref("log").set({
+    title: title.innerText,
+    desc: desc.innerHTML,
+    table: tbody.innerHTML,
+    updated: getTime()
+  });
+});
+
+lockAll();
+</script>
+
+</body>
+</html>
