@@ -143,8 +143,13 @@ const logoutBtn = document.getElementById("logoutBtn");
 let isAdmin=false;
 let firstLoad=true;
 
-document.addEventListener("keydown",e=>{
-  if(!isAdmin && !e.target.closest("#authBox")){
+/* ✅ FIXED KEY BLOCKER */
+document.addEventListener("keydown", e=>{
+  if (
+    !isAdmin &&
+    !e.target.closest("#authBox") &&
+    e.target.isContentEditable
+  ) {
     e.preventDefault();
   }
 });
