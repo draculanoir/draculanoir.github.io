@@ -171,7 +171,7 @@ function enableEdit(){
 
 loginBtn.onclick=()=>{
   auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
-  .catch(e=>alert(e.message));
+    .catch(e=>alert(e.message));
 };
 
 logoutBtn.onclick=()=>auth.signOut();
@@ -207,20 +207,8 @@ db.ref("log").on("value",snap=>{
   lastUpdatedEl.innerText="Last updated: "+d.updated;
 });
 
-document.addEventListener("input",e=>{
+document.addEventListener("input",()=>{
   if(!isAdmin) return;
-  const td=e.target.closest("td");
-  if(td){
-    const row=td.parentElement;
-    const lastCell=row.querySelector("td:last-child");
-    const now=new Date();
-    lastCell.innerText=
-      String(now.getDate()).padStart(2,"0")+"/"+
-      String(now.getMonth()+1).padStart(2,"0")+"/"+
-      now.getFullYear()+" · "+
-      String(now.getHours()).padStart(2,"0")+":"+
-      String(now.getMinutes()).padStart(2,"0");
-  }
 
   const now=new Date();
   const formatted=
