@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-:root {
+:root{
   --bg-main:#0c0e12;
   --bg-panel:#14161c;
   --bg-header:#1b1e26;
@@ -16,8 +16,8 @@
   --accent:#bfc6d6;
 }
 
-/* 🚫 HIDE PAGE UNTIL FIREBASE LOADS */
-body {
+/* hide page until data loads */
+body{
   visibility:hidden;
   font-family:"Segoe UI",Arial,sans-serif;
   background:radial-gradient(circle at top,#12141b,var(--bg-main));
@@ -25,29 +25,30 @@ body {
   padding:24px;
 }
 
-/* 🔒 LOCK CONTENT */
+/* lock content (not login) */
 .locked-content,
-.locked-content * {
+.locked-content *{
   pointer-events:none !important;
   user-select:none !important;
   caret-color:transparent !important;
 }
 
-/* 🚫 Remove focus outline */
-*:focus {
+/* remove focus outline */
+*:focus{
   outline:none !important;
   box-shadow:none !important;
 }
 
-.top-bar {
+.top-bar{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  max-width:1100px;
+  max-width:1020px;
   margin-bottom:12px;
 }
 
-#authBox input, #authBox button {
+#authBox input,
+#authBox button{
   background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
@@ -56,33 +57,30 @@ body {
   margin-right:4px;
 }
 
-table {
+table{
   width:100%;
-  max-width:1100px;
+  max-width:1020px;
   border-collapse:collapse;
   background:var(--bg-panel);
   box-shadow:0 0 0 1px var(--border);
 }
 
-th,td {
+th,td{
   border:1px solid var(--border);
   padding:10px;
   text-align:center;
 }
 
-th {
+th{
   background:var(--bg-header);
   color:var(--accent);
   font-size:.75rem;
 }
 
-td.left {
-  text-align:left;
-}
+td.left{ text-align:left; }
 
-.last-updated,
-.row-updated {
-  font-size:.7rem;
+.last-updated{
+  font-size:.75rem;
   color:var(--muted);
 }
 </style>
@@ -100,20 +98,19 @@ td.left {
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
-  <div class="last-updated" id="lastUpdated"></div>
+  <div id="lastUpdated" class="last-updated"></div>
 </div>
 
 <table id="table" class="locked-content">
-<thead>
-<tr>
-  <th class="left">Lift</th>
-  <th>Current</th>
-  <th>1RM</th>
-  <th>Strength Level</th>
-  <th>Last updated</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
+  <thead>
+    <tr>
+      <th class="left">Lift</th>
+      <th>Current</th>
+      <th>1RM</th>
+      <th>Strength Level</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
 </table>
 
 <!-- Firebase -->
@@ -122,6 +119,7 @@ td.left {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+/* 🔥 FIREBASE INIT */
 firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
@@ -133,125 +131,119 @@ firebase.initializeApp({
 });
 
 const auth = firebase.auth();
-const db = firebase.database();
+const db   = firebase.database();
 
-const table = document.getElementById("table");
-const tbody = document.getElementById("tbody");
-const title = document.getElementById("title");
-const desc = document.getElementById("desc");
-const lastUpdated = document.getElementById("lastUpdated");
-const loginBtn = document.getElementById("loginBtn");
+/* DOM */
+const titleEl = document.getElementById("title");
+const descEl  = document.getElementById("desc");
+const tbody   = document.getElementById("tbody");
+const table   = document.getElementById("table");
+const lastUpdatedEl = document.getElementById("lastUpdated");
+
+const emailEl = document.getElementById("email");
+const passEl  = document.getElementById("password");
+const loginBtn  = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-const email = document.getElementById("email");
-const password = document.getElementById("password");
 
-let isAdmin = false;
+let isAdmin   = false;
 let firstLoad = true;
 
-/* 🚫 Block keyboard except login */
-document.addEventListener("keydown", e => {
-  if (!isAdmin && !e.target.closest("#authBox")) e.preventDefault();
-});
-
-/* 🔒 LOCK */
-function lockAll() {
-  isAdmin = false;
-  table.classList.add("locked-content");
-  title.contentEditable = "false";
-  desc.contentEditable = "false";
-  document.querySelectorAll("td").forEach(td => td.contentEditable = "false");
-}
-
-/* ✏️ ENABLE EDIT */
-function enableEdit() {
-  isAdmin = true;
-  table.classList.remove("locked-content");
-  title.contentEditable = "true";
-  desc.contentEditable = "true";
-  document.querySelectorAll("td").forEach(td => td.contentEditable = "true");
-}
-
-/* 🔐 AUTH */
-loginBtn.onclick = () =>
-  auth.signInWithEmailAndPassword(email.value, password.value)
-    .catch(e => alert(e.message));
-
-logoutBtn.onclick = () => auth.signOut();
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    enableEdit();
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-  } else {
-    lockAll();
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
+/* 🚫 block keyboard outside login */
+document.addEventListener("keydown", e=>{
+  if(!isAdmin && !e.target.closest("#authBox")){
+    e.preventDefault();
   }
 });
 
-/* 📥 LOAD DATA */
-db.ref("log").once("value").then(snap => {
-  const d = snap.val();
-  title.innerText = d.title || "";
-  desc.innerHTML = d.desc || "";
-  tbody.innerHTML = d.table || "";
-  lastUpdated.innerText = d.updated ? "Last updated: " + d.updated : "";
-  document.body.style.visibility = "visible";
+/* 🔒 lock */
+function lockAll(){
+  isAdmin=false;
+  table.classList.add("locked-content");
+  titleEl.contentEditable="false";
+  descEl.contentEditable="false";
+  document.querySelectorAll("td").forEach(td=>{
+    td.contentEditable="false";
+    td.blur();
+  });
+}
+
+/* ✏️ enable editing */
+function enableEdit(){
+  isAdmin=true;
+  table.classList.remove("locked-content");
+  titleEl.contentEditable="true";
+  descEl.contentEditable="true";
+  document.querySelectorAll("td").forEach(td=>{
+    td.contentEditable="true";
+  });
+}
+
+/* 🔐 auth */
+loginBtn.onclick=()=>{
+  auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
+  .catch(e=>alert(e.message));
+};
+
+logoutBtn.onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    enableEdit();
+    loginBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
+  }else{
+    lockAll();
+    loginBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
+  }
 });
 
-/* 🔁 LIVE UPDATES (NO CURSOR JUMP) */
-db.ref("log").on("value", snap => {
-  if (firstLoad) {
-    firstLoad = false;
+/* 📥 initial load (no flash) */
+db.ref("log").once("value").then(snap=>{
+  const d=snap.val();
+  titleEl.innerText=d.title;
+  descEl.innerHTML=d.desc;
+  tbody.innerHTML=d.table;
+  lastUpdatedEl.innerText="Last updated: "+d.updated;
+  document.body.style.visibility="visible";
+});
+
+/* 🔁 live updates (safe) */
+db.ref("log").on("value",snap=>{
+  if(firstLoad){
+    firstLoad=false;
     return;
   }
-  if (isAdmin) return;
+  if(isAdmin) return;
 
-  const d = snap.val();
-  title.innerText = d.title || "";
-  desc.innerHTML = d.desc || "";
-  tbody.innerHTML = d.table || "";
-  lastUpdated.innerText = "Last updated: " + d.updated;
+  const d=snap.val();
+  titleEl.innerText=d.title;
+  descEl.innerHTML=d.desc;
+  tbody.innerHTML=d.table;
+  lastUpdatedEl.innerText="Last updated: "+d.updated;
 });
 
-/* 🕒 FORMAT TIME */
-function getTime() {
-  const n = new Date();
-  return (
-    String(n.getDate()).padStart(2,"0") + "/" +
-    String(n.getMonth()+1).padStart(2,"0") + "/" +
-    n.getFullYear() + " · " +
-    String(n.getHours()).padStart(2,"0") + ":" +
-    String(n.getMinutes()).padStart(2,"0")
-  );
-}
+/* 💾 save edits */
+document.addEventListener("input",()=>{
+  if(!isAdmin) return;
 
-/* 💾 SAVE + ROW TIMESTAMP */
-document.addEventListener("input", e => {
-  if (!isAdmin) return;
-
-  const row = e.target.closest("tr");
-  if (row) {
-    let cell = row.querySelector(".row-updated");
-    if (!cell) {
-      cell = document.createElement("td");
-      cell.className = "row-updated";
-      row.appendChild(cell);
-    }
-    cell.innerText = getTime();
-  }
+  const now=new Date();
+  const formatted =
+    String(now.getDate()).padStart(2,"0")+"/"+
+    String(now.getMonth()+1).padStart(2,"0")+"/"+
+    now.getFullYear()+" · "+
+    String(now.getHours()).padStart(2,"0")+":"+
+    String(now.getMinutes()).padStart(2,"0");
 
   db.ref("log").set({
-    title: title.innerText,
-    desc: desc.innerHTML,
-    table: tbody.innerHTML,
-    updated: getTime()
+    title:titleEl.innerText,
+    desc:descEl.innerHTML,
+    table:tbody.innerHTML,
+    updated:formatted
   });
 });
 
 lockAll();
 </script>
-
 </body>
 </html>
