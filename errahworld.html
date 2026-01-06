@@ -16,7 +16,6 @@
   --accent:#bfc6d6;
 }
 
-/* Hide page until Firebase data loads */
 body{
   visibility:hidden;
   font-family:"Segoe UI",Arial,sans-serif;
@@ -25,7 +24,6 @@ body{
   padding:24px;
 }
 
-/* Lock all non-admin interaction */
 .locked-content,
 .locked-content *{
   pointer-events:none !important;
@@ -33,7 +31,6 @@ body{
   caret-color:transparent !important;
 }
 
-/* Remove focus outlines globally */
 *:focus{
   outline:none !important;
   box-shadow:none !important;
@@ -77,13 +74,21 @@ th{
   font-size:.75rem;
 }
 
-td.left{
-  text-align:left;
-}
+td.left{ text-align:left; }
 
 .last-updated{
   font-size:.75rem;
   color:var(--muted);
+}
+
+.exercise-updates{
+  max-width:1020px;
+  margin-top:12px;
+  font-size:.75rem;
+  color:var(--muted);
+}
+.exercise-updates div{
+  margin-bottom:4px;
 }
 </style>
 </head>
@@ -112,8 +117,14 @@ td.left{
       <th>Strength Level</th>
     </tr>
   </thead>
-  <tbody id="tbody"></tbody>
+  <tbody id="tbody">
+    <!-- IMPORTANT: each row MUST have data-id -->
+    <!-- example stored in Firebase -->
+  </tbody>
 </table>
+
+<!-- Viewer-only per exercise updates -->
+<div id="exerciseUpdates" class="exercise-updates"></div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -121,7 +132,6 @@ td.left{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* 🔥 Firebase Init */
 firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
@@ -135,121 +145,120 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db   = firebase.database();
 
-/* DOM */
-const titleEl       = document.getElementById("title");
-const descEl        = document.getElementById("desc");
-const tbody         = document.getElementById("tbody");
-const table         = document.getElementById("table");
-const lastUpdatedEl = document.getElementById("lastUpdated");
-const emailEl       = document.getElementById("email");
-const passEl        = document.getElementById("password");
-const loginBtn      = document.getElementById("loginBtn");
-const logoutBtn     = document.getElementById("logoutBtn");
+const titleEl   = document.getElementById("title");
+const descEl    = document.getElementById("desc");
+const tbody     = document.getElementById("tbody");
+const table     = document.getElementById("table");
+const lastEl    = document.getElementById("lastUpdated");
+const updatesEl = document.getElementById("exerciseUpdates");
 
-let isAdmin   = false;
-let firstLoad = true;
+const emailEl   = document.getElementById("email");
+const passEl    = document.getElementById("password");
+const loginBtn  = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-/* 🚫 Block keyboard when not admin (except login) */
-document.addEventListener("keydown", e=>{
-  if(!isAdmin && !e.target.closest("#authBox")){
-    e.preventDefault();
-  }
-});
+let isAdmin=false, firstLoad=true;
 
-/* 🔒 Lock everything */
+/* lock */
 function lockAll(){
-  isAdmin = false;
+  isAdmin=false;
   table.classList.add("locked-content");
-  titleEl.contentEditable = "false";
-  descEl.contentEditable  = "false";
+  titleEl.contentEditable=false;
+  descEl.contentEditable=false;
   document.querySelectorAll("td").forEach(td=>{
-    td.contentEditable = "false";
+    td.contentEditable=false;
     td.blur();
   });
 }
 
-/* ✏️ Enable editing */
+/* edit */
 function enableEdit(){
-  isAdmin = true;
+  isAdmin=true;
   table.classList.remove("locked-content");
-  titleEl.contentEditable = "true";
-  descEl.contentEditable  = "true";
+  titleEl.contentEditable=true;
+  descEl.contentEditable=true;
   document.querySelectorAll("td").forEach(td=>{
-    td.contentEditable = "true";
+    td.contentEditable=true;
   });
 }
 
-/* 🔐 Auth */
-loginBtn.onclick = ()=>{
-  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
+/* auth */
+loginBtn.onclick=()=>{
+  auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
     .catch(e=>alert(e.message));
 };
+logoutBtn.onclick=()=>auth.signOut();
 
-logoutBtn.onclick = ()=>auth.signOut();
-
-auth.onAuthStateChanged(user=>{
-  if(user){
+auth.onAuthStateChanged(u=>{
+  if(u){
     enableEdit();
-    loginBtn.style.display  = "none";
-    logoutBtn.style.display = "inline-block";
+    loginBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
   }else{
     lockAll();
-    loginBtn.style.display  = "inline-block";
-    logoutBtn.style.display = "none";
+    loginBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
   }
 });
 
-/* 📥 Initial load (no flash) */
-db.ref("log").once("value").then(snap=>{
-  const d = snap.val();
-  if(!d) return;
+/* render per-exercise timestamps */
+function renderExerciseUpdates(rows, map){
+  updatesEl.innerHTML="";
+  rows.forEach(tr=>{
+    const id = tr.dataset.id;
+    if(!id || !map[id]) return;
+    const name = tr.querySelector("td")?.innerText || id;
+    const div=document.createElement("div");
+    div.textContent = `${name} — Last updated: ${map[id]}`;
+    updatesEl.appendChild(div);
+  });
+}
 
-  titleEl.innerText       = d.title;
-  descEl.innerHTML        = d.desc;
-  tbody.innerHTML         = d.table;
-  lastUpdatedEl.innerText = "Last updated: " + d.updated;
-
-  document.body.style.visibility = "visible";
+/* initial load */
+db.ref("log").once("value").then(s=>{
+  const d=s.val();
+  titleEl.innerText=d.title;
+  descEl.innerHTML=d.desc;
+  tbody.innerHTML=d.table;
+  lastEl.innerText="Last updated: "+d.updated;
+  renderExerciseUpdates([...tbody.children], d.rowUpdates || {});
+  document.body.style.visibility="visible";
 });
 
-/* 🔁 Live updates (viewers only) */
-db.ref("log").on("value", snap=>{
-  if(firstLoad){
-    firstLoad = false;
-    return;
-  }
+/* live updates (viewers) */
+db.ref("log").on("value",s=>{
+  if(firstLoad){ firstLoad=false; return; }
   if(isAdmin) return;
-
-  const d = snap.val();
-  if(!d) return;
-
-  titleEl.innerText       = d.title;
-  descEl.innerHTML        = d.desc;
-  tbody.innerHTML         = d.table;
-  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+  const d=s.val();
+  tbody.innerHTML=d.table;
+  lastEl.innerText="Last updated: "+d.updated;
+  renderExerciseUpdates([...tbody.children], d.rowUpdates || {});
 });
 
-/* 💾 Save edits */
-document.addEventListener("input", ()=>{
+/* save edits + per-row timestamp */
+document.addEventListener("input",e=>{
   if(!isAdmin) return;
+  const tr = e.target.closest("tr");
+  if(!tr || !tr.dataset.id) return;
 
-  const now = new Date();
-  const formatted =
-    String(now.getDate()).padStart(2,"0") + "/" +
-    String(now.getMonth()+1).padStart(2,"0") + "/" +
-    now.getFullYear() + " · " +
-    String(now.getHours()).padStart(2,"0") + ":" +
+  const now=new Date();
+  const t =
+    String(now.getDate()).padStart(2,"0")+"/"+
+    String(now.getMonth()+1).padStart(2,"0")+"/"+
+    now.getFullYear()+" · "+
+    String(now.getHours()).padStart(2,"0")+":"+
     String(now.getMinutes()).padStart(2,"0");
 
-  db.ref("log").set({
-    title:   titleEl.innerText,
-    desc:    descEl.innerHTML,
-    table:   tbody.innerHTML,
-    updated: formatted
+  db.ref("log/rowUpdates/"+tr.dataset.id).set(t);
+
+  db.ref("log").update({
+    title:titleEl.innerText,
+    desc:descEl.innerHTML,
+    table:tbody.innerHTML,
+    updated:t
   });
 });
 
-/* Default lock */
 lockAll();
 </script>
 
