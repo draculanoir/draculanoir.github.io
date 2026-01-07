@@ -32,14 +32,8 @@ body{
   caret-color:transparent !important;
 }
 
-.locked-content td,
-.locked-content th{
-  touch-action:none !important;
-}
-
 *:focus{
   outline:none !important;
-  box-shadow:none !important;
 }
 
 .top-bar{
@@ -57,7 +51,6 @@ body{
   color:var(--accent);
   padding:6px 10px;
   border-radius:6px;
-  margin-right:4px;
 }
 
 table{
@@ -76,52 +69,42 @@ th, td{
 
 th{
   background:var(--bg-header);
-  color:var(--accent);
   font-size:.75rem;
 }
 
-td.left{ text-align:left; }
-
-.last-updated{
-  font-size:.75rem;
-  color:var(--muted);
-}
-
-/* ============================= */
-/* 🏋️ BARBELL CALCULATOR STYLES */
-/* ============================= */
+/* 🏋️ BARBELL */
 .calculator{
   max-width:1020px;
-  margin-top:32px;
-  padding:16px;
+  margin:24px 0;
   background:var(--bg-panel);
+  padding:16px;
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:10px;
 }
 
-.calculator input,
-.calculator button,
-.calculator label{
+.calc-controls input{
   background:transparent;
   border:1px solid var(--border);
-  color:var(--accent);
-  padding:8px 12px;
+  color:var(--text);
+  padding:6px;
+  width:120px;
   border-radius:6px;
-  margin-right:6px;
+}
+
+.calc-controls button{
+  padding:6px 12px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--accent);
+  border-radius:6px;
+  cursor:pointer;
 }
 
 .barbell{
-  margin-top:20px;
   display:flex;
   align-items:center;
   justify-content:center;
-}
-
-.bar{
-  width:260px;
-  height:8px;
-  background:#777;
-  border-radius:4px;
+  margin-top:16px;
 }
 
 .side{
@@ -129,31 +112,39 @@ td.left{ text-align:left; }
   align-items:center;
 }
 
-/* Plates with centered text */
-.plate{
-  height:60px;
+.bar{
+  width:140px;
+  height:8px;
+  background:#777;
   border-radius:4px;
+  margin:0 10px;
+}
+
+.plate{
+  height:70px;
   margin:0 2px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:.7rem;
   font-weight:600;
-  color:#111;
+  color:#000;
+  background:#ccc;
 }
 
-.p45{ width:26px; background:#c0392b; }
-.p35{ width:24px; background:#d35400; }
-.p25{ width:22px; background:#f1c40f; }
-.p10{ width:18px; background:#3498db; color:#fff; }
-.p5 { width:14px; background:#2ecc71; }
-.p2_5{ width:10px; background:#95a5a6; }
+.p45{ width:42px }
+.p35{ width:38px }
+.p25{ width:34px }
+.p10{ width:28px }
+.p5{ width:24px }
+.p2_5{ width:20px }
 
-.note{
-  font-size:.75rem;
-  color:var(--muted);
-  margin-top:8px;
+/* 🔇 remove number arrows */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{
+  -webkit-appearance:none;
 }
+input[type=number]{ -moz-appearance:textfield }
 </style>
 </head>
 
@@ -169,41 +160,34 @@ td.left{ text-align:left; }
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
-  <div id="lastUpdated" class="last-updated"></div>
+  <div id="lastUpdated"></div>
 </div>
 
 <table id="table" class="locked-content">
-  <thead>
-    <tr>
-      <th class="left">Lift</th>
-      <th>Current</th>
-      <th>1RM</th>
-      <th>Strength Level</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
+<thead>
+<tr>
+<th>Lift</th><th>Current</th><th>1RM</th><th>Level</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
 </table>
 
-<!-- 🏋️ BARBELL CALCULATOR -->
+<!-- 🏋️ CALCULATOR -->
 <div class="calculator" id="calculator">
-  <h3>Barbell Target Weight (lbs)</h3>
-
-  <input id="targetWeight" type="number" placeholder="Enter weight">
-
-  <label>
-    <input type="checkbox" id="includeBar" checked>
-    Include 45lb bar
-  </label>
-
-  <button id="calcBtn">Calculate</button>
+  <div class="calc-controls">
+    <input id="targetWeight" type="number" placeholder="Target lbs">
+    <label>
+      <input type="checkbox" id="includeBar" checked> Include bar (45)
+    </label>
+    <button id="calcBtn">Calculate</button>
+    <span id="roundNote"></span>
+  </div>
 
   <div class="barbell">
     <div id="leftSide" class="side"></div>
     <div class="bar"></div>
     <div id="rightSide" class="side"></div>
   </div>
-
-  <div id="roundNote" class="note"></div>
 </div>
 
 <!-- Firebase -->
@@ -216,139 +200,84 @@ firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
   databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId: "strenght-a9f37",
-  storageBucket: "strenght-a9f37.firebasestorage.app",
-  messagingSenderId: "469926449178",
-  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+  projectId: "strenght-a9f37"
 });
 
-const auth = firebase.auth();
-const db = firebase.database();
+const auth=firebase.auth(), db=firebase.database();
+const titleEl=title=document.getElementById("title"),
+descEl=document.getElementById("desc"),
+tbody=document.getElementById("tbody"),
+table=document.getElementById("table");
 
-const titleEl = document.getElementById("title");
-const descEl = document.getElementById("desc");
-const tbody = document.getElementById("tbody");
-const table = document.getElementById("table");
-const lastUpdatedEl = document.getElementById("lastUpdated");
+const emailEl=document.getElementById("email"),
+passEl=document.getElementById("password"),
+loginBtn=document.getElementById("loginBtn"),
+logoutBtn=document.getElementById("logoutBtn");
 
-const emailEl = document.getElementById("email");
-const passEl = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+let isAdmin=false;
 
-let isAdmin = false;
-let firstLoad = true;
-
-/* 🚫 VIEWER INTERACTION BLOCK */
-function viewerShield(e){
+/* viewer shield */
+document.addEventListener("click",e=>{
   if(isAdmin) return;
-  if(e.target.closest("#authBox") || e.target.closest("#calculator")) return;
-  e.preventDefault();
-  e.stopPropagation();
-  if(document.activeElement) document.activeElement.blur();
-  return false;
-}
+  if(e.target.closest("#authBox")||e.target.closest("#calculator")) return;
+  e.preventDefault();e.stopPropagation();
+},true);
 
-["touchstart","touchend","click","focus"].forEach(evt=>{
-  document.addEventListener(evt, viewerShield, true);
-});
-
-/* 🔒 LOCK MODE */
 function lockAll(){
-  isAdmin = false;
+  isAdmin=false;
   table.classList.add("locked-content");
-  titleEl.contentEditable = "false";
-  descEl.contentEditable = "false";
 }
 
-/* ✏️ ADMIN MODE */
 function enableEdit(){
-  isAdmin = true;
+  isAdmin=true;
   table.classList.remove("locked-content");
-  titleEl.contentEditable = "true";
-  descEl.contentEditable = "true";
 }
 
-/* 🔐 AUTH */
-loginBtn.onclick = () =>
-  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
-    .catch(e => alert(e.message));
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
+.catch(e=>alert(e.message));
+logoutBtn.onclick=()=>auth.signOut();
 
-logoutBtn.onclick = () => auth.signOut();
-
-auth.onAuthStateChanged(user=>{
-  if(user){
-    enableEdit();
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-  }else{
-    lockAll();
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-  }
+auth.onAuthStateChanged(u=>{
+  if(u){enableEdit();loginBtn.style.display="none";logoutBtn.style.display="inline"}
+  else{lockAll();loginBtn.style.display="inline";logoutBtn.style.display="none"}
 });
 
-/* 📥 INITIAL LOAD */
-db.ref("log").once("value").then(snap=>{
-  const d = snap.val();
-  if(!d) return;
-  titleEl.innerText = d.title;
-  descEl.innerHTML = d.desc;
-  tbody.innerHTML = d.table;
-  lastUpdatedEl.innerText = "Last updated: " + d.updated;
-  document.body.style.visibility = "visible";
-});
+/* 🏋️ CALC */
+document.getElementById("calcBtn").onclick=()=>{
+  const plates=[45,35,25,10,5,2.5];
+  const left=document.getElementById("leftSide"),
+        right=document.getElementById("rightSide"),
+        note=document.getElementById("roundNote");
 
-/* 🏋️ BARBELL CALCULATOR LOGIC */
-document.getElementById("calcBtn").onclick = () => {
-  const plates = [45,35,25,10,5,2.5];
-  const left = document.getElementById("leftSide");
-  const right = document.getElementById("rightSide");
-  const note = document.getElementById("roundNote");
-  const includeBar = document.getElementById("includeBar").checked;
+  left.innerHTML=right.innerHTML=note.innerText="";
 
-  left.innerHTML = "";
-  right.innerHTML = "";
-  note.innerText = "";
-
-  let target = Number(document.getElementById("targetWeight").value);
+  let target=Number(document.getElementById("targetWeight").value);
   if(!target) return;
 
-  const barWeight = includeBar ? 45 : 0;
-  let remaining = (target - barWeight) / 2;
-
-  if(remaining < 0){
-    note.innerText = "Target weight is less than the bar weight.";
-    return;
-  }
-
-  let used = [];
+  if(document.getElementById("includeBar").checked) target-=45;
+  let remaining=target/2, used=[];
 
   plates.forEach(p=>{
-    while(remaining >= p){
-      remaining -= p;
+    while(remaining>=p){
+      remaining-=p;
       used.push(p);
     }
   });
 
-  if(remaining > 0){
-    note.innerText = "Rounded down to nearest achievable weight.";
-  }
+  if(remaining>0) note.innerText="Rounded down.";
 
-  // Right side (bar → outside)
   used.forEach(p=>{
-    const cls = p === 2.5 ? "p2_5" : "p" + p;
-    right.innerHTML += `<div class="plate ${cls}">${p}</div>`;
+    const cls=p===2.5?"p2_5":"p"+p;
+    right.innerHTML+=`<div class="plate ${cls}">${p}</div>`;
   });
 
-  // Left side (bar → outside, reversed)
   [...used].reverse().forEach(p=>{
-    const cls = p === 2.5 ? "p2_5" : "p" + p;
-    left.innerHTML += `<div class="plate ${cls}">${p}</div>`;
+    const cls=p===2.5?"p2_5":"p"+p;
+    left.innerHTML+=`<div class="plate ${cls}">${p}</div>`;
   });
 };
 
-lockAll();
+document.body.style.visibility="visible";
 </script>
 
 </body>
