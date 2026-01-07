@@ -155,8 +155,8 @@ td.left{ text-align:left; }
 
 <body>
 
-<h1 id="title" contenteditable="false"></h1>
-<p id="desc" contenteditable="false"></p>
+<h1 id="title"></h1>
+<p id="desc"></p>
 
 <div class="top-bar">
   <div id="authBox">
@@ -191,14 +191,13 @@ td.left{ text-align:left; }
     Include 45lb bar
   </label>
 
-  <button id="calcBtn">Calculate</button>
-
   <div class="barbell">
     <div id="leftSide" class="side"></div>
     <div class="bar"></div>
     <div id="rightSide" class="side"></div>
   </div>
 
+  <div id="totalWeight" class="note"></div>
   <div id="roundNote" class="note"></div>
 </div>
 
@@ -238,16 +237,12 @@ let isAdmin = false;
 function lockAll(){
   isAdmin = false;
   table.classList.add("locked-content");
-  titleEl.contentEditable = "false";
-  descEl.contentEditable = "false";
 }
 
 /* ✏️ ADMIN */
 function enableEdit(){
   isAdmin = true;
   table.classList.remove("locked-content");
-  titleEl.contentEditable = "true";
-  descEl.contentEditable = "true";
 }
 
 /* 🔐 AUTH */
@@ -269,44 +264,6 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-/* 💾 SAVE ON EDIT */
-function saveData(){
-  if(!isAdmin) return;
-
-  const now = new Date();
-
-  const date = now.toLocaleDateString("en-GB", {
-    day:"numeric",
-    month:"long",
-    year:"numeric"
-  });
-
-  const time = now.toLocaleTimeString("en-US", {
-    hour:"numeric",
-    minute:"2-digit",
-    hour12:true
-  });
-
-  const updated = `${date} · ${time}`;
-
-  db.ref("log").set({
-    title: titleEl.innerText,
-    desc: descEl.innerHTML,
-    table: tbody.innerHTML,
-    updated
-  });
-
-  lastUpdatedEl.innerText = "Last updated: " + updated;
-}
-
-["input","blur","keyup"].forEach(evt=>{
-  document.addEventListener(evt, e=>{
-    if(isAdmin && e.target.closest("#table, #title, #desc")){
-      saveData();
-    }
-  }, true);
-});
-
 /* 📥 LOAD */
 db.ref("log").once("value").then(snap=>{
   const d = snap.val();
@@ -318,22 +275,25 @@ db.ref("log").once("value").then(snap=>{
   document.body.style.visibility = "visible";
 });
 
-/* 🏋️ BARBELL */
-document.getElementById("calcBtn").onclick = () => {
-  const plates = [45,35,25,10,5,2.5];
-  const left = document.getElementById("leftSide");
-  const right = document.getElementById("rightSide");
-  const note = document.getElementById("roundNote");
-  const includeBar = document.getElementById("includeBar").checked;
+/* 🏋️ LIVE BARBELL CALCULATOR */
+const plates = [45,35,25,10,5,2.5];
+const targetInput = document.getElementById("targetWeight");
+const includeBarEl = document.getElementById("includeBar");
+const left = document.getElementById("leftSide");
+const right = document.getElementById("rightSide");
+const note = document.getElementById("roundNote");
+const totalEl = document.getElementById("totalWeight");
 
+function updateBarbell(){
   left.innerHTML = "";
   right.innerHTML = "";
   note.innerText = "";
+  totalEl.innerText = "";
 
-  let target = Number(document.getElementById("targetWeight").value);
+  let target = Number(targetInput.value);
   if(!target) return;
 
-  const barWeight = includeBar ? 45 : 0;
+  const barWeight = includeBarEl.checked ? 45 : 0;
   let remaining = (target - barWeight) / 2;
 
   if(remaining < 0){
@@ -342,7 +302,6 @@ document.getElementById("calcBtn").onclick = () => {
   }
 
   let used = [];
-
   plates.forEach(p=>{
     while(remaining >= p){
       remaining -= p;
@@ -350,20 +309,26 @@ document.getElementById("calcBtn").onclick = () => {
     }
   });
 
+  let totalLoaded = barWeight + used.reduce((a,b)=>a+b,0)*2;
+  totalEl.innerText = "Total loaded: " + totalLoaded + " lbs";
+
   if(remaining > 0){
     note.innerText = "Rounded down to nearest achievable weight.";
   }
 
   used.forEach(p=>{
-    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    const cls = p === 2.5 ? "p2_5" : "p"+p;
     right.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
 
   [...used].reverse().forEach(p=>{
-    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    const cls = p === 2.5 ? "p2_5" : "p"+p;
     left.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
-};
+}
+
+targetInput.addEventListener("input", updateBarbell);
+includeBarEl.addEventListener("change", updateBarbell);
 
 lockAll();
 </script>
