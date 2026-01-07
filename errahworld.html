@@ -83,6 +83,7 @@ td.left{text-align:left}
 /* ================= */
 /* BARBELL CALC */
 /* ================= */
+
 .calculator{
   max-width:1020px;
   margin-top:40px;
@@ -187,20 +188,21 @@ td.left{text-align:left}
 </div>
 
 <table id="table" class="locked-content">
-  <thead>
-    <tr>
-      <th class="left">Lift</th>
-      <th>Current</th>
-      <th>1RM</th>
-      <th>Strength Level</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
+<thead>
+<tr>
+<th class="left">Lift</th>
+<th>Current</th>
+<th>1RM</th>
+<th>Strength Level</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
 </table>
 
 <!-- ================= -->
 <!-- BARBELL CALC -->
 <!-- ================= -->
+
 <div class="calculator">
   <div class="calc-header">
     <div>Barbell Calculator</div>
@@ -255,6 +257,7 @@ db.ref("log").once("value").then(s=>{
 /* ================= */
 /* CALCULATOR LOGIC */
 /* ================= */
+
 const left=document.getElementById("left");
 const right=document.getElementById("right");
 const totalEl=document.getElementById("total");
