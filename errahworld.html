@@ -107,7 +107,7 @@ td.left{text-align:left}
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
-  margin-bottom:14px;
+  margin-bottom:10px;
 }
 
 .controls input,
@@ -129,6 +129,21 @@ td.left{text-align:left}
   align-items:center;
   gap:6px;
   font-size:.8rem;
+}
+
+.calc-btn{
+  width:100%;
+  margin-top:10px;
+  padding:10px;
+  background:#1b1e26;
+  border:1px solid #2a2d36;
+  color:#bfc6d6;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.calc-btn:hover{
+  background:#232635;
 }
 
 .bar{
@@ -234,6 +249,8 @@ td.left{text-align:left}
       <span>Include bar</span>
     </div>
   </div>
+
+  <button class="calc-btn" id="calcBtn">Calculate</button>
 
   <div class="bar">
     <div class="bar-shaft">
@@ -373,10 +390,13 @@ const barWeight=document.getElementById("barWeight");
 const includeBar=document.getElementById("includeBar");
 const platesEl=document.getElementById("plates");
 const result=document.getElementById("result");
+const calcBtn=document.getElementById("calcBtn");
 
-function updateCalc(){
+function calculate(){
   platesEl.innerHTML="";
-  let total=Number(target.value)||0;
+  let total=Number(target.value);
+  if(!total){result.innerText="Enter a target weight";return;}
+
   let bar=includeBar.checked?Number(barWeight.value)||0:0;
   let perSide=(total-bar)/2;
   if(perSide<=0){result.innerText="No plates needed";return;}
@@ -401,9 +421,7 @@ function updateCalc(){
   result.innerText=`Plates per side: ${used.join(", ")} ${unit.value}`;
 }
 
-[target,unit,barWeight,includeBar].forEach(el=>{
-  el.addEventListener("input",updateCalc);
-});
+calcBtn.addEventListener("click",calculate);
 
 lockAll();
 </script>
