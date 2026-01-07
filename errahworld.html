@@ -32,16 +32,9 @@ body{
   caret-color:transparent !important;
 }
 
-.locked-content td,
-.locked-content th{
-  touch-action:none !important;
-}
+*:focus{outline:none}
 
-*:focus{
-  outline:none !important;
-  box-shadow:none !important;
-}
-
+/* LAYOUT */
 .top-bar{
   display:flex;
   justify-content:space-between;
@@ -50,16 +43,15 @@ body{
   margin-bottom:12px;
 }
 
-#authBox input,
-#authBox button{
+#authBox input,#authBox button{
   background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
   padding:6px 10px;
   border-radius:6px;
-  margin-right:4px;
 }
 
+/* TABLE */
 table{
   width:100%;
   max-width:1020px;
@@ -76,7 +68,6 @@ th,td{
 
 th{
   background:var(--bg-header);
-  color:var(--accent);
   font-size:.75rem;
 }
 
@@ -86,6 +77,64 @@ td.left{text-align:left}
   font-size:.75rem;
   color:var(--muted);
 }
+
+/* 🏋️ BARBELL CALCULATOR */
+.calculator{
+  max-width:1020px;
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  padding:16px;
+  margin:16px 0 24px;
+  border-radius:8px;
+}
+
+.calc-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.calc-row input,.calc-row select,.calc-row button{
+  background:#0e1016;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:8px;
+  border-radius:6px;
+}
+
+.calc-row button{
+  cursor:pointer;
+}
+
+.plates{
+  display:flex;
+  gap:6px;
+  margin-top:12px;
+  align-items:flex-end;
+}
+
+.plate{
+  width:28px;
+  border-radius:4px;
+  text-align:center;
+  font-size:.65rem;
+  color:#000;
+}
+
+.p25{height:70px;background:#d32f2f}
+.p20{height:64px;background:#1976d2}
+.p15{height:58px;background:#fbc02d}
+.p10{height:52px;background:#388e3c}
+.p5{height:42px;background:#ff9800}
+.p2{height:34px;background:#9c27b0}
+.p1{height:28px;background:#aaa}
+
+.calc-note{
+  font-size:.75rem;
+  color:var(--muted);
+  margin-top:8px;
+}
 </style>
 </head>
 
@@ -93,6 +142,35 @@ td.left{text-align:left}
 
 <h1 id="title"></h1>
 <p id="desc"></p>
+
+<!-- 🏋️ BARBELL CALCULATOR -->
+<div class="calculator">
+  <h3>Barbell Calculator</h3>
+
+  <div class="calc-row">
+    <select id="unit">
+      <option value="kg">KG</option>
+      <option value="lb">LB</option>
+    </select>
+
+    <input id="target" type="number" placeholder="Target weight">
+
+    <select id="bar">
+      <option value="20">20 kg / 45 lb bar</option>
+      <option value="15">15 kg bar</option>
+      <option value="25">Trap bar (25)</option>
+    </select>
+
+    <button onclick="calculate()">Calculate</button>
+  </div>
+
+  <strong>Plates per side:</strong>
+  <div id="plates" class="plates"></div>
+
+  <div class="calc-note">
+    Displays plates for ONE side only.
+  </div>
+</div>
 
 <div class="top-bar">
   <div id="authBox">
@@ -140,128 +218,89 @@ const descEl=document.getElementById("desc");
 const tbody=document.getElementById("tbody");
 const table=document.getElementById("table");
 const lastUpdatedEl=document.getElementById("lastUpdated");
-const emailEl=document.getElementById("email");
-const passEl=document.getElementById("password");
 const loginBtn=document.getElementById("loginBtn");
 const logoutBtn=document.getElementById("logoutBtn");
 
 let isAdmin=false;
 let firstLoad=true;
 
-/* 🚫 VIEWER INTERACTION BLOCK (LOGIN SAFE) */
-function viewerShield(e){
-  if(isAdmin) return;
-
-  // allow login panel
-  if(e.target.closest("#authBox")) return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  if(document.activeElement){
-    document.activeElement.blur();
-  }
-
-  return false;
-}
-
-["touchstart","touchend","click","focus"].forEach(evt=>{
-  document.addEventListener(evt,viewerShield,true);
-});
-
-/* 🔒 LOCK MODE */
-function lockAll(){
-  isAdmin=false;
-  table.classList.add("locked-content");
-
-  titleEl.contentEditable="false";
-  descEl.contentEditable="false";
-
-  document.querySelectorAll("td,th").forEach(el=>{
-    el.contentEditable="false";
-    el.setAttribute("tabindex","-1");
-    el.blur();
-  });
-}
-
-/* ✏️ ADMIN MODE */
-function enableEdit(){
-  isAdmin=true;
-  table.classList.remove("locked-content");
-
-  titleEl.contentEditable="true";
-  descEl.contentEditable="true";
-
-  document.querySelectorAll("td,th").forEach(el=>{
-    el.contentEditable="true";
-    el.removeAttribute("tabindex");
-  });
-}
-
 /* 🔐 AUTH */
-loginBtn.onclick=()=>auth
-  .signInWithEmailAndPassword(emailEl.value,passEl.value)
-  .catch(e=>alert(e.message));
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(
+  email.value,password.value
+).catch(e=>alert(e.message));
 
 logoutBtn.onclick=()=>auth.signOut();
 
 auth.onAuthStateChanged(user=>{
-  if(user){
-    enableEdit();
-    loginBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
-  }else{
-    lockAll();
-    loginBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
-  }
+  isAdmin=!!user;
+  table.classList.toggle("locked-content",!isAdmin);
+  loginBtn.style.display=user?"none":"inline-block";
+  logoutBtn.style.display=user?"inline-block":"none";
 });
 
-/* 📥 INITIAL LOAD */
-db.ref("log").once("value").then(snap=>{
-  const d=snap.val();
+/* 📥 LOAD */
+db.ref("log").once("value").then(s=>{
+  const d=s.val();
   if(!d) return;
-
   titleEl.innerText=d.title;
   descEl.innerHTML=d.desc;
   tbody.innerHTML=d.table;
   lastUpdatedEl.innerText="Last updated: "+d.updated;
-
   document.body.style.visibility="visible";
 });
 
-/* 🔁 LIVE VIEWER UPDATES */
-db.ref("log").on("value",snap=>{
+/* 🔁 LIVE VIEW */
+db.ref("log").on("value",s=>{
   if(firstLoad){firstLoad=false;return;}
   if(isAdmin) return;
-
-  const d=snap.val();
-  if(!d) return;
-
+  const d=s.val();
   titleEl.innerText=d.title;
   descEl.innerHTML=d.desc;
   tbody.innerHTML=d.table;
   lastUpdatedEl.innerText="Last updated: "+d.updated;
 });
 
-/* 💾 SAVE (ADMIN ONLY) */
+/* 💾 SAVE */
 document.addEventListener("input",()=>{
   if(!isAdmin) return;
-
-  const now=new Date();
-  const date=now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
-  const time=now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
-
+  const n=new Date();
   db.ref("log").set({
     title:titleEl.innerText,
     desc:descEl.innerHTML,
     table:tbody.innerHTML,
-    updated:`${date} · ${time}`
+    updated:n.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})+
+      " · "+n.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})
   });
 });
 
-/* DEFAULT */
-lockAll();
+/* 🏋️ BARBELL LOGIC */
+const platesKg=[25,20,15,10,5,2.5,1.25];
+
+function calculate(){
+  const unit=unitSel.value;
+  const target=+targetInput.value;
+  const bar=+barSel.value;
+  const side=(target-bar)/2;
+
+  platesDiv.innerHTML="";
+  if(side<=0) return;
+
+  let remain=side;
+  platesKg.forEach(p=>{
+    while(remain>=p-0.01){
+      remain-=p;
+      const d=document.createElement("div");
+      d.className="plate p"+Math.floor(p);
+      d.textContent=p;
+      platesDiv.appendChild(d);
+    }
+  });
+}
+
+const unitSel=document.getElementById("unit");
+const targetInput=document.getElementById("target");
+const barSel=document.getElementById("bar");
+const platesDiv=document.getElementById("plates");
 </script>
 
 </body>
