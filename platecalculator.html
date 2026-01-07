@@ -1,97 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Barbell Racking Calculator</title>
-  <meta name="description" content="Barbell Calculator figures out the right weights to put on the bar so you don't have to.">
-
-  <!-- Libraries -->
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <script src="rack.js"></script>
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="foundation-6.6.3-complete/css/foundation.min.css">
-  <link rel="stylesheet" href="rack.css">
-</head>
-
-<body>
-
-<div class="grid-container">
-  <div class="grid-x grid-margin-x">
-
-    <div class="cell">
-      <h1>Barbell Racking Calculator</h1>
-    </div>
-
-    <div class="cell large-6 small-12">
-      <form onsubmit="return false;">
-        <div class="grid-x grid-margin-x">
-
-          <div class="cell small-6">
-            <label for="weight">Target Weight</label>
-            <div class="slider" data-slider data-initial-start="135" data-start="12.5" data-end="1000" data-step="2.5">
-              <span class="slider-handle" data-slider-handle role="slider" tabindex="1" aria-controls="weight"></span>
-              <span class="slider-fill" data-slider-fill></span>
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      🏋️💪 Barbell Calculator
+    </title>
+    <meta name="keywords" content="Barbell Calculator" />
+    <meta name="description" content="A free calculator that helps you add up the weight on your barbell" />
+    <meta name="language" content="en-us" />
+    <meta name="robots" content="index,follow" />
+    <meta name="rating" content="general" />
+    <meta name="distribution" content="global" />
+    <meta name="URL" content="https://barbellcalculator.com" />
+    <meta name="revisit-after" content="3 days" />
+    <meta name="copyright" content="Copyright 1999 - ∞ Niki Brown" />
+    <meta name="author" content="Niki Brown" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="msapplication-TileColor" content="#da532c" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="next-head-count" content="19" />
+    <meta charset="utf-8" />
+    <link rel="preload" href="/_next/static/css/45faa77b3ffafdf6.css" as="style" />
+    <link rel="stylesheet" href="/_next/static/css/45faa77b3ffafdf6.css" data-n-g="" />
+    <noscript data-n-css="">
+    </noscript>
+    <script defer="" nomodule="" src="/_next/static/chunks/polyfills-78c92fac7aa8fdd8.js">
+    </script>
+    <script src="/_next/static/chunks/webpack-bded03699a6102bd.js" defer="">
+    </script>
+    <script src="/_next/static/chunks/framework-ecc4130bc7a58a64.js" defer="">
+    </script>
+    <script src="/_next/static/chunks/main-b94553d8de663752.js" defer="">
+    </script>
+    <script src="/_next/static/chunks/pages/_app-4dc3e33f3ff6d7b1.js" defer="">
+    </script>
+    <script src="/_next/static/chunks/101-33339ce8b07e89e3.js" defer="">
+    </script>
+    <script src="/_next/static/chunks/pages/reverse-calculator-456e1c65994405fd.js" defer="">
+    </script>
+    <script src="/_next/static/IomeVhFP0EAii_LXwMDac/_buildManifest.js" defer="">
+    </script>
+    <script src="/_next/static/IomeVhFP0EAii_LXwMDac/_ssgManifest.js" defer="">
+    </script>
+    <style data-styled="" data-styled-version="5.3.11">
+      .hcZtxY{width:90vw;padding-right:calc(1.5rem * 0.5);padding-left:calc(1.5rem * 0.5);margin-right:auto;margin-left:auto;position:relative;}/*!sc*/
+@media (min-width:576px){.hcZtxY{max-width:400px;}}/*!sc*/
+@media (min-width:992px){.hcZtxY{max-width:700px;}}/*!sc*/
+data-styled.g1[id=&#34;Container__ContainerWrapper-sc-1eo9ed6-0&#34;]{content:&#34;hcZtxY,&#34;}/*!sc*/
+.bNdXBZ{background-color:#6c757d;border:none;border-radius:6px;padding:6px 12px;-webkit-transition:all 0.15s ease-in-out;transition:all 0.15s ease-in-out;color:#fff;}/*!sc*/
+.bNdXBZ:hover{background-color:#5c636a;}/*!sc*/
+data-styled.g2[id=&#34;ResetButton__ResetButtonWrapper-sc-1j1kbzg-0&#34;]{content:&#34;bNdXBZ,&#34;}/*!sc*/
+.dZWBkd{display:&#34;inline-block&#34;;}/*!sc*/
+data-styled.g11[id=&#34;BarbellButton__BarbellButtonWrapper-sc-m93yy7-0&#34;]{content:&#34;dZWBkd,&#34;}/*!sc*/
+.kWxFVm{color:#fff;background-color:#6c757d;display:inline-block;margin:4px 8px;text-align:center;-webkit-text-decoration:none;text-decoration:none;vertical-align:middle;padding:6px 12px;border-radius:6px;border:none;-webkit-transition:color 0.15s ease-in-out,background-color 0.15s ease-in-out;transition:color 0.15s ease-in-out,background-color 0.15s ease-in-out;}/*!sc*/
+.kWxFVm:hover{background-color:#5c636a;}/*!sc*/
+.kWxFVm:disabled{background-color:#839896;cursor:not-allowed;opacity:0.7;}/*!sc*/
+.kWxFVm:disabled:hovered{cursor:not-allowed;}/*!sc*/
+.kWxFVm:disabled.selected{background-color:#212529;opacity:1;}/*!sc*/
+data-styled.g12[id=&#34;BarbellButton-sc-m93yy7-1&#34;]{content:&#34;kWxFVm,&#34;}/*!sc*/
+.HKgHK{background-color:#212529;color:#fff;padding:20px 0;position:relative;text-align:center;}/*!sc*/
+.HKgHK p{margin:0;}/*!sc*/
+.HKgHK span{display:inline-block;margin:0 5px;}/*!sc*/
+.HKgHK .nextjs{fill:#ffffff;}/*!sc*/
+.HKgHK .info svg,.HKgHK .github svg{-webkit-transition:opacity 0.15s ease-in-out;transition:opacity 0.15s ease-in-out;}/*!sc*/
+.HKgHK .info svg:hover,.HKgHK .github svg:hover{cursor:pointer;opacity:0.7;}/*!sc*/
+data-styled.g15[id=&#34;Footer__FooterWrapper-sc-wtqic3-0&#34;]{content:&#34;HKgHK,&#34;}/*!sc*/
+.ipDpCK{background-color:#212529;color:#fff;padding:15px 0px;}/*!sc*/
+.ipDpCK h1{font-size:1.2rem;margin:0;}/*!sc*/
+@media screen and (min-width:900px){.ipDpCK h1{font-size:2rem;}}/*!sc*/
+.ipDpCK a{-webkit-text-decoration:none;text-decoration:none;color:#fff;}/*!sc*/
+data-styled.g17[id=&#34;HeaderNoBanner__HeaderWrapper-sc-aet4y9-0&#34;]{content:&#34;ipDpCK,&#34;}/*!sc*/
+.dCrOLN{color:#fff;display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-pack:justify;-webkit-justify-content:space-between;-ms-flex-pack:justify;justify-content:space-between;-webkit-align-items:center;-webkit-box-align:center;-ms-flex-align:center;align-items:center;}/*!sc*/
+data-styled.g18[id=&#34;HeaderNoBanner__NavbarWrapper-sc-aet4y9-1&#34;]{content:&#34;dCrOLN,&#34;}/*!sc*/
+    </style>
+  </head>
+  <body>
+    <div id="__next">
+      <div class="app-container reverse-calculator">
+        <header class="HeaderNoBanner__HeaderWrapper-sc-aet4y9-0 ipDpCK">
+          <div class="Container__ContainerWrapper-sc-1eo9ed6-0 hcZtxY">
+            <nav class="HeaderNoBanner__NavbarWrapper-sc-aet4y9-1 dCrOLN">
+              <h1>
+                <a href="/">                ←
+</a>
+                Barbell Calculator
+              </h1>
+              <button aria-label="Reset Barbell" class="ResetButton__ResetButtonWrapper-sc-1j1kbzg-0 bNdXBZ">
+                Reset
+              </button>
+            </nav>
+          </div>
+        </header>
+        <main>
+          <section class="total-weight-section text-center">
+            <div class="Container__ContainerWrapper-sc-1eo9ed6-0 hcZtxY">
+              <h2>
+                0
+                <small>                lb
+</small>
+              </h2>
+              <section class="plates-on-barbell-section">
+                <div class="barbell-container">
+                  <div class="plates-on-barbell left-plates">
+                  </div>
+                  <div class="plates-on-barbell right-plates">
+                  </div>
+                </div>
+              </section>
             </div>
-            <input id="weight" type="number" onchange="saveValues();">
-          </div>
-
-          <div class="cell small-6">
-            <label for="barweight">Bar Weight</label>
-            <div class="slider" data-slider data-initial-start="45" data-start="0" data-end="200" data-step="2.5">
-              <span class="slider-handle" data-slider-handle role="slider" tabindex="1" aria-controls="barweight"></span>
-              <span class="slider-fill" data-slider-fill></span>
+          </section>
+          <section class="barbells-section">
+            <div class="Container__ContainerWrapper-sc-1eo9ed6-0 hcZtxY">
+              <div class="grid-container">
+                <div class="column weight-input">
+                  <h3>
+                    Enter Weight
+                  </h3>
+                  <input type="number" inputmode="decimal" value="" />
+                </div>
+                <div class="column weight-units">
+                  <h3>
+                    Select Units
+                  </h3>
+                  <div class="weight-units-container">
+                    <div class="weight-unit">
+                      <input type="radio" id="lb" name="unit" checked="" value="lb" />
+                      <label for="lb">
+                        LB
+                      </label>
+                    </div>
+                    <div class="weight-unit">
+                      <input type="radio" id="kg" name="unit" value="kg" />
+                      <label for="kg">
+                        KG
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="column barbell">
+                  <h3>
+                    Select Barbell
+                  </h3>
+                  <span class="BarbellButton__BarbellButtonWrapper-sc-m93yy7-0 dZWBkd">                  <button type="button" class="BarbellButton-sc-m93yy7-1 kWxFVm null">
+                    45
+                    <!-- -->
+                    <!-- -->
+                    lb
+                  </button>
+</span>
+                  <span class="BarbellButton__BarbellButtonWrapper-sc-m93yy7-0 dZWBkd">                  <button type="button" class="BarbellButton-sc-m93yy7-1 kWxFVm null">
+                    35
+                    <!-- -->
+                    <!-- -->
+                    lb
+                  </button>
+</span>
+                  <span class="BarbellButton__BarbellButtonWrapper-sc-m93yy7-0 dZWBkd">                  <button type="button" class="BarbellButton-sc-m93yy7-1 kWxFVm null">
+                    15
+                    <!-- -->
+                    <!-- -->
+                    lb
+                  </button>
+</span>
+                </div>
+                <div class="column calculate-button">
+                  <input class="btn btn-primary" type="submit" value="💪 Calculate Plates" />
+                </div>
+              </div>
             </div>
-            <input id="barweight" type="number" onchange="saveValues();">
+          </section>
+        </main>
+        <footer class="Footer__FooterWrapper-sc-wtqic3-0 HKgHK">
+          <div class="Container__ContainerWrapper-sc-1eo9ed6-0 hcZtxY">
+            <p>
+              <span class="info">              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM169.8 165.3c7.9-22.3 29.1-37.3 52.8-37.3l58.3 0c34.9 0 63.1 28.3 63.1 63.1c0 22.6-12.1 43.5-31.7 54.8L280 264.4c-.2 13-10.9 23.6-24 23.6c-13.3 0-24-10.7-24-24l0-13.5c0-8.6 4.6-16.5 12.1-20.8l44.3-25.4c4.7-2.7 7.6-7.7 7.6-13.1c0-8.4-6.8-15.1-15.1-15.1l-58.3 0c-3.4 0-6.4 2.1-7.5 5.3l-.4 1.2c-4.4 12.5-18.2 19-30.6 14.6s-19-18.2-14.6-30.6l.4-1.2zM224 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z">
+                </path>
+              </svg>
+</span>
+            </p>
           </div>
-
-          <div class="cell">
-            <button class="button" type="button" data-toggle="plates-dropdown">
-              Set Plates Available
-            </button>
-
-            <div class="dropdown-pane" id="plates-dropdown" data-dropdown data-auto-focus="true">
-              <div id="weightChecks" onclick="saveValues();"></div>
-            </div>
-          </div>
-
-          <div class="cell">
-            <button
-              type="button"
-              class="large expanded button"
-              onclick="outputResultSVG(false);">
-              Calculate
-            </button>
-          </div>
-
-        </div>
-      </form>
+        </footer>
+      </div>
     </div>
-
-    <div class="cell large-6">
-      <div id="result"></div>
-    </div>
-
-  </div>
-</div>
-
-<!-- Keyboard support -->
-<script>
-document.onkeypress = function(e){
-  const key = e.keyCode || e.which;
-  if(key === 13){
-    outputResultSVG(false);
-  }
-};
-</script>
-
-<!-- Foundation JS -->
-<script src="foundation-6.6.3-complete/js/vendor/jquery.js"></script>
-<script src="foundation-6.6.3-complete/js/vendor/what-input.js"></script>
-<script src="foundation-6.6.3-complete/js/vendor/foundation.js"></script>
-<script src="foundation-6.6.3-complete/js/app.js"></script>
-
-</body>
+    <script id="__NEXT_DATA__" type="application/json">
+      {&#34;props&#34;:{&#34;pageProps&#34;:{}},&#34;page&#34;:&#34;/reverse-calculator&#34;,&#34;query&#34;:{},&#34;buildId&#34;:&#34;IomeVhFP0EAii_LXwMDac&#34;,&#34;nextExport&#34;:true,&#34;autoExport&#34;:true,&#34;isFallback&#34;:false,&#34;scriptLoader&#34;:[]}
+    </script>
+  </body>
 </html>
