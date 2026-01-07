@@ -32,7 +32,15 @@ body{
   caret-color:transparent !important;
 }
 
-*:focus{ outline:none !important; }
+.locked-content td,
+.locked-content th{
+  touch-action:none !important;
+}
+
+*:focus{
+  outline:none !important;
+  box-shadow:none !important;
+}
 
 .top-bar{
   display:flex;
@@ -167,11 +175,11 @@ td.left{ text-align:left; }
   <tbody id="tbody"></tbody>
 </table>
 
-<!-- 🏋️ BARBELL CALCULATOR -->
+<!-- 🏋️ BARBELL CALCULATOR (ISOLATED) -->
 <div class="calculator">
   <h3>Barbell Target Weight (lbs)</h3>
-  <input id="targetWeight" type="number" placeholder="Enter weight (lbs)">
-  <button onclick="calculateBarbell()">Calculate</button>
+  <input id="targetWeight" type="number" placeholder="Enter weight">
+  <button id="calcBtn">Calculate</button>
 
   <div class="barbell">
     <div id="leftSide" class="side"></div>
@@ -207,69 +215,155 @@ const tbody = document.getElementById("tbody");
 const table = document.getElementById("table");
 const lastUpdatedEl = document.getElementById("lastUpdated");
 
-let isAdmin=false, firstLoad=true;
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-/* 🔒 LOCK */
+let isAdmin = false;
+let firstLoad = true;
+
+/* 🚫 VIEWER INTERACTION BLOCK */
+function viewerShield(e){
+  if(isAdmin) return;
+  if(e.target.closest("#authBox")) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if(document.activeElement) document.activeElement.blur();
+  return false;
+}
+
+["touchstart","touchend","click","focus"].forEach(evt=>{
+  document.addEventListener(evt, viewerShield, true);
+});
+
+/* 🔒 LOCK MODE */
 function lockAll(){
-  isAdmin=false;
+  isAdmin = false;
   table.classList.add("locked-content");
+  titleEl.contentEditable = "false";
+  descEl.contentEditable = "false";
+
+  document.querySelectorAll("td,th").forEach(el=>{
+    el.contentEditable = "false";
+    el.setAttribute("tabindex","-1");
+    el.blur();
+  });
 }
 
-/* ✏️ ADMIN */
+/* ✏️ ADMIN MODE */
 function enableEdit(){
-  isAdmin=true;
+  isAdmin = true;
   table.classList.remove("locked-content");
+  titleEl.contentEditable = "true";
+  descEl.contentEditable = "true";
+
+  document.querySelectorAll("td,th").forEach(el=>{
+    el.contentEditable = "true";
+    el.removeAttribute("tabindex");
+  });
 }
+
+/* 🔐 AUTH (RESTORED) */
+loginBtn.onclick = () =>
+  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
+    .catch(e => alert(e.message));
+
+logoutBtn.onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(user=>{
-  user ? enableEdit() : lockAll();
+  if(user){
+    enableEdit();
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  }else{
+    lockAll();
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  }
 });
 
-/* LOAD */
-db.ref("log").once("value").then(s=>{
-  const d=s.val(); if(!d) return;
-  titleEl.innerText=d.title;
-  descEl.innerHTML=d.desc;
-  tbody.innerHTML=d.table;
-  lastUpdatedEl.innerText="Last updated: "+d.updated;
-  document.body.style.visibility="visible";
+/* 📥 INITIAL LOAD */
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val();
+  if(!d) return;
+  titleEl.innerText = d.title;
+  descEl.innerHTML = d.desc;
+  tbody.innerHTML = d.table;
+  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+  document.body.style.visibility = "visible";
+});
+
+/* 🔁 LIVE VIEWER UPDATES */
+db.ref("log").on("value", snap=>{
+  if(firstLoad){ firstLoad = false; return; }
+  if(isAdmin) return;
+  const d = snap.val();
+  if(!d) return;
+  titleEl.innerText = d.title;
+  descEl.innerHTML = d.desc;
+  tbody.innerHTML = d.table;
+  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+});
+
+/* 💾 SAVE (ADMIN ONLY) */
+document.addEventListener("input", ()=>{
+  if(!isAdmin) return;
+
+  const now = new Date();
+  const date = now.toLocaleDateString("en-GB", {
+    day:"numeric", month:"long", year:"numeric"
+  });
+  const time = now.toLocaleTimeString("en-US", {
+    hour:"numeric", minute:"2-digit", hour12:true
+  });
+
+  db.ref("log").set({
+    title: titleEl.innerText,
+    desc: descEl.innerHTML,
+    table: tbody.innerHTML,
+    updated: `${date} · ${time}`
+  });
 });
 
 /* ============================= */
-/* 🏋️ BARBELL LOGIC (ISOLATED) */
+/* 🏋️ BARBELL CALCULATOR LOGIC */
 /* ============================= */
-function calculateBarbell(){
-  const plates=[45,35,25,10,5,2.5];
-  const left=document.getElementById("leftSide");
-  const right=document.getElementById("rightSide");
-  const note=document.getElementById("roundNote");
+document.getElementById("calcBtn").onclick = () => {
+  const plates = [45,35,25,10,5,2.5];
+  const left = document.getElementById("leftSide");
+  const right = document.getElementById("rightSide");
+  const note = document.getElementById("roundNote");
 
-  left.innerHTML=""; right.innerHTML=""; note.innerText="";
+  left.innerHTML = "";
+  right.innerHTML = "";
+  note.innerText = "";
 
-  let target=Number(document.getElementById("targetWeight").value);
-  if(!target || target<45) return;
+  let target = Number(document.getElementById("targetWeight").value);
+  if(!target || target < 45) return;
 
-  let remaining=(target-45)/2;
-  let used=[];
+  let remaining = (target - 45) / 2;
+  let used = [];
 
   plates.forEach(p=>{
-    while(remaining>=p){
-      remaining-=p;
+    while(remaining >= p){
+      remaining -= p;
       used.push(p);
     }
   });
 
-  if(remaining>0){
-    note.innerText="Weight rounded down to nearest possible load.";
+  if(remaining > 0){
+    note.innerText = "Rounded down to nearest achievable weight.";
   }
 
   used.forEach(p=>{
-    const cls = p===2.5 ? "p2_5" : "p"+p;
-    left.innerHTML+=`<div class="plate ${cls}"></div>`;
-    right.innerHTML+=`<div class="plate ${cls}"></div>`;
+    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    left.innerHTML += `<div class="plate ${cls}"></div>`;
+    right.innerHTML += `<div class="plate ${cls}"></div>`;
   });
-}
+};
 
+/* DEFAULT */
 lockAll();
 </script>
 
