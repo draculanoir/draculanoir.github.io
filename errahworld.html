@@ -31,10 +31,6 @@ body{
  caret-color:transparent !important;
 }
 
-.locked-content td, .locked-content th{
- touch-action:none !important;
-}
-
 *{ box-sizing:border-box }
 *:focus{ outline:none !important; box-shadow:none !important; }
 
@@ -117,12 +113,6 @@ td.left{text-align:left}
  background:#1b1e26;
 }
 
-.calc-note{
- font-size:.75rem;
- color:var(--muted);
- margin-top:6px;
-}
-
 .barbell-wrap{
  margin-top:20px;
  display:flex;
@@ -137,6 +127,7 @@ td.left{text-align:left}
 .sleeve{
  display:flex;
  align-items:center;
+ min-height:70px;
 }
 
 .bar{
@@ -198,10 +189,7 @@ td.left{text-align:left}
  <tbody id="tbody"></tbody>
 </table>
 
-<!-- ========================= -->
 <!-- 🏋️ BARBELL CALCULATOR -->
-<!-- ========================= -->
-
 <div class="calculator">
  <h3>Barbell Calculator</h3>
 
@@ -246,104 +234,24 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.database();
 
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
-const emailEl=document.getElementById("email");
-const passEl=document.getElementById("password");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
-
 let isAdmin=false;
 let firstLoad=true;
 
-/* VIEWER SHIELD */
+/* 🚫 VIEWER SHIELD (FIXED) */
 function viewerShield(e){
  if(isAdmin) return;
  if(e.target.closest("#authBox")) return;
+ if(e.target.closest(".calculator")) return; // ✅ ALLOW CALCULATOR
  e.preventDefault();
  e.stopPropagation();
  return false;
 }
+
 ["touchstart","touchend","click","focus"].forEach(evt=>{
  document.addEventListener(evt,viewerShield,true);
 });
 
-/* LOCK */
-function lockAll(){
- isAdmin=false;
- table.classList.add("locked-content");
- titleEl.contentEditable="false";
- descEl.contentEditable="false";
-}
-
-/* ADMIN */
-function enableEdit(){
- isAdmin=true;
- table.classList.remove("locked-content");
- titleEl.contentEditable="true";
- descEl.contentEditable="true";
-}
-
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
- .catch(e=>alert(e.message));
-
-logoutBtn.onclick=()=>auth.signOut();
-
-auth.onAuthStateChanged(user=>{
- if(user){
-  enableEdit();
-  loginBtn.style.display="none";
-  logoutBtn.style.display="inline-block";
- }else{
-  lockAll();
-  loginBtn.style.display="inline-block";
-  logoutBtn.style.display="none";
- }
-});
-
-db.ref("log").once("value").then(snap=>{
- const d=snap.val();
- if(!d) return;
- titleEl.innerText=d.title;
- descEl.innerHTML=d.desc;
- tbody.innerHTML=d.table;
- lastUpdatedEl.innerText="Last updated: "+d.updated;
- document.body.style.visibility="visible";
-});
-
-db.ref("log").on("value",snap=>{
- if(firstLoad){ firstLoad=false; return; }
- if(isAdmin) return;
- const d=snap.val();
- if(!d) return;
- titleEl.innerText=d.title;
- descEl.innerHTML=d.desc;
- tbody.innerHTML=d.table;
- lastUpdatedEl.innerText="Last updated: "+d.updated;
-});
-
-document.addEventListener("input",()=>{
- if(!isAdmin) return;
- const now=new Date();
- const date=now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
- const time=now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
- db.ref("log").set({
-  title:titleEl.innerText,
-  desc:descEl.innerHTML,
-  table:tbody.innerHTML,
-  updated:`${date} · ${time}`
- });
-});
-
-lockAll();
-
-/* ========================= */
 /* BARBELL LOGIC */
-/* ========================= */
-
 const plates=[45,35,25,15,10,5,2.5];
 
 function calculatePlates(){
@@ -375,10 +283,13 @@ function calculatePlates(){
  if(remaining>0.01) rounded=true;
 
  used.forEach(p=>{
-  const plate=document.createElement("div");
-  plate.className="plate p"+String(p).replace(".","_");
-  left.appendChild(plate.cloneNode());
-  right.prepend(plate);
+  const cls="plate p"+String(p).replace(".","_");
+  const l=document.createElement("div");
+  const r=document.createElement("div");
+  l.className=cls;
+  r.className=cls;
+  left.appendChild(l);
+  right.prepend(r);
  });
 
  if(rounded){
