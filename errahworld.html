@@ -213,53 +213,97 @@ Include bar
 <div id="totalWeight" class="total"></div>
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
+firebase.initializeApp({
+  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain: "strenght-a9f37.firebaseapp.com",
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+});
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+const titleEl = document.getElementById("title");
+const descEl = document.getElementById("desc");
+const tbody = document.getElementById("tbody");
+const table = document.getElementById("table");
+const lastUpdatedEl = document.getElementById("lastUpdated");
+
+let isAdmin = false;
+
+/* 🔒 LOCK MODE */
+function lockAll(){
+  isAdmin = false;
+  table.classList.add("locked-content");
+  titleEl.contentEditable = "false";
+  descEl.contentEditable = "false";
+}
+
+/* 📥 INITIAL LOAD */
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val();
+  if(!d) return;
+  titleEl.innerText = d.title;
+  descEl.innerHTML = d.desc;
+  tbody.innerHTML = d.table;
+  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+  document.body.style.visibility = "visible";
+});
+
+/* 🏋️ BARBELL CALCULATOR LOGIC (UNCHANGED, JUST LIVE) */
 const plates=[45,35,25,10,5,2.5];
 
 function updateBarbell(){
-  const left=leftSide;
-  const right=rightSide;
-  const note=roundNote;
-  const totalEl=totalWeight;
+  leftSide.innerHTML = "";
+  rightSide.innerHTML = "";
+  roundNote.innerText = "";
+  totalWeight.innerText = "";
 
-  left.innerHTML=right.innerHTML=note.innerText=totalEl.innerText="";
-
-  const target=+targetWeight.value;
+  const target = +targetWeight.value;
   if(!target) return;
 
-  const bar=includeBar.checked?(+barWeight.value||0):0;
-  let remaining=(target-bar)/2;
+  const bar = includeBar.checked ? (+barWeight.value||0) : 0;
+  let remaining = (target - bar) / 2;
 
-  if(remaining<0){
-    note.innerText="Target weight is less than the bar weight.";
-    totalEl.innerText="Total loaded weight: "+bar+" lb";
+  if(remaining < 0){
+    roundNote.innerText = "Target weight is less than the bar weight.";
+    totalWeight.innerText = "Total loaded weight: " + bar + " lb";
     return;
   }
 
-  let used=[],platesTotal=0;
+  let used=[], platesTotal=0;
   plates.forEach(p=>{
-    while(remaining>=p){
-      remaining-=p;
+    while(remaining >= p){
+      remaining -= p;
       used.push(p);
-      platesTotal+=p*2;
+      platesTotal += p*2;
     }
   });
 
-  if(remaining>0){
-    note.innerText="Rounded down to nearest achievable weight.";
+  if(remaining > 0){
+    roundNote.innerText = "Rounded down to nearest achievable weight.";
   }
 
   used.forEach(p=>{
-    const c=p===2.5?"p2_5":"p"+p;
-    right.innerHTML+=`<div class="plate ${c}">${p}</div>`;
+    const c = p===2.5 ? "p2_5" : "p"+p;
+    rightSide.innerHTML += `<div class="plate ${c}">${p}</div>`;
   });
 
   [...used].reverse().forEach(p=>{
-    const c=p===2.5?"p2_5":"p"+p;
-    left.innerHTML+=`<div class="plate ${c}">${p}</div>`;
+    const c = p===2.5 ? "p2_5" : "p"+p;
+    leftSide.innerHTML += `<div class="plate ${c}">${p}</div>`;
   });
 
-  totalEl.innerText="Total loaded weight: "+(platesTotal+bar)+" lb";
+  totalWeight.innerText = "Total loaded weight: " + (platesTotal + bar) + " lb";
 }
 
 /* 🔴 LIVE EVENTS */
@@ -267,8 +311,7 @@ targetWeight.addEventListener("input", updateBarbell);
 barWeight.addEventListener("input", updateBarbell);
 includeBar.addEventListener("change", updateBarbell);
 
-/* show page */
-document.body.style.visibility="visible";
+lockAll();
 </script>
 
 </body>
