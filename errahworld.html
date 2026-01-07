@@ -32,8 +32,6 @@ body{
   caret-color:transparent !important;
 }
 
-*:focus{outline:none}
-
 /* LAYOUT */
 .top-bar{
   display:flex;
@@ -92,7 +90,7 @@ td.left{text-align:left}
   display:flex;
   gap:10px;
   flex-wrap:wrap;
-  margin-bottom:12px;
+  margin-bottom:14px;
 }
 
 .calc-row input,.calc-row select,.calc-row button{
@@ -103,37 +101,53 @@ td.left{text-align:left}
   border-radius:6px;
 }
 
-.calc-row button{
-  cursor:pointer;
+.calc-row button{cursor:pointer}
+
+/* BARBELL VISUAL */
+.barbell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-top:18px;
 }
 
+.bar{
+  height:10px;
+  width:280px;
+  background:linear-gradient(90deg,#777,#aaa,#777);
+  border-radius:6px;
+}
+
+/* PLATES */
 .plates{
   display:flex;
-  gap:6px;
-  margin-top:12px;
   align-items:flex-end;
+  gap:4px;
 }
 
 .plate{
-  width:28px;
   border-radius:4px;
-  text-align:center;
-  font-size:.65rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.6rem;
+  font-weight:600;
   color:#000;
 }
 
-.p25{height:70px;background:#d32f2f}
-.p20{height:64px;background:#1976d2}
-.p15{height:58px;background:#fbc02d}
-.p10{height:52px;background:#388e3c}
-.p5{height:42px;background:#ff9800}
-.p2{height:34px;background:#9c27b0}
-.p1{height:28px;background:#aaa}
+.p45{width:28px;height:78px;background:#d32f2f}
+.p35{width:26px;height:72px;background:#1976d2}
+.p25{width:24px;height:66px;background:#fbc02d}
+.p10{width:20px;height:54px;background:#388e3c}
+.p5{width:16px;height:44px;background:#ff9800}
+.p05{width:12px;height:36px;background:#9c27b0}
 
 .calc-note{
   font-size:.75rem;
   color:var(--muted);
-  margin-top:8px;
+  margin-top:10px;
+  text-align:center;
 }
 </style>
 </head>
@@ -145,30 +159,25 @@ td.left{text-align:left}
 
 <!-- 🏋️ BARBELL CALCULATOR -->
 <div class="calculator">
-  <h3>Barbell Calculator</h3>
+  <h3>Barbell Calculator (LB)</h3>
 
   <div class="calc-row">
-    <select id="unit">
-      <option value="kg">KG</option>
-      <option value="lb">LB</option>
-    </select>
-
-    <input id="target" type="number" placeholder="Target weight">
-
+    <input id="target" type="number" placeholder="Target weight (lb)">
     <select id="bar">
-      <option value="20">20 kg / 45 lb bar</option>
-      <option value="15">15 kg bar</option>
-      <option value="25">Trap bar (25)</option>
+      <option value="45">45 lb Olympic bar</option>
+      <option value="65">65 lb Trap bar</option>
     </select>
-
     <button onclick="calculate()">Calculate</button>
   </div>
 
-  <strong>Plates per side:</strong>
-  <div id="plates" class="plates"></div>
+  <div class="barbell">
+    <div id="leftPlates" class="plates"></div>
+    <div class="bar"></div>
+    <div id="rightPlates" class="plates"></div>
+  </div>
 
   <div class="calc-note">
-    Displays plates for ONE side only.
+    Plates are shown per side and mirrored like a real barbell.
   </div>
 </div>
 
@@ -218,27 +227,20 @@ const descEl=document.getElementById("desc");
 const tbody=document.getElementById("tbody");
 const table=document.getElementById("table");
 const lastUpdatedEl=document.getElementById("lastUpdated");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
 
 let isAdmin=false;
 let firstLoad=true;
 
-/* 🔐 AUTH */
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(
-  email.value,password.value
-).catch(e=>alert(e.message));
-
+/* AUTH */
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value);
 logoutBtn.onclick=()=>auth.signOut();
 
 auth.onAuthStateChanged(user=>{
   isAdmin=!!user;
   table.classList.toggle("locked-content",!isAdmin);
-  loginBtn.style.display=user?"none":"inline-block";
-  logoutBtn.style.display=user?"inline-block":"none";
 });
 
-/* 📥 LOAD */
+/* LOAD */
 db.ref("log").once("value").then(s=>{
   const d=s.val();
   if(!d) return;
@@ -249,18 +251,7 @@ db.ref("log").once("value").then(s=>{
   document.body.style.visibility="visible";
 });
 
-/* 🔁 LIVE VIEW */
-db.ref("log").on("value",s=>{
-  if(firstLoad){firstLoad=false;return;}
-  if(isAdmin) return;
-  const d=s.val();
-  titleEl.innerText=d.title;
-  descEl.innerHTML=d.desc;
-  tbody.innerHTML=d.table;
-  lastUpdatedEl.innerText="Last updated: "+d.updated;
-});
-
-/* 💾 SAVE */
+/* SAVE */
 document.addEventListener("input",()=>{
   if(!isAdmin) return;
   const n=new Date();
@@ -274,33 +265,41 @@ document.addEventListener("input",()=>{
 });
 
 /* 🏋️ BARBELL LOGIC */
-const platesKg=[25,20,15,10,5,2.5,1.25];
+const PLATES=[45,35,25,10,5,0.5];
 
-function calculate(){
-  const unit=unitSel.value;
-  const target=+targetInput.value;
-  const bar=+barSel.value;
-  const side=(target-bar)/2;
-
-  platesDiv.innerHTML="";
-  if(side<=0) return;
-
-  let remain=side;
-  platesKg.forEach(p=>{
-    while(remain>=p-0.01){
-      remain-=p;
-      const d=document.createElement("div");
-      d.className="plate p"+Math.floor(p);
-      d.textContent=p;
-      platesDiv.appendChild(d);
-    }
-  });
+function plateClass(w){
+  return w===0.5?"p05":"p"+w;
 }
 
-const unitSel=document.getElementById("unit");
-const targetInput=document.getElementById("target");
-const barSel=document.getElementById("bar");
-const platesDiv=document.getElementById("plates");
+function calculate(){
+  leftPlates.innerHTML="";
+  rightPlates.innerHTML="";
+
+  const target=+document.getElementById("target").value;
+  const bar=+document.getElementById("bar").value;
+  const perSide=(target-bar)/2;
+  if(perSide<=0) return;
+
+  let remain=perSide;
+  const used=[];
+
+  PLATES.forEach(p=>{
+    while(remain>=p-0.001){
+      remain-=p;
+      used.push(p);
+    }
+  });
+
+  used.forEach(p=>{
+    const l=document.createElement("div");
+    l.className=`plate ${plateClass(p)}`;
+    l.textContent=p;
+    leftPlates.appendChild(l);
+
+    const r=l.cloneNode(true);
+    rightPlates.appendChild(r);
+  });
+}
 </script>
 
 </body>
