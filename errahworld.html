@@ -326,7 +326,7 @@ document.addEventListener("input", ()=>{
   });
 });
 
-/* 🏋️ BARBELL CALCULATOR LOGIC */
+/* 🏋️ BARBELL CALCULATOR LOGIC (FIXED ORDER) */
 document.getElementById("calcBtn").onclick = () => {
   const plates = [45,35,25,10,5,2.5];
   const left = document.getElementById("leftSide");
@@ -354,10 +354,16 @@ document.getElementById("calcBtn").onclick = () => {
     note.innerText = "Rounded down to nearest achievable weight.";
   }
 
+  // RIGHT SIDE: bar → outside
   used.forEach(p=>{
     const cls = p === 2.5 ? "p2_5" : "p" + p;
-    left.innerHTML += `<div class="plate ${cls}"></div>`;
     right.innerHTML += `<div class="plate ${cls}"></div>`;
+  });
+
+  // LEFT SIDE: bar → outside (reverse order)
+  [...used].reverse().forEach(p=>{
+    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    left.innerHTML += `<div class="plate ${cls}"></div>`;
   });
 };
 
