@@ -175,8 +175,8 @@ td.left{ text-align:left; }
   <tbody id="tbody"></tbody>
 </table>
 
-<!-- 🏋️ BARBELL CALCULATOR (ISOLATED) -->
-<div class="calculator">
+<!-- 🏋️ BARBELL CALCULATOR -->
+<div class="calculator" id="calculator">
   <h3>Barbell Target Weight (lbs)</h3>
   <input id="targetWeight" type="number" placeholder="Enter weight">
   <button id="calcBtn">Calculate</button>
@@ -226,7 +226,7 @@ let firstLoad = true;
 /* 🚫 VIEWER INTERACTION BLOCK */
 function viewerShield(e){
   if(isAdmin) return;
-  if(e.target.closest("#authBox")) return;
+  if(e.target.closest("#authBox") || e.target.closest("#calculator")) return;
   e.preventDefault();
   e.stopPropagation();
   if(document.activeElement) document.activeElement.blur();
@@ -264,7 +264,7 @@ function enableEdit(){
   });
 }
 
-/* 🔐 AUTH (RESTORED) */
+/* 🔐 AUTH */
 loginBtn.onclick = () =>
   auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
     .catch(e => alert(e.message));
@@ -326,9 +326,7 @@ document.addEventListener("input", ()=>{
   });
 });
 
-/* ============================= */
 /* 🏋️ BARBELL CALCULATOR LOGIC */
-/* ============================= */
 document.getElementById("calcBtn").onclick = () => {
   const plates = [45,35,25,10,5,2.5];
   const left = document.getElementById("leftSide");
