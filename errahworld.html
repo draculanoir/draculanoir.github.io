@@ -24,7 +24,7 @@ body{
   padding:24px;
 }
 
-/* 🔒 HARD LOCK (viewer mode) */
+/* 🔒 VIEWER LOCK */
 .locked-content,
 .locked-content *{
   pointer-events:none !important;
@@ -32,13 +32,11 @@ body{
   caret-color:transparent !important;
 }
 
-/* Prevent mobile tap focus */
 .locked-content td,
 .locked-content th{
   touch-action:none !important;
 }
 
-/* Remove focus visuals */
 *:focus{
   outline:none !important;
   box-shadow:none !important;
@@ -150,14 +148,21 @@ const logoutBtn=document.getElementById("logoutBtn");
 let isAdmin=false;
 let firstLoad=true;
 
-/* 🚫 BLOCK ALL VIEWER INTERACTION (MOBILE SAFE) */
+/* 🚫 VIEWER INTERACTION BLOCK (LOGIN SAFE) */
 function viewerShield(e){
-  if(!isAdmin){
-    e.preventDefault();
-    e.stopPropagation();
-    if(document.activeElement) document.activeElement.blur();
-    return false;
+  if(isAdmin) return;
+
+  // allow login panel
+  if(e.target.closest("#authBox")) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  if(document.activeElement){
+    document.activeElement.blur();
   }
+
+  return false;
 }
 
 ["touchstart","touchend","click","focus"].forEach(evt=>{
@@ -194,7 +199,8 @@ function enableEdit(){
 }
 
 /* 🔐 AUTH */
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
+loginBtn.onclick=()=>auth
+  .signInWithEmailAndPassword(emailEl.value,passEl.value)
   .catch(e=>alert(e.message));
 
 logoutBtn.onclick=()=>auth.signOut();
@@ -215,10 +221,12 @@ auth.onAuthStateChanged(user=>{
 db.ref("log").once("value").then(snap=>{
   const d=snap.val();
   if(!d) return;
+
   titleEl.innerText=d.title;
   descEl.innerHTML=d.desc;
   tbody.innerHTML=d.table;
   lastUpdatedEl.innerText="Last updated: "+d.updated;
+
   document.body.style.visibility="visible";
 });
 
@@ -226,8 +234,10 @@ db.ref("log").once("value").then(snap=>{
 db.ref("log").on("value",snap=>{
   if(firstLoad){firstLoad=false;return;}
   if(isAdmin) return;
+
   const d=snap.val();
   if(!d) return;
+
   titleEl.innerText=d.title;
   descEl.innerHTML=d.desc;
   tbody.innerHTML=d.table;
