@@ -32,15 +32,7 @@ body{
   caret-color:transparent !important;
 }
 
-.locked-content td,
-.locked-content th{
-  touch-action:none !important;
-}
-
-*:focus{
-  outline:none !important;
-  box-shadow:none !important;
-}
+*:focus{ outline:none !important; }
 
 .top-bar{
   display:flex;
@@ -87,9 +79,7 @@ td.left{ text-align:left; }
   color:var(--muted);
 }
 
-/* ============================= */
-/* 🏋️ BARBELL CALCULATOR STYLES */
-/* ============================= */
+/* 🏋️ BARBELL CALCULATOR */
 .calculator{
   max-width:1020px;
   margin-top:32px;
@@ -110,14 +100,10 @@ td.left{ text-align:left; }
   margin-right:6px;
 }
 
-/* remove number arrows */
-.calculator input[type="number"]::-webkit-inner-spin-button,
-.calculator input[type="number"]::-webkit-outer-spin-button{
+.calculator input[type=number]::-webkit-inner-spin-button,
+.calculator input[type=number]::-webkit-outer-spin-button{
   -webkit-appearance:none;
   margin:0;
-}
-.calculator input[type="number"]{
-  -moz-appearance:textfield;
 }
 
 .barbell{
@@ -134,15 +120,10 @@ td.left{ text-align:left; }
   border-radius:4px;
 }
 
-.side{
-  display:flex;
-  align-items:center;
-}
+.side{ display:flex; }
 
-/* Plates */
 .plate{
   height:60px;
-  border-radius:4px;
   margin:0 2px;
   display:flex;
   align-items:center;
@@ -150,23 +131,20 @@ td.left{ text-align:left; }
   font-size:.7rem;
   font-weight:600;
   color:#111;
+  border-radius:4px;
 }
 
 .p45{ width:26px; background:#c0392b; }
 .p35{ width:24px; background:#d35400; }
 .p25{ width:22px; background:#f1c40f; }
 .p10{ width:18px; background:#3498db; color:#fff; }
-.p5 { width:14px; background:#2ecc71; }
+.p5{ width:14px; background:#2ecc71; }
 .p2_5{ width:10px; background:#95a5a6; }
 
 .note{
   font-size:.75rem;
   color:var(--muted);
   margin-top:8px;
-}
-.total{
-  font-size:.85rem;
-  margin-top:6px;
 }
 </style>
 </head>
@@ -187,40 +165,40 @@ td.left{ text-align:left; }
 </div>
 
 <table id="table" class="locked-content">
-  <thead>
-    <tr>
-      <th class="left">Lift</th>
-      <th>Current</th>
-      <th>1RM</th>
-      <th>Strength Level</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
+<thead>
+<tr>
+<th class="left">Lift</th>
+<th>Current</th>
+<th>1RM</th>
+<th>Strength Level</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
 </table>
 
 <!-- 🏋️ BARBELL CALCULATOR -->
-<div class="calculator" id="calculator">
-  <h3>Barbell Target Weight (lbs)</h3>
+<div class="calculator">
+<h3>Barbell Target Weight (lbs)</h3>
 
-  <input id="targetWeight" type="number" placeholder="Target weight">
+<input id="targetWeight" type="number" placeholder="Target weight">
 
-  <input id="barWeight" type="number" value="45" placeholder="Bar weight">
+<input id="barWeight" type="number" placeholder="Bar weight" value="45">
 
-  <label>
-    <input type="checkbox" id="includeBar" checked>
-    Include bar
-  </label>
+<label>
+<input type="checkbox" id="includeBar" checked>
+Include bar
+</label>
 
-  <button id="calcBtn">Calculate</button>
+<button id="calcBtn">Calculate</button>
 
-  <div class="barbell">
-    <div id="leftSide" class="side"></div>
-    <div class="bar"></div>
-    <div id="rightSide" class="side"></div>
-  </div>
+<div class="barbell">
+<div id="leftSide" class="side"></div>
+<div class="bar"></div>
+<div id="rightSide" class="side"></div>
+</div>
 
-  <div id="roundNote" class="note"></div>
-  <div id="totalWeight" class="total"></div>
+<div id="totalWeight" class="note"></div>
+<div id="roundNote" class="note"></div>
 </div>
 
 <!-- Firebase -->
@@ -239,141 +217,54 @@ firebase.initializeApp({
   appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
-const auth = firebase.auth();
-const db = firebase.database();
+const plates=[45,35,25,10,5,2.5];
 
-const titleEl = document.getElementById("title");
-const descEl = document.getElementById("desc");
-const tbody = document.getElementById("tbody");
-const table = document.getElementById("table");
-const lastUpdatedEl = document.getElementById("lastUpdated");
+function calculate(){
+  const left=document.getElementById("leftSide");
+  const right=document.getElementById("rightSide");
+  const totalEl=document.getElementById("totalWeight");
+  const note=document.getElementById("roundNote");
 
-const emailEl = document.getElementById("email");
-const passEl = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+  left.innerHTML=right.innerHTML=note.innerText=totalEl.innerText="";
 
-let isAdmin = false;
-let firstLoad = true;
-
-/* 🚫 VIEWER INTERACTION BLOCK */
-function viewerShield(e){
-  if(isAdmin) return;
-  if(e.target.closest("#authBox") || e.target.closest("#calculator")) return;
-  e.preventDefault();
-  e.stopPropagation();
-  if(document.activeElement) document.activeElement.blur();
-  return false;
-}
-
-["touchstart","touchend","click","focus"].forEach(evt=>{
-  document.addEventListener(evt, viewerShield, true);
-});
-
-/* 🔒 LOCK MODE */
-function lockAll(){
-  isAdmin = false;
-  table.classList.add("locked-content");
-  titleEl.contentEditable = "false";
-  descEl.contentEditable = "false";
-}
-
-/* ✏️ ADMIN MODE */
-function enableEdit(){
-  isAdmin = true;
-  table.classList.remove("locked-content");
-  titleEl.contentEditable = "true";
-  descEl.contentEditable = "true";
-}
-
-/* 🔐 AUTH */
-loginBtn.onclick = () =>
-  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
-    .catch(e => alert(e.message));
-
-logoutBtn.onclick = () => auth.signOut();
-
-auth.onAuthStateChanged(user=>{
-  if(user){
-    enableEdit();
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-  }else{
-    lockAll();
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-  }
-});
-
-/* 📥 INITIAL LOAD */
-db.ref("log").once("value").then(snap=>{
-  const d = snap.val();
-  if(!d) return;
-  titleEl.innerText = d.title;
-  descEl.innerHTML = d.desc;
-  tbody.innerHTML = d.table;
-  lastUpdatedEl.innerText = "Last updated: " + d.updated;
-  document.body.style.visibility = "visible";
-});
-
-/* 🏋️ BARBELL CALCULATOR LOGIC */
-document.getElementById("calcBtn").onclick = () => {
-  const plates = [45,35,25,10,5,2.5];
-  const left = document.getElementById("leftSide");
-  const right = document.getElementById("rightSide");
-  const note = document.getElementById("roundNote");
-  const totalEl = document.getElementById("totalWeight");
-
-  left.innerHTML = "";
-  right.innerHTML = "";
-  note.innerText = "";
-  totalEl.innerText = "";
-
-  const target = Number(document.getElementById("targetWeight").value);
-  const barWeight = Number(document.getElementById("barWeight").value) || 0;
-  const includeBar = document.getElementById("includeBar").checked;
-
+  const target=+targetWeight.value;
+  const bar=includeBar.checked ? (+barWeight.value||0):0;
   if(!target) return;
 
-  const bar = includeBar ? barWeight : 0;
-  let remaining = (target - bar) / 2;
-
-  if(remaining < 0){
-    note.innerText = "Target weight is less than the bar weight.";
+  let remaining=(target-bar)/2;
+  if(remaining<0){
+    totalEl.innerText="Total loaded weight: "+bar+" lb";
     return;
   }
 
-  let used = [];
-
+  let used=[],platesTotal=0;
   plates.forEach(p=>{
-    while(remaining >= p){
-      remaining -= p;
+    while(remaining>=p){
+      remaining-=p;
       used.push(p);
+      platesTotal+=p*2;
     }
   });
 
-  if(remaining > 0){
-    note.innerText = "Rounded down to nearest achievable weight.";
-  }
-
-  let platesTotal = 0;
+  if(remaining>0) note.innerText="Rounded down to nearest achievable weight.";
 
   used.forEach(p=>{
-    platesTotal += p * 2;
-    const cls = p === 2.5 ? "p2_5" : "p" + p;
-    right.innerHTML += `<div class="plate ${cls}">${p}</div>`;
+    const c=p===2.5?"p2_5":"p"+p;
+    right.innerHTML+=`<div class="plate ${c}">${p}</div>`;
   });
 
   [...used].reverse().forEach(p=>{
-    const cls = p === 2.5 ? "p2_5" : "p" + p;
-    left.innerHTML += `<div class="plate ${cls}">${p}</div>`;
+    const c=p===2.5?"p2_5":"p"+p;
+    left.innerHTML+=`<div class="plate ${c}">${p}</div>`;
   });
 
-  const totalLoaded = platesTotal + bar;
-  totalEl.innerText = "Total loaded weight: " + totalLoaded + " lb";
-};
+  totalEl.innerText="Total loaded weight: "+(platesTotal+bar)+" lb";
+}
 
-lockAll();
+calcBtn.onclick=calculate;
+targetWeight.oninput=calculate;
+barWeight.oninput=calculate;
+includeBar.onchange=calculate;
 </script>
 
 </body>
