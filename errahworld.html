@@ -100,12 +100,14 @@ td.left{ text-align:left; }
 }
 
 .calculator input,
-.calculator button{
+.calculator button,
+.calculator label{
   background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
   padding:8px 12px;
   border-radius:6px;
+  margin-right:6px;
 }
 
 .barbell{
@@ -127,16 +129,23 @@ td.left{ text-align:left; }
   align-items:center;
 }
 
+/* Plates with centered text */
 .plate{
   height:60px;
   border-radius:4px;
   margin:0 2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.7rem;
+  font-weight:600;
+  color:#111;
 }
 
 .p45{ width:26px; background:#c0392b; }
 .p35{ width:24px; background:#d35400; }
 .p25{ width:22px; background:#f1c40f; }
-.p10{ width:18px; background:#3498db; }
+.p10{ width:18px; background:#3498db; color:#fff; }
 .p5 { width:14px; background:#2ecc71; }
 .p2_5{ width:10px; background:#95a5a6; }
 
@@ -178,7 +187,14 @@ td.left{ text-align:left; }
 <!-- 🏋️ BARBELL CALCULATOR -->
 <div class="calculator" id="calculator">
   <h3>Barbell Target Weight (lbs)</h3>
+
   <input id="targetWeight" type="number" placeholder="Enter weight">
+
+  <label>
+    <input type="checkbox" id="includeBar" checked>
+    Include 45lb bar
+  </label>
+
   <button id="calcBtn">Calculate</button>
 
   <div class="barbell">
@@ -243,12 +259,6 @@ function lockAll(){
   table.classList.add("locked-content");
   titleEl.contentEditable = "false";
   descEl.contentEditable = "false";
-
-  document.querySelectorAll("td,th").forEach(el=>{
-    el.contentEditable = "false";
-    el.setAttribute("tabindex","-1");
-    el.blur();
-  });
 }
 
 /* ✏️ ADMIN MODE */
@@ -257,11 +267,6 @@ function enableEdit(){
   table.classList.remove("locked-content");
   titleEl.contentEditable = "true";
   descEl.contentEditable = "true";
-
-  document.querySelectorAll("td,th").forEach(el=>{
-    el.contentEditable = "true";
-    el.removeAttribute("tabindex");
-  });
 }
 
 /* 🔐 AUTH */
@@ -294,53 +299,29 @@ db.ref("log").once("value").then(snap=>{
   document.body.style.visibility = "visible";
 });
 
-/* 🔁 LIVE VIEWER UPDATES */
-db.ref("log").on("value", snap=>{
-  if(firstLoad){ firstLoad = false; return; }
-  if(isAdmin) return;
-  const d = snap.val();
-  if(!d) return;
-  titleEl.innerText = d.title;
-  descEl.innerHTML = d.desc;
-  tbody.innerHTML = d.table;
-  lastUpdatedEl.innerText = "Last updated: " + d.updated;
-});
-
-/* 💾 SAVE (ADMIN ONLY) */
-document.addEventListener("input", ()=>{
-  if(!isAdmin) return;
-
-  const now = new Date();
-  const date = now.toLocaleDateString("en-GB", {
-    day:"numeric", month:"long", year:"numeric"
-  });
-  const time = now.toLocaleTimeString("en-US", {
-    hour:"numeric", minute:"2-digit", hour12:true
-  });
-
-  db.ref("log").set({
-    title: titleEl.innerText,
-    desc: descEl.innerHTML,
-    table: tbody.innerHTML,
-    updated: `${date} · ${time}`
-  });
-});
-
-/* 🏋️ BARBELL CALCULATOR LOGIC (FIXED ORDER) */
+/* 🏋️ BARBELL CALCULATOR LOGIC */
 document.getElementById("calcBtn").onclick = () => {
   const plates = [45,35,25,10,5,2.5];
   const left = document.getElementById("leftSide");
   const right = document.getElementById("rightSide");
   const note = document.getElementById("roundNote");
+  const includeBar = document.getElementById("includeBar").checked;
 
   left.innerHTML = "";
   right.innerHTML = "";
   note.innerText = "";
 
   let target = Number(document.getElementById("targetWeight").value);
-  if(!target || target < 45) return;
+  if(!target) return;
 
-  let remaining = (target - 45) / 2;
+  const barWeight = includeBar ? 45 : 0;
+  let remaining = (target - barWeight) / 2;
+
+  if(remaining < 0){
+    note.innerText = "Target weight is less than the bar weight.";
+    return;
+  }
+
   let used = [];
 
   plates.forEach(p=>{
@@ -354,20 +335,19 @@ document.getElementById("calcBtn").onclick = () => {
     note.innerText = "Rounded down to nearest achievable weight.";
   }
 
-  // RIGHT SIDE: bar → outside
+  // Right side (bar → outside)
   used.forEach(p=>{
     const cls = p === 2.5 ? "p2_5" : "p" + p;
-    right.innerHTML += `<div class="plate ${cls}"></div>`;
+    right.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
 
-  // LEFT SIDE: bar → outside (reverse order)
+  // Left side (bar → outside, reversed)
   [...used].reverse().forEach(p=>{
     const cls = p === 2.5 ? "p2_5" : "p" + p;
-    left.innerHTML += `<div class="plate ${cls}"></div>`;
+    left.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
 };
 
-/* DEFAULT */
 lockAll();
 </script>
 
