@@ -24,10 +24,33 @@ body{
   padding:24px;
 }
 
+/* Lock viewers */
 .locked-content,
 .locked-content *{
   pointer-events:none!important;
   user-select:none!important;
+  caret-color:transparent!important;
+}
+
+*:focus{outline:none}
+
+/* Layout */
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  max-width:1020px;
+  margin-bottom:12px;
+}
+
+#authBox input,
+#authBox button{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:6px 10px;
+  border-radius:6px;
+  margin-right:4px;
 }
 
 table{
@@ -35,6 +58,7 @@ table{
   max-width:1020px;
   border-collapse:collapse;
   background:var(--bg-panel);
+  box-shadow:0 0 0 1px var(--border);
 }
 
 th,td{
@@ -42,6 +66,23 @@ th,td{
   padding:10px;
   text-align:center;
 }
+
+th{
+  background:var(--bg-header);
+  color:var(--accent);
+  font-size:.75rem;
+}
+
+td.left{text-align:left}
+
+.last-updated{
+  font-size:.75rem;
+  color:var(--muted);
+}
+
+/* ================= */
+/* BARBELL CALC */
+/* ================= */
 
 .calculator{
   max-width:1020px;
@@ -56,13 +97,14 @@ th,td{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  margin-bottom:10px;
 }
 
-button{
+.unit-toggle button{
   background:transparent;
   border:1px solid var(--border);
-  color:var(--text);
-  padding:6px 10px;
+  color:var(--accent);
+  padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
 }
@@ -81,23 +123,29 @@ button{
   border-radius:4px;
 }
 
-.sleeve{display:flex;align-items:center}
-.plate{margin:0 2px;border-radius:4px}
+.sleeve{
+  display:flex;
+  align-items:center;
+}
 
-/* Sizes */
-.xl{height:90px;width:28px}
-.lg{height:82px;width:25px}
-.md{height:70px;width:21px}
-.sm{height:55px;width:17px}
-.xs{height:42px;width:13px}
+.plate{
+  margin:0 2px;
+  border-radius:4px;
+}
 
-/* Colors */
-.red{background:#d32f2f}
-.blue{background:#1976d2}
-.yellow{background:#fbc02d}
-.green{background:#388e3c}
-.gray{background:#666}
-.light{background:#999}
+/* Plate sizes */
+.big{height:90px;width:26px}
+.mid{height:75px;width:22px}
+.small{height:60px;width:18px}
+.tiny{height:45px;width:14px}
+
+/* Plate colors */
+.p45,.p25kg{background:#d32f2f}
+.p35,.p20kg{background:#1976d2}
+.p25,.p15kg{background:#fbc02d}
+.p10,.p10kg{background:#388e3c}
+.p5,.p5kg{background:#555}
+.p2_5,.p2_5kg,.p1_25kg{background:#999}
 
 .plates{
   display:flex;
@@ -106,10 +154,19 @@ button{
   justify-content:center;
 }
 
+.plates button{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
 .total{
   text-align:center;
   font-size:1.2rem;
-  margin-top:12px;
+  margin-top:10px;
   color:var(--accent);
 }
 </style>
@@ -117,99 +174,157 @@ button{
 
 <body>
 
-<h2>Barbell Calculator</h2>
+<h1 id="title"></h1>
+<p id="desc"></p>
+
+<div class="top-bar">
+  <div id="authBox">
+    <input id="email" placeholder="admin email">
+    <input id="password" type="password" placeholder="password">
+    <button id="loginBtn">Login</button>
+    <button id="logoutBtn" style="display:none">Logout</button>
+  </div>
+  <div id="lastUpdated" class="last-updated"></div>
+</div>
+
+<table id="table" class="locked-content">
+<thead>
+<tr>
+<th class="left">Lift</th>
+<th>Current</th>
+<th>1RM</th>
+<th>Strength Level</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<!-- ================= -->
+<!-- BARBELL CALC -->
+<!-- ================= -->
 
 <div class="calculator">
-
-  <!-- UNIT + BAR -->
   <div class="calc-header">
-    <div>
+    <div>Barbell Calculator</div>
+    <div class="unit-toggle">
       <button onclick="setUnit('kg')">KG</button>
       <button onclick="setUnit('lb')">LB</button>
     </div>
-
-    <div>
-      <button onclick="setBar(20)">20</button>
-      <button onclick="setBar(15)">15</button>
-      <button onclick="setBar(45)">45</button>
-      <button onclick="setBar(0)">No Bar</button>
-    </div>
   </div>
 
-  <!-- BARBELL -->
   <div class="barbell">
     <div id="left" class="sleeve"></div>
-    <div id="bar" class="bar"></div>
+    <div class="bar"></div>
     <div id="right" class="sleeve"></div>
   </div>
 
-  <!-- PLATES -->
-  <div class="plates" id="plateBtns"></div>
+  <div class="plates" id="plateButtons"></div>
 
   <div class="plates">
-    <button onclick="undo()">Undo</button>
-    <button onclick="resetAll()">Reset</button>
+    <button onclick="removePlate()">Undo</button>
+    <button onclick="resetBar()">Reset</button>
   </div>
 
   <div class="total" id="total"></div>
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain:"strenght-a9f37.firebaseapp.com",
+  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId:"strenght-a9f37"
+});
+
+const db=firebase.database();
+
+/* Load */
+db.ref("log").once("value").then(s=>{
+  const d=s.val();
+  if(!d)return;
+  title.innerText=d.title;
+  desc.innerHTML=d.desc;
+  tbody.innerHTML=d.table;
+  lastUpdated.innerText="Last updated: "+d.updated;
+  document.body.style.visibility="visible";
+});
+
+/* ================= */
+/* CALCULATOR LOGIC */
+/* ================= */
+
 const left=document.getElementById("left");
 const right=document.getElementById("right");
-const barEl=document.getElementById("bar");
 const totalEl=document.getElementById("total");
-const btns=document.getElementById("plateBtns");
+const plateBtns=document.getElementById("plateButtons");
 
 let unit="kg";
 let barWeight=20;
 let plates=[];
 
-const config={
-  kg:[
-    {w:25,c:"xl red"},
-    {w:20,c:"lg blue"},
-    {w:15,c:"md yellow"},
-    {w:10,c:"sm green"},
-    {w:5,c:"xs gray"},
-    {w:2.5,c:"xs light"},
-    {w:1.25,c:"xs light"}
-  ],
-  lb:[
-    {w:45,c:"xl red"},
-    {w:35,c:"lg blue"},
-    {w:25,c:"md yellow"},
-    {w:10,c:"sm green"},
-    {w:5,c:"xs gray"},
-    {w:2.5,c:"xs light"}
-  ]
+const configs={
+  kg:{
+    bar:20,
+    plates:[
+      {w:25,c:"p25kg big"},
+      {w:20,c:"p20kg mid"},
+      {w:15,c:"p15kg mid"},
+      {w:10,c:"p10kg small"},
+      {w:5,c:"p5kg small"},
+      {w:2.5,c:"p2_5kg tiny"},
+      {w:1.25,c:"p1_25kg tiny"}
+    ]
+  },
+  lb:{
+    bar:45,
+    plates:[
+      {w:45,c:"p45 big"},
+      {w:35,c:"p35 mid"},
+      {w:25,c:"p25 mid"},
+      {w:10,c:"p10 small"},
+      {w:5,c:"p5 small"},
+      {w:2.5,c:"p2_5 tiny"}
+    ]
+  }
 };
 
 function setUnit(u){
   unit=u;
   plates=[];
-  build();
+  barWeight=configs[u].bar;
+  buildButtons();
   render();
 }
 
-function setBar(w){
-  barWeight=w;
-  barEl.style.display=w===0?"none":"block";
-  render();
-}
-
-function build(){
-  btns.innerHTML="";
-  config[unit].forEach(p=>{
+function buildButtons(){
+  plateBtns.innerHTML="";
+  configs[unit].plates.forEach(p=>{
     const b=document.createElement("button");
     b.textContent=`+${p.w} ${unit}`;
-    b.onclick=()=>{plates.push(p);render()};
-    btns.appendChild(b);
+    b.onclick=()=>addPlate(p.w,p.c);
+    plateBtns.appendChild(b);
   });
 }
 
-function undo(){plates.pop();render()}
-function resetAll(){plates=[];render()}
+function addPlate(w,c){
+  plates.push({w,c});
+  render();
+}
+
+function removePlate(){
+  plates.pop();
+  render();
+}
+
+function resetBar(){
+  plates=[];
+  render();
+}
 
 function render(){
   left.innerHTML="";
