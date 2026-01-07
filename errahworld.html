@@ -24,7 +24,7 @@ body{
   padding:24px;
 }
 
-/* ================= LOCK ================= */
+/* ================= VIEWER LOCK ================= */
 .locked-content,
 .locked-content *{
   pointer-events:none !important;
@@ -107,7 +107,6 @@ td.left{text-align:left}
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
-  margin-bottom:10px;
 }
 
 .controls input,
@@ -133,7 +132,7 @@ td.left{text-align:left}
 
 .calc-btn{
   width:100%;
-  margin-top:10px;
+  margin-top:12px;
   padding:10px;
   background:#1b1e26;
   border:1px solid #2a2d36;
@@ -147,7 +146,7 @@ td.left{text-align:left}
 }
 
 .bar{
-  margin-top:18px;
+  margin-top:20px;
   display:flex;
   justify-content:center;
 }
@@ -379,9 +378,24 @@ document.addEventListener("input",()=>{
 });
 
 /* ================= CALCULATOR LOGIC ================= */
-const platesByUnit={
-  lb:[45,35,25,10,5,2.5],
-  kg:[25,20,15,10,5,2.5,1.25]
+const PLATES={
+  lb:[
+    {w:45,c:"red"},
+    {w:35,c:"blue"},
+    {w:25,c:"yellow"},
+    {w:10,c:"green"},
+    {w:5,c:"black"},
+    {w:2.5,c:"black"}
+  ],
+  kg:[
+    {w:25,c:"red"},
+    {w:20,c:"blue"},
+    {w:15,c:"yellow"},
+    {w:10,c:"green"},
+    {w:5,c:"black"},
+    {w:2.5,c:"black"},
+    {w:1.25,c:"black"}
+  ]
 };
 
 const target=document.getElementById("targetWeight");
@@ -392,36 +406,47 @@ const platesEl=document.getElementById("plates");
 const result=document.getElementById("result");
 const calcBtn=document.getElementById("calcBtn");
 
-function calculate(){
+calcBtn.onclick=()=>{
   platesEl.innerHTML="";
-  let total=Number(target.value);
-  if(!total){result.innerText="Enter a target weight";return;}
+  result.innerText="";
 
-  let bar=includeBar.checked?Number(barWeight.value)||0:0;
-  let perSide=(total-bar)/2;
-  if(perSide<=0){result.innerText="No plates needed";return;}
+  const total=Number(target.value);
+  if(!total||total<=0){
+    result.innerText="Enter a valid lift weight";
+    return;
+  }
 
+  const bar=includeBar.checked?Number(barWeight.value)||0:0;
+  const perSide=(total-bar)/2;
+
+  if(perSide<=0){
+    result.innerText="Only the bar is loaded";
+    return;
+  }
+
+  let remaining=perSide;
   const used=[];
-  platesByUnit[unit.value].forEach(w=>{
-    while(perSide>=w-0.01){
-      perSide-=w;
-      used.push(w);
+
+  PLATES[unit.value].forEach(p=>{
+    while(remaining>=p.w-0.001){
+      remaining-=p.w;
+      used.push(p);
     }
   });
 
-  used.forEach(w=>{
+  if(!used.length){
+    result.innerText="No plates needed per side";
+    return;
+  }
+
+  used.forEach(p=>{
     const el=document.createElement("div");
-    el.className="plate";
-    el.classList.add(
-      w>=25?"red":w>=20?"blue":w>=15?"yellow":w>=10?"green":"black"
-    );
+    el.className=`plate ${p.c}`;
     platesEl.appendChild(el);
   });
 
-  result.innerText=`Plates per side: ${used.join(", ")} ${unit.value}`;
-}
-
-calcBtn.addEventListener("click",calculate);
+  result.innerText=`Per side: ${used.map(p=>p.w).join(" + ")} ${unit.value}`;
+};
 
 lockAll();
 </script>
