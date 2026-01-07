@@ -24,6 +24,7 @@ body{
   padding:24px;
 }
 
+/* 🔒 VIEWER LOCK */
 .locked-content,
 .locked-content *{
   pointer-events:none !important;
@@ -31,7 +32,15 @@ body{
   caret-color:transparent !important;
 }
 
-*:focus{ outline:none !important; }
+.locked-content td,
+.locked-content th{
+  touch-action:none !important;
+}
+
+*:focus{
+  outline:none !important;
+  box-shadow:none !important;
+}
 
 .top-bar{
   display:flex;
@@ -59,7 +68,7 @@ table{
   box-shadow:0 0 0 1px var(--border);
 }
 
-th,td{
+th, td{
   border:1px solid var(--border);
   padding:10px;
   text-align:center;
@@ -71,14 +80,14 @@ th{
   font-size:.75rem;
 }
 
-td.left{text-align:left;}
+td.left{ text-align:left; }
 
 .last-updated{
   font-size:.75rem;
   color:var(--muted);
 }
 
-/* ===== BARBELL ===== */
+/* 🏋️ BARBELL CALCULATOR */
 .calculator{
   max-width:1020px;
   margin-top:32px;
@@ -89,6 +98,7 @@ td.left{text-align:left;}
 }
 
 .calculator input,
+.calculator button,
 .calculator label{
   background:transparent;
   border:1px solid var(--border);
@@ -101,8 +111,12 @@ td.left{text-align:left;}
 .calculator input[type="number"]::-webkit-inner-spin-button,
 .calculator input[type="number"]::-webkit-outer-spin-button{
   -webkit-appearance:none;
+  margin:0;
 }
-.calculator input[type="number"]{ -moz-appearance:textfield; }
+
+.calculator input[type="number"]{
+  -moz-appearance:textfield;
+}
 
 .barbell{
   margin-top:20px;
@@ -118,7 +132,10 @@ td.left{text-align:left;}
   border-radius:4px;
 }
 
-.side{ display:flex; align-items:center; }
+.side{
+  display:flex;
+  align-items:center;
+}
 
 .plate{
   height:60px;
@@ -132,15 +149,23 @@ td.left{text-align:left;}
   color:#111;
 }
 
-.p45{width:26px;background:#c0392b;}
-.p35{width:24px;background:#d35400;}
-.p25{width:22px;background:#f1c40f;}
-.p10{width:18px;background:#3498db;color:#fff;}
-.p5{width:14px;background:#2ecc71;}
-.p2_5{width:10px;background:#95a5a6;}
+.p45{ width:26px; background:#c0392b; }
+.p35{ width:24px; background:#d35400; }
+.p25{ width:22px; background:#f1c40f; }
+.p10{ width:18px; background:#3498db; color:#fff; }
+.p5 { width:14px; background:#2ecc71; }
+.p2_5{ width:10px; background:#95a5a6; }
 
-.note{font-size:.75rem;color:var(--muted);margin-top:8px;}
-.total{font-size:.85rem;margin-top:6px;}
+.note{
+  font-size:.75rem;
+  color:var(--muted);
+  margin-top:8px;
+}
+
+.total{
+  font-size:.85rem;
+  margin-top:6px;
+}
 </style>
 </head>
 
@@ -160,36 +185,37 @@ td.left{text-align:left;}
 </div>
 
 <table id="table" class="locked-content">
-<thead>
-<tr>
-<th class="left">Lift</th>
-<th>Current</th>
-<th>1RM</th>
-<th>Strength Level</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
+  <thead>
+    <tr>
+      <th class="left">Lift</th>
+      <th>Current</th>
+      <th>1RM</th>
+      <th>Strength Level</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
 </table>
 
-<!-- BARBELL -->
-<div class="calculator">
-<h3>Barbell Target Weight (lbs)</h3>
+<div class="calculator" id="calculator">
+  <h3>Barbell Target Weight (lbs)</h3>
 
-<input id="targetWeight" type="number" placeholder="Target weight">
-<input id="barWeight" type="number" value="45" placeholder="Bar weight">
+  <input id="targetWeight" type="number" placeholder="Target weight">
+  <input id="barWeight" type="number" value="45" placeholder="Bar weight">
 
-<label>
-<input type="checkbox" id="includeBar" checked> Include bar
-</label>
+  <label>
+    <input type="checkbox" id="includeBar" checked> Include bar
+  </label>
 
-<div class="barbell">
-<div id="leftSide" class="side"></div>
-<div class="bar"></div>
-<div id="rightSide" class="side"></div>
-</div>
+  <button id="calcBtn">Calculate</button>
 
-<div id="roundNote" class="note"></div>
-<div id="totalWeight" class="total"></div>
+  <div class="barbell">
+    <div id="leftSide" class="side"></div>
+    <div class="bar"></div>
+    <div id="rightSide" class="side"></div>
+  </div>
+
+  <div id="roundNote" class="note"></div>
+  <div id="totalWeight" class="total"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -198,13 +224,13 @@ td.left{text-align:left;}
 
 <script>
 firebase.initializeApp({
-  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain:"strenght-a9f37.firebaseapp.com",
-  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId:"strenght-a9f37",
-  storageBucket:"strenght-a9f37.appspot.com",
-  messagingSenderId:"469926449178",
-  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
+  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain: "strenght-a9f37.firebaseapp.com",
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
 const auth = firebase.auth();
@@ -223,91 +249,121 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 let isAdmin = false;
 
-function lockAll(){
-  isAdmin=false;
-  table.classList.add("locked-content");
-  titleEl.contentEditable="false";
-  descEl.contentEditable="false";
+/* 🚫 VIEWER INTERACTION BLOCK */
+function viewerShield(e){
+  if(isAdmin) return;
+  if(e.target.closest("#authBox") || e.target.closest("#calculator")) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if(document.activeElement) document.activeElement.blur();
+  return false;
 }
 
-loginBtn.onclick=()=>{
-  auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
-    .catch(e=>alert(e.message));
-};
-logoutBtn.onclick=()=>auth.signOut();
+["touchstart","touchend","click","focus"].forEach(evt=>{
+  document.addEventListener(evt, viewerShield, true);
+});
+
+/* 🔒 LOCK MODE */
+function lockAll(){
+  isAdmin = false;
+  table.classList.add("locked-content");
+  titleEl.contentEditable = "false";
+  descEl.contentEditable = "false";
+}
+
+/* ✏️ ADMIN MODE */
+function enableEdit(){
+  isAdmin = true;
+  table.classList.remove("locked-content");
+  titleEl.contentEditable = "true";
+  descEl.contentEditable = "true";
+}
+
+/* 🔐 AUTH */
+loginBtn.onclick = () =>
+  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
+  .catch(e => alert(e.message));
+
+logoutBtn.onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(user=>{
   if(user){
-    isAdmin=true;
-    table.classList.remove("locked-content");
-    titleEl.contentEditable="true";
-    descEl.contentEditable="true";
-    loginBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
+    enableEdit();
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
   }else{
     lockAll();
-    loginBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
   }
 });
 
-db.ref("log").once("value").then(s=>{
-  const d=s.val();
+/* 📥 INITIAL LOAD */
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val();
   if(!d) return;
-  titleEl.innerText=d.title;
-  descEl.innerHTML=d.desc;
-  tbody.innerHTML=d.table;
-  lastUpdatedEl.innerText="Last updated: "+d.updated;
-  document.body.style.visibility="visible";
+  titleEl.innerText = d.title;
+  descEl.innerHTML = d.desc;
+  tbody.innerHTML = d.table;
+  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+  document.body.style.visibility = "visible";
 });
 
-/* ===== LIVE BARBELL ===== */
-const plates=[45,35,25,10,5,2.5];
+/* 🏋️ BARBELL CALCULATOR LOGIC */
+document.getElementById("calcBtn").onclick = () => {
+  const plates = [45,35,25,10,5,2.5];
+  const left = document.getElementById("leftSide");
+  const right = document.getElementById("rightSide");
+  const note = document.getElementById("roundNote");
+  const totalEl = document.getElementById("totalWeight");
 
-function updateBarbell(){
-  const target=+targetWeight.value;
-  const barW=+barWeight.value||0;
-  const include=includeBar.checked;
+  left.innerHTML = "";
+  right.innerHTML = "";
+  note.innerText = "";
+  totalEl.innerText = "";
 
-  leftSide.innerHTML="";
-  rightSide.innerHTML="";
-  roundNote.innerText="";
-  totalWeight.innerText="";
+  const target = Number(document.getElementById("targetWeight").value);
+  const barWeight = Number(document.getElementById("barWeight").value) || 0;
+  const includeBar = document.getElementById("includeBar").checked;
 
   if(!target) return;
 
-  const bar=include?barW:0;
-  let rem=(target-bar)/2;
-  if(rem<0) return;
+  const bar = includeBar ? barWeight : 0;
+  let remaining = (target - bar) / 2;
 
-  let used=[];
+  if(remaining < 0){
+    note.innerText = "Target weight is less than the bar weight.";
+    return;
+  }
+
+  let used = [];
   plates.forEach(p=>{
-    while(rem>=p){ rem-=p; used.push(p); }
+    while(remaining >= p){
+      remaining -= p;
+      used.push(p);
+    }
   });
 
-  if(rem>0) roundNote.innerText="Rounded down to nearest achievable weight.";
+  if(remaining > 0){
+    note.innerText = "Rounded down to nearest achievable weight.";
+  }
 
-  let plateTotal=0;
+  let platesTotal = 0;
 
   used.forEach(p=>{
-    plateTotal+=p*2;
-    const c=p===2.5?"p2_5":"p"+p;
-    rightSide.innerHTML+=`<div class="plate ${c}">${p}</div>`;
+    platesTotal += p * 2;
+    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    right.innerHTML += <div class="plate ${cls}">${p}</div>;
   });
 
   [...used].reverse().forEach(p=>{
-    const c=p===2.5?"p2_5":"p"+p;
-    leftSide.innerHTML+=`<div class="plate ${c}">${p}</div>`;
+    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    left.innerHTML += <div class="plate ${cls}">${p}</div>;
   });
 
-  totalWeight.innerText="Total loaded weight: "+(plateTotal+bar)+" lb";
-}
-
-["input","change"].forEach(e=>{
-  targetWeight.addEventListener(e,updateBarbell);
-  barWeight.addEventListener(e,updateBarbell);
-  includeBar.addEventListener(e,updateBarbell);
-});
+  const totalLoaded = platesTotal + bar;
+  totalEl.innerText = "Total loaded weight: " + totalLoaded + " lb";
+};
 
 lockAll();
 </script>
