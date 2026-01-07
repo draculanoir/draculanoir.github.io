@@ -305,23 +305,25 @@ db.ref("log").once("value").then(snap=>{
   document.body.style.visibility="visible";
 });
 
-/* 💾 SAVE (RESTORED) */
+/* 💾 SAVE — DATE FORMAT FIXED */
 function saveData(){
   if(!isAdmin) return;
 
-  const now=new Date();
-  const updated=
-    now.toLocaleDateString()+" "+
-    now.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+  const now = new Date();
+  const updated = now.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
 
   db.ref("log").set({
-    title:titleEl.innerText,
-    desc:descEl.innerHTML,
-    table:tbody.innerHTML,
+    title: titleEl.innerText,
+    desc: descEl.innerHTML,
+    table: tbody.innerHTML,
     updated
   });
 
-  lastUpdatedEl.innerText="Last updated: "+updated;
+  lastUpdatedEl.innerText = "Last updated: " + updated;
 }
 
 ["input","keyup","blur","paste"].forEach(evt=>{
