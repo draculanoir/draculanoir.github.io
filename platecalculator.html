@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Barbell Racking Calculator</title>
+  <meta name="description" content="Barbell Calculator figures out the right weights to put on the bar so you don't have to.">
+
+  <!-- Libraries -->
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="rack.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="foundation-6.6.3-complete/css/foundation.min.css">
+  <link rel="stylesheet" href="rack.css">
+</head>
+
+<body>
+
+<div class="grid-container">
+  <div class="grid-x grid-margin-x">
+
+    <div class="cell">
+      <h1>Barbell Racking Calculator</h1>
+    </div>
+
+    <div class="cell large-6 small-12">
+      <form onsubmit="return false;">
+        <div class="grid-x grid-margin-x">
+
+          <div class="cell small-6">
+            <label for="weight">Target Weight</label>
+            <div class="slider" data-slider data-initial-start="135" data-start="12.5" data-end="1000" data-step="2.5">
+              <span class="slider-handle" data-slider-handle role="slider" tabindex="1" aria-controls="weight"></span>
+              <span class="slider-fill" data-slider-fill></span>
+            </div>
+            <input id="weight" type="number" onchange="saveValues();">
+          </div>
+
+          <div class="cell small-6">
+            <label for="barweight">Bar Weight</label>
+            <div class="slider" data-slider data-initial-start="45" data-start="0" data-end="200" data-step="2.5">
+              <span class="slider-handle" data-slider-handle role="slider" tabindex="1" aria-controls="barweight"></span>
+              <span class="slider-fill" data-slider-fill></span>
+            </div>
+            <input id="barweight" type="number" onchange="saveValues();">
+          </div>
+
+          <div class="cell">
+            <button class="button" type="button" data-toggle="plates-dropdown">
+              Set Plates Available
+            </button>
+
+            <div class="dropdown-pane" id="plates-dropdown" data-dropdown data-auto-focus="true">
+              <div id="weightChecks" onclick="saveValues();"></div>
+            </div>
+          </div>
+
+          <div class="cell">
+            <button
+              type="button"
+              class="large expanded button"
+              onclick="outputResultSVG(false);">
+              Calculate
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <div class="cell large-6">
+      <div id="result"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Keyboard support -->
+<script>
+document.onkeypress = function(e){
+  const key = e.keyCode || e.which;
+  if(key === 13){
+    outputResultSVG(false);
+  }
+};
+</script>
+
+<!-- Foundation JS -->
+<script src="foundation-6.6.3-complete/js/vendor/jquery.js"></script>
+<script src="foundation-6.6.3-complete/js/vendor/what-input.js"></script>
+<script src="foundation-6.6.3-complete/js/vendor/foundation.js"></script>
+<script src="foundation-6.6.3-complete/js/app.js"></script>
+
+</body>
+</html>
