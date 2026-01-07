@@ -80,9 +80,7 @@ td.left{text-align:left}
   color:var(--muted);
 }
 
-/* ================= */
-/* BARBELL CALC */
-/* ================= */
+/* ===== BARBELL CALC ===== */
 
 .calculator{
   max-width:1020px;
@@ -149,13 +147,13 @@ td.left{text-align:left}
   border-radius:4px;
 }
 
-/* Plate sizes */
+/* Sizes */
 .big{height:90px;width:26px}
 .mid{height:75px;width:22px}
 .small{height:60px;width:18px}
 .tiny{height:45px;width:14px}
 
-/* Plate colors */
+/* Colors */
 .p45,.p25kg{background:#d32f2f}
 .p35,.p20kg{background:#1976d2}
 .p25,.p15kg{background:#fbc02d}
@@ -215,10 +213,6 @@ td.left{text-align:left}
 <tbody id="tbody"></tbody>
 </table>
 
-<!-- ================= -->
-<!-- BARBELL CALC -->
-<!-- ================= -->
-
 <div class="calculator">
   <div class="calc-header">
     <div>Barbell Calculator</div>
@@ -229,8 +223,7 @@ td.left{text-align:left}
   </div>
 
   <div class="controls">
-    <label>
-      Bar weight:
+    <label>Bar weight:
       <input id="barInput" type="number" step="0.5">
     </label>
     <label>
@@ -268,12 +261,12 @@ firebase.initializeApp({
   projectId:"strenght-a9f37"
 });
 
-const db=firebase.database();
+const db = firebase.database();
 
-/* Load data */
+/* LOAD DATA */
 db.ref("log").once("value").then(s=>{
   const d=s.val();
-  if(!d)return;
+  if(!d) return;
   title.innerText=d.title;
   desc.innerHTML=d.desc;
   tbody.innerHTML=d.table;
@@ -281,10 +274,34 @@ db.ref("log").once("value").then(s=>{
   document.body.style.visibility="visible";
 });
 
-/* ================= */
-/* CALCULATOR LOGIC */
-/* ================= */
+/* AUTH */
+const emailEl = document.getElementById("email");
+const passwordEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const tableEl = document.getElementById("table");
 
+loginBtn.onclick = ()=>{
+  firebase.auth()
+    .signInWithEmailAndPassword(emailEl.value, passwordEl.value)
+    .catch(err=>alert(err.message));
+};
+
+logoutBtn.onclick = ()=>firebase.auth().signOut();
+
+firebase.auth().onAuthStateChanged(user=>{
+  if(user){
+    tableEl.classList.remove("locked-content");
+    loginBtn.style.display="none";
+    logoutBtn.style.display="inline-block";
+  }else{
+    tableEl.classList.add("locked-content");
+    loginBtn.style.display="inline-block";
+    logoutBtn.style.display="none";
+  }
+});
+
+/* CALCULATOR */
 const left=document.getElementById("left");
 const right=document.getElementById("right");
 const totalEl=document.getElementById("total");
@@ -297,29 +314,15 @@ let barWeight=20;
 let plates=[];
 
 const configs={
-  kg:{
-    bar:20,
-    plates:[
-      {w:25,c:"p25kg big"},
-      {w:20,c:"p20kg mid"},
-      {w:15,c:"p15kg mid"},
-      {w:10,c:"p10kg small"},
-      {w:5,c:"p5kg small"},
-      {w:2.5,c:"p2_5kg tiny"},
-      {w:1.25,c:"p1_25kg tiny"}
-    ]
-  },
-  lb:{
-    bar:45,
-    plates:[
-      {w:45,c:"p45 big"},
-      {w:35,c:"p35 mid"},
-      {w:25,c:"p25 mid"},
-      {w:10,c:"p10 small"},
-      {w:5,c:"p5 small"},
-      {w:2.5,c:"p2_5 tiny"}
-    ]
-  }
+  kg:{ bar:20, plates:[
+    {w:25,c:"p25kg big"},{w:20,c:"p20kg mid"},
+    {w:15,c:"p15kg mid"},{w:10,c:"p10kg small"},
+    {w:5,c:"p5kg small"},{w:2.5,c:"p2_5kg tiny"},
+    {w:1.25,c:"p1_25kg tiny"} ]},
+  lb:{ bar:45, plates:[
+    {w:45,c:"p45 big"},{w:35,c:"p35 mid"},
+    {w:25,c:"p25 mid"},{w:10,c:"p10 small"},
+    {w:5,c:"p5 small"},{w:2.5,c:"p2_5 tiny"} ]}
 };
 
 function setUnit(u){
@@ -336,47 +339,25 @@ function buildButtons(){
   configs[unit].plates.forEach(p=>{
     const b=document.createElement("button");
     b.textContent=`+${p.w} ${unit}`;
-    b.onclick=()=>addPlate(p);
+    b.onclick=()=>{ plates.push(p); render(); };
     plateBtns.appendChild(b);
   });
 }
 
-function addPlate(p){
-  plates.push(p);
-  render();
-}
+function removePlate(){ plates.pop(); render(); }
+function resetBar(){ plates=[]; render(); }
 
-function removePlate(){
-  plates.pop();
-  render();
-}
-
-function resetBar(){
-  plates=[];
-  render();
-}
-
-barInput.oninput=()=>{
-  barWeight=parseFloat(barInput.value)||0;
-  render();
-};
-
+barInput.oninput=()=>{ barWeight=parseFloat(barInput.value)||0; render(); };
 barToggle.onchange=render;
 
 function render(){
-  left.innerHTML="";
-  right.innerHTML="";
-
+  left.innerHTML=""; right.innerHTML="";
   let total = barToggle.checked ? barWeight : 0;
-
-  const sorted=[...plates].sort((a,b)=>b.w-a.w);
-
-  sorted.forEach(p=>{
+  [...plates].sort((a,b)=>b.w-a.w).forEach(p=>{
     left.innerHTML+=`<div class="plate ${p.c}"></div>`;
     right.innerHTML+=`<div class="plate ${p.c}"></div>`;
     total+=p.w*2;
   });
-
   totalEl.textContent=`Total: ${total} ${unit}`;
 }
 
