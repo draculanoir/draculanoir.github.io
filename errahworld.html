@@ -1,272 +1,315 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Strength Log – 1RM Tracking</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8" />
+<title>Strength Log – 1RM Tracking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <style>
-    :root {
-      --bg-main: #0c0e12;
-      --bg-panel: #14161c;
-      --bg-header: #1b1e26;
-      --border: #2a2d36;
-      --text: #d9dbe1;
-      --muted: #9da1ac;
-      --accent: #bfc6d6;
-    }
+<style>
+:root{
+  --bg-main:#0c0e12;
+  --bg-panel:#14161c;
+  --bg-header:#1b1e26;
+  --border:#2a2d36;
+  --text:#d9dbe1;
+  --muted:#9da1ac;
+  --accent:#bfc6d6;
+}
 
-    /* Hide page until Firebase data loads */
-    body {
-      visibility: hidden;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: radial-gradient(circle at top, #12141b, var(--bg-main));
-      color: var(--text);
-      padding: 24px;
-    }
+/* Hide page until Firebase data loads */
+body{
+  visibility:hidden;
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:radial-gradient(circle at top,#12141b,var(--bg-main));
+  color:var(--text);
+  padding:24px;
+}
 
-    /* Lock all non-admin interaction */
-    .locked-content,
-    .locked-content * {
-      pointer-events: none !important;
-      user-select: none !important;
-      caret-color: transparent !important;
-    }
+/* Lock all non-admin interaction */
+.locked-content,
+.locked-content *{
+  pointer-events:none !important;
+  user-select:none !important;
+  caret-color:transparent !important;
+}
 
-    /* Disable touch interactions for locked cells on mobile */
-    .locked-content td,
-    .locked-content th {
-      touch-action: none !important;
-    }
+/* Remove focus outlines globally */
+*:focus{
+  outline:none !important;
+}
 
-    /* Remove focus outlines globally */
-    *:focus {
-      outline: none !important;
-      box-shadow: none !important;
-    }
+/* Layout */
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  max-width:1020px;
+  margin-bottom:12px;
+}
 
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1020px;
-      margin-bottom: 12px;
-    }
+#authBox input,
+#authBox button{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:6px 10px;
+  border-radius:6px;
+  margin-right:4px;
+}
 
-    #authBox input,
-    #authBox button {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--accent);
-      padding: 6px 10px;
-      border-radius: 6px;
-      margin-right: 4px;
-    }
+table{
+  width:100%;
+  max-width:1020px;
+  border-collapse:collapse;
+  background:var(--bg-panel);
+  box-shadow:0 0 0 1px var(--border);
+}
 
-    table {
-      width: 100%;
-      max-width: 1020px;
-      border-collapse: collapse;
-      background: var(--bg-panel);
-      box-shadow: 0 0 0 1px var(--border);
-    }
+th,td{
+  border:1px solid var(--border);
+  padding:10px;
+  text-align:center;
+}
 
-    th,
-    td {
-      border: 1px solid var(--border);
-      padding: 10px;
-      text-align: center;
-    }
+th{
+  background:var(--bg-header);
+  color:var(--accent);
+  font-size:.75rem;
+}
 
-    th {
-      background: var(--bg-header);
-      color: var(--accent);
-      font-size: 0.75rem;
-    }
+td.left{ text-align:left; }
 
-    td.left {
-      text-align: left;
-    }
+.last-updated{
+  font-size:.75rem;
+  color:var(--muted);
+}
 
-    .last-updated {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-  </style>
+/* ===================== */
+/* 🏋️ BARBELL CALCULATOR */
+/* ===================== */
+
+.calculator{
+  max-width:1020px;
+  margin-top:40px;
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  padding:20px;
+  border-radius:10px;
+}
+
+.calc-title{
+  font-size:1.1rem;
+  margin-bottom:12px;
+}
+
+.barbell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:20px 0;
+}
+
+.bar{
+  width:260px;
+  height:8px;
+  background:#888;
+  border-radius:4px;
+}
+
+.sleeve{
+  display:flex;
+  align-items:center;
+}
+
+.plate{
+  width:22px;
+  height:80px;
+  margin:0 2px;
+  border-radius:4px;
+}
+
+.p25{background:#d32f2f}
+.p20{background:#1976d2}
+.p15{background:#fbc02d}
+.p10{background:#388e3c}
+.p5 {background:#555}
+.p2_5{background:#999}
+.p1_25{background:#bbb}
+
+.plates{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  justify-content:center;
+}
+
+.plates button{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.total{
+  text-align:center;
+  font-size:1.2rem;
+  margin-top:10px;
+  color:var(--accent);
+}
+</style>
 </head>
 
 <body>
 
-  <h1 id="title"></h1>
-  <p id="desc"></p>
+<h1 id="title"></h1>
+<p id="desc"></p>
 
-  <div class="top-bar">
-    <div id="authBox">
-      <input id="email" placeholder="admin email">
-      <input id="password" type="password" placeholder="password">
-      <button id="loginBtn">Login</button>
-      <button id="logoutBtn" style="display:none">Logout</button>
-    </div>
-    <div id="lastUpdated" class="last-updated"></div>
+<div class="top-bar">
+  <div id="authBox">
+    <input id="email" placeholder="admin email">
+    <input id="password" type="password" placeholder="password">
+    <button id="loginBtn">Login</button>
+    <button id="logoutBtn" style="display:none">Logout</button>
+  </div>
+  <div id="lastUpdated" class="last-updated"></div>
+</div>
+
+<table id="table" class="locked-content">
+<thead>
+<tr>
+<th class="left">Lift</th>
+<th>Current</th>
+<th>1RM</th>
+<th>Strength Level</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<!-- ===================== -->
+<!-- 🏋️ BARBELL CALCULATOR -->
+<!-- ===================== -->
+
+<div class="calculator">
+  <div class="calc-title">Barbell Calculator (20kg Bar)</div>
+
+  <div class="barbell">
+    <div id="left" class="sleeve"></div>
+    <div class="bar"></div>
+    <div id="right" class="sleeve"></div>
   </div>
 
-  <table id="table" class="locked-content">
-    <thead>
-      <tr>
-        <th class="left">Lift</th>
-        <th>Current</th>
-        <th>1RM</th>
-        <th>Strength Level</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
+  <div class="plates">
+    <button onclick="addPlate(25)">+25</button>
+    <button onclick="addPlate(20)">+20</button>
+    <button onclick="addPlate(15)">+15</button>
+    <button onclick="addPlate(10)">+10</button>
+    <button onclick="addPlate(5)">+5</button>
+    <button onclick="addPlate(2.5)">+2.5</button>
+    <button onclick="addPlate(1.25)">+1.25</button>
+    <button onclick="removePlate()">Undo</button>
+    <button onclick="resetBar()">Reset</button>
+  </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <div class="total" id="total">Total: 20 kg</div>
+</div>
 
-  <script>
-    /* 🔥 Firebase Init */
-    firebase.initializeApp({
-      apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-      authDomain: "strenght-a9f37.firebaseapp.com",
-      databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
-      projectId: "strenght-a9f37",
-      storageBucket: "strenght-a9f37.firebasestorage.app",
-      messagingSenderId: "469926449178",
-      appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
-    });
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    const auth = firebase.auth();
-    const db = firebase.database();
+<script>
+/* Firebase Init */
+firebase.initializeApp({
+  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain:"strenght-a9f37.firebaseapp.com",
+  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId:"strenght-a9f37"
+});
 
-    /* DOM */
-    const titleEl = document.getElementById("title");
-    const descEl = document.getElementById("desc");
-    const tbody = document.getElementById("tbody");
-    const table = document.getElementById("table");
-    const lastUpdatedEl = document.getElementById("lastUpdated");
-    const emailEl = document.getElementById("email");
-    const passEl = document.getElementById("password");
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
+const auth=firebase.auth();
+const db=firebase.database();
 
-    let isAdmin = false;
-    let firstLoad = true;
+/* DOM */
+const titleEl=document.getElementById("title");
+const descEl=document.getElementById("desc");
+const tbody=document.getElementById("tbody");
+const table=document.getElementById("table");
+const lastUpdatedEl=document.getElementById("lastUpdated");
 
-    /* 🚫 Block keyboard when not admin (except login) */
-    document.addEventListener("keydown", e => {
-      if (!isAdmin && !e.target.closest("#authBox")) {
-        e.preventDefault();
-      }
-    });
+let isAdmin=false, firstLoad=true;
 
-    /* 🔒 Lock everything */
-    function lockAll() {
-      isAdmin = false;
-      table.classList.add("locked-content");
-      titleEl.contentEditable = "false";
-      descEl.contentEditable = "false";
-      document.querySelectorAll("td, th").forEach(td => {
-        td.contentEditable = "false";
-        td.blur(); // Blur to ensure no focus on the cells
-      });
-    }
+/* Lock */
+function lockAll(){
+  table.classList.add("locked-content");
+  titleEl.contentEditable=false;
+  descEl.contentEditable=false;
+}
 
-    /* ✏️ Enable editing */
-    function enableEdit() {
-      isAdmin = true;
-      table.classList.remove("locked-content");
-      titleEl.contentEditable = "true";
-      descEl.contentEditable = "true";
-      document.querySelectorAll("td, th").forEach(td => {
-        td.contentEditable = "true";
-      });
-    }
+/* Auth */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    table.classList.remove("locked-content");
+    titleEl.contentEditable=true;
+    descEl.contentEditable=true;
+  }else lockAll();
+});
 
-    /* 🔐 Auth */
-    loginBtn.onclick = () => {
-      auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
-        .catch(e => alert(e.message));
-    };
+/* Load */
+db.ref("log").once("value").then(s=>{
+  const d=s.val();
+  if(!d)return;
+  titleEl.innerText=d.title;
+  descEl.innerHTML=d.desc;
+  tbody.innerHTML=d.table;
+  lastUpdatedEl.innerText="Last updated: "+d.updated;
+  document.body.style.visibility="visible";
+});
 
-    logoutBtn.onclick = () => auth.signOut();
+/* ===================== */
+/* 🧮 BARBELL LOGIC */
+/* ===================== */
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        enableEdit();
-        loginBtn.style.display = "none";
-        logoutBtn.style.display = "inline-block";
-      } else {
-        lockAll();
-        loginBtn.style.display = "inline-block";
-        logoutBtn.style.display = "none";
-      }
-    });
+const left=document.getElementById("left");
+const right=document.getElementById("right");
+const totalEl=document.getElementById("total");
 
-    /* 📥 Initial load (no flash) */
-    db.ref("log").once("value").then(snap => {
-      const d = snap.val();
-      if (!d) return;
+let plates=[];
+const BAR=20;
 
-      titleEl.innerText = d.title;
-      descEl.innerHTML = d.desc;
-      tbody.innerHTML = d.table;
-      lastUpdatedEl.innerText = "Last updated: " + d.updated;
+function addPlate(w){
+  plates.push(w);
+  render();
+}
 
-      document.body.style.visibility = "visible";
-    });
+function removePlate(){
+  plates.pop();
+  render();
+}
 
-    /* 🔁 Live updates (viewers only) */
-    db.ref("log").on("value", snap => {
-      if (firstLoad) {
-        firstLoad = false;
-        return;
-      }
-      if (isAdmin) return;
+function resetBar(){
+  plates=[];
+  render();
+}
 
-      const d = snap.val();
-      if (!d) return;
+function render(){
+  left.innerHTML="";
+  right.innerHTML="";
+  let total=BAR;
 
-      titleEl.innerText = d.title;
-      descEl.innerHTML = d.desc;
-      tbody.innerHTML = d.table;
-      lastUpdatedEl.innerText = "Last updated: " + d.updated;
-    });
+  plates.forEach(w=>{
+    const cls="p"+String(w).replace(".","_");
+    left.innerHTML+=`<div class="plate ${cls}"></div>`;
+    right.innerHTML+=`<div class="plate ${cls}"></div>`;
+    total+=w*2;
+  });
 
-    /* 💾 Save edits (DATE + AM/PM TIME) */
-    document.addEventListener("input", () => {
-      if (!isAdmin) return;
-
-      const now = new Date();
-
-      const datePart = now.toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      });
-
-      const timePart = now.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true
-      });
-
-      const formatted = `${datePart} · ${timePart}`;
-
-      db.ref("log").set({
-        title: titleEl.innerText,
-        desc: descEl.innerHTML,
-        table: tbody.innerHTML,
-        updated: formatted
-      });
-    });
-
-    /* Default lock */
-    lockAll();
-  </script>
+  totalEl.innerText=`Total: ${total} kg`;
+}
+</script>
 
 </body>
 </html>
