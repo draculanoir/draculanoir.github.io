@@ -136,17 +136,26 @@ td.left{text-align:left}
   color:#000;
 }
 
+/* Plate sizing (heaviest → lightest) */
 .p45{width:28px;height:78px;background:#d32f2f}
 .p35{width:26px;height:72px;background:#1976d2}
 .p25{width:24px;height:66px;background:#fbc02d}
+.p15{width:22px;height:60px;background:#8bc34a}
 .p10{width:20px;height:54px;background:#388e3c}
 .p5{width:16px;height:44px;background:#ff9800}
-.p05{width:12px;height:36px;background:#9c27b0}
+.p2_5{width:14px;height:38px;background:#9c27b0}
 
 .calc-note{
   font-size:.75rem;
   color:var(--muted);
   margin-top:10px;
+  text-align:center;
+}
+
+.calc-warning{
+  margin-top:8px;
+  font-size:.75rem;
+  color:#ffb74d;
   text-align:center;
 }
 </style>
@@ -176,8 +185,10 @@ td.left{text-align:left}
     <div id="rightPlates" class="plates"></div>
   </div>
 
+  <div id="warning" class="calc-warning"></div>
+
   <div class="calc-note">
-    Plates are shown per side and mirrored like a real barbell.
+    Heaviest plates are closest to the bar. Plates are mirrored per side.
   </div>
 </div>
 
@@ -219,68 +230,32 @@ firebase.initializeApp({
   appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
-const auth=firebase.auth();
-const db=firebase.database();
-
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
-
-let isAdmin=false;
-let firstLoad=true;
-
-/* AUTH */
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value);
-logoutBtn.onclick=()=>auth.signOut();
-
-auth.onAuthStateChanged(user=>{
-  isAdmin=!!user;
-  table.classList.toggle("locked-content",!isAdmin);
-});
-
-/* LOAD */
-db.ref("log").once("value").then(s=>{
-  const d=s.val();
-  if(!d) return;
-  titleEl.innerText=d.title;
-  descEl.innerHTML=d.desc;
-  tbody.innerHTML=d.table;
-  lastUpdatedEl.innerText="Last updated: "+d.updated;
-  document.body.style.visibility="visible";
-});
-
-/* SAVE */
-document.addEventListener("input",()=>{
-  if(!isAdmin) return;
-  const n=new Date();
-  db.ref("log").set({
-    title:titleEl.innerText,
-    desc:descEl.innerHTML,
-    table:tbody.innerHTML,
-    updated:n.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})+
-      " · "+n.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})
-  });
-});
-
 /* 🏋️ BARBELL LOGIC */
-const PLATES=[45,35,25,10,5,0.5];
+const PLATES=[45,35,25,15,10,5,2.5];
 
 function plateClass(w){
-  return w===0.5?"p05":"p"+w;
+  return w===2.5 ? "p2_5" : "p"+w;
 }
 
 function calculate(){
   leftPlates.innerHTML="";
   rightPlates.innerHTML="";
+  warning.innerText="";
 
   const target=+document.getElementById("target").value;
   const bar=+document.getElementById("bar").value;
-  const perSide=(target-bar)/2;
-  if(perSide<=0) return;
+  const rawPerSide=(target-bar)/2;
+  if(rawPerSide<=0) return;
 
-  let remain=perSide;
+  const minIncrement=2.5;
+  const roundedPerSide=Math.round(rawPerSide/minIncrement)*minIncrement;
+
+  if(Math.abs(rawPerSide-roundedPerSide)>0.001){
+    warning.innerText=
+      `Exact load not possible. Rounded to ${(roundedPerSide*2+bar).toFixed(1)} lb total.`;
+  }
+
+  let remain=roundedPerSide;
   const used=[];
 
   PLATES.forEach(p=>{
@@ -290,11 +265,12 @@ function calculate(){
     }
   });
 
+  /* Heaviest closest to bar */
   used.forEach(p=>{
     const l=document.createElement("div");
     l.className=`plate ${plateClass(p)}`;
     l.textContent=p;
-    leftPlates.appendChild(l);
+    leftPlates.prepend(l);
 
     const r=l.cloneNode(true);
     rightPlates.appendChild(r);
