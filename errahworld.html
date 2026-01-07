@@ -32,16 +32,6 @@ body{
   caret-color:transparent !important;
 }
 
-.locked-content td,
-.locked-content th{
-  touch-action:none !important;
-}
-
-*:focus{
-  outline:none !important;
-  box-shadow:none !important;
-}
-
 .top-bar{
   display:flex;
   justify-content:space-between;
@@ -100,7 +90,6 @@ td.left{ text-align:left; }
 }
 
 .calculator input,
-.calculator button,
 .calculator label{
   background:transparent;
   border:1px solid var(--border);
@@ -110,11 +99,9 @@ td.left{ text-align:left; }
   margin-right:6px;
 }
 
-/* remove arrows */
 .calculator input[type="number"]::-webkit-inner-spin-button,
 .calculator input[type="number"]::-webkit-outer-spin-button{
   -webkit-appearance:none;
-  margin:0;
 }
 .calculator input[type="number"]{
   -moz-appearance:textfield;
@@ -168,8 +155,8 @@ td.left{ text-align:left; }
 
 <body>
 
-<h1 id="title"></h1>
-<p id="desc"></p>
+<h1 id="title" contenteditable="false"></h1>
+<p id="desc" contenteditable="false"></p>
 
 <div class="top-bar">
   <div id="authBox">
@@ -194,7 +181,7 @@ td.left{ text-align:left; }
 </table>
 
 <!-- 🏋️ BARBELL CALCULATOR -->
-<div class="calculator" id="calculator">
+<div class="calculator">
   <h3>Barbell Target Weight (lbs)</h3>
 
   <input id="targetWeight" type="number" placeholder="Enter weight">
@@ -247,18 +234,6 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 let isAdmin = false;
 
-/* 🚫 VIEWER SHIELD */
-function viewerShield(e){
-  if(isAdmin) return;
-  if(e.target.closest("#authBox") || e.target.closest("#calculator")) return;
-  e.preventDefault();
-  e.stopPropagation();
-  if(document.activeElement) document.activeElement.blur();
-}
-["click","focus","touchstart"].forEach(evt=>{
-  document.addEventListener(evt, viewerShield, true);
-});
-
 /* 🔒 LOCK */
 function lockAll(){
   isAdmin = false;
@@ -278,43 +253,41 @@ function enableEdit(){
 /* 🔐 AUTH */
 loginBtn.onclick = () =>
   auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
-    .catch(e=>alert(e.message));
+    .catch(e => alert(e.message));
 
 logoutBtn.onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(user=>{
   if(user){
     enableEdit();
-    loginBtn.style.display="none";
-    logoutBtn.style.display="inline-block";
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
   }else{
     lockAll();
-    loginBtn.style.display="inline-block";
-    logoutBtn.style.display="none";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
   }
 });
 
-/* 📥 LOAD */
-db.ref("log").once("value").then(snap=>{
-  const d=snap.val();
-  if(!d) return;
-  titleEl.innerText=d.title;
-  descEl.innerHTML=d.desc;
-  tbody.innerHTML=d.table;
-  lastUpdatedEl.innerText="Last updated: "+d.updated;
-  document.body.style.visibility="visible";
-});
-
-/* 💾 SAVE — DATE FORMAT FIXED */
+/* 💾 SAVE ON EDIT */
 function saveData(){
   if(!isAdmin) return;
 
   const now = new Date();
-  const updated = now.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
+
+  const date = now.toLocaleDateString("en-GB", {
+    day:"numeric",
+    month:"long",
+    year:"numeric"
   });
+
+  const time = now.toLocaleTimeString("en-US", {
+    hour:"numeric",
+    minute:"2-digit",
+    hour12:true
+  });
+
+  const updated = `${date} · ${time}`;
 
   db.ref("log").set({
     title: titleEl.innerText,
@@ -326,50 +299,69 @@ function saveData(){
   lastUpdatedEl.innerText = "Last updated: " + updated;
 }
 
-["input","keyup","blur","paste"].forEach(evt=>{
-  titleEl.addEventListener(evt, saveData);
-  descEl.addEventListener(evt, saveData);
-  tbody.addEventListener(evt, saveData);
+["input","blur","keyup"].forEach(evt=>{
+  document.addEventListener(evt, e=>{
+    if(isAdmin && e.target.closest("#table, #title, #desc")){
+      saveData();
+    }
+  }, true);
 });
 
-/* 🏋️ CALCULATOR */
-document.getElementById("calcBtn").onclick = ()=>{
-  const plates=[45,35,25,10,5,2.5];
-  const left=document.getElementById("leftSide");
-  const right=document.getElementById("rightSide");
-  const note=document.getElementById("roundNote");
-  const includeBar=document.getElementById("includeBar").checked;
+/* 📥 LOAD */
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val();
+  if(!d) return;
+  titleEl.innerText = d.title;
+  descEl.innerHTML = d.desc;
+  tbody.innerHTML = d.table;
+  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+  document.body.style.visibility = "visible";
+});
 
-  left.innerHTML="";
-  right.innerHTML="";
-  note.innerText="";
+/* 🏋️ BARBELL */
+document.getElementById("calcBtn").onclick = () => {
+  const plates = [45,35,25,10,5,2.5];
+  const left = document.getElementById("leftSide");
+  const right = document.getElementById("rightSide");
+  const note = document.getElementById("roundNote");
+  const includeBar = document.getElementById("includeBar").checked;
 
-  let target=Number(document.getElementById("targetWeight").value);
+  left.innerHTML = "";
+  right.innerHTML = "";
+  note.innerText = "";
+
+  let target = Number(document.getElementById("targetWeight").value);
   if(!target) return;
 
-  let remaining=(target-(includeBar?45:0))/2;
-  if(remaining<0){
-    note.innerText="Target weight is less than the bar.";
+  const barWeight = includeBar ? 45 : 0;
+  let remaining = (target - barWeight) / 2;
+
+  if(remaining < 0){
+    note.innerText = "Target weight is less than the bar.";
     return;
   }
 
-  let used=[];
+  let used = [];
+
   plates.forEach(p=>{
-    while(remaining>=p){
-      remaining-=p;
+    while(remaining >= p){
+      remaining -= p;
       used.push(p);
     }
   });
 
-  if(remaining>0) note.innerText="Rounded down.";
+  if(remaining > 0){
+    note.innerText = "Rounded down to nearest achievable weight.";
+  }
 
   used.forEach(p=>{
-    const cls=p===2.5?"p2_5":"p"+p;
-    right.innerHTML+=`<div class="plate ${cls}">${p}</div>`;
+    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    right.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
+
   [...used].reverse().forEach(p=>{
-    const cls=p===2.5?"p2_5":"p"+p;
-    left.innerHTML+=`<div class="plate ${cls}">${p}</div>`;
+    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    left.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
 };
 
