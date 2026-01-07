@@ -110,7 +110,7 @@ td.left{ text-align:left; }
   margin-right:6px;
 }
 
-/* 🔇 REMOVE NUMBER INPUT ARROWS (ONLY CHANGE) */
+/* remove number arrows */
 .calculator input[type="number"]::-webkit-inner-spin-button,
 .calculator input[type="number"]::-webkit-outer-spin-button{
   -webkit-appearance:none;
@@ -139,7 +139,7 @@ td.left{ text-align:left; }
   align-items:center;
 }
 
-/* Plates with centered text */
+/* Plates */
 .plate{
   height:60px;
   border-radius:4px;
@@ -163,6 +163,10 @@ td.left{ text-align:left; }
   font-size:.75rem;
   color:var(--muted);
   margin-top:8px;
+}
+.total{
+  font-size:.85rem;
+  margin-top:6px;
 }
 </style>
 </head>
@@ -198,11 +202,13 @@ td.left{ text-align:left; }
 <div class="calculator" id="calculator">
   <h3>Barbell Target Weight (lbs)</h3>
 
-  <input id="targetWeight" type="number" placeholder="Enter weight">
+  <input id="targetWeight" type="number" placeholder="Target weight">
+
+  <input id="barWeight" type="number" value="45" placeholder="Bar weight">
 
   <label>
     <input type="checkbox" id="includeBar" checked>
-    Include 45lb bar
+    Include bar
   </label>
 
   <button id="calcBtn">Calculate</button>
@@ -214,6 +220,7 @@ td.left{ text-align:left; }
   </div>
 
   <div id="roundNote" class="note"></div>
+  <div id="totalWeight" class="total"></div>
 </div>
 
 <!-- Firebase -->
@@ -315,17 +322,21 @@ document.getElementById("calcBtn").onclick = () => {
   const left = document.getElementById("leftSide");
   const right = document.getElementById("rightSide");
   const note = document.getElementById("roundNote");
-  const includeBar = document.getElementById("includeBar").checked;
+  const totalEl = document.getElementById("totalWeight");
 
   left.innerHTML = "";
   right.innerHTML = "";
   note.innerText = "";
+  totalEl.innerText = "";
 
-  let target = Number(document.getElementById("targetWeight").value);
+  const target = Number(document.getElementById("targetWeight").value);
+  const barWeight = Number(document.getElementById("barWeight").value) || 0;
+  const includeBar = document.getElementById("includeBar").checked;
+
   if(!target) return;
 
-  const barWeight = includeBar ? 45 : 0;
-  let remaining = (target - barWeight) / 2;
+  const bar = includeBar ? barWeight : 0;
+  let remaining = (target - bar) / 2;
 
   if(remaining < 0){
     note.innerText = "Target weight is less than the bar weight.";
@@ -345,17 +356,21 @@ document.getElementById("calcBtn").onclick = () => {
     note.innerText = "Rounded down to nearest achievable weight.";
   }
 
-  // Right side
+  let platesTotal = 0;
+
   used.forEach(p=>{
+    platesTotal += p * 2;
     const cls = p === 2.5 ? "p2_5" : "p" + p;
     right.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
 
-  // Left side (reversed)
   [...used].reverse().forEach(p=>{
     const cls = p === 2.5 ? "p2_5" : "p" + p;
     left.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
+
+  const totalLoaded = platesTotal + bar;
+  totalEl.innerText = "Total loaded weight: " + totalLoaded + " lb";
 };
 
 lockAll();
