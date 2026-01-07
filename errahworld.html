@@ -24,7 +24,7 @@ body{
   padding:24px;
 }
 
-/* 🔒 VIEWER LOCK */
+/* ================= LOCK ================= */
 .locked-content,
 .locked-content *{
   pointer-events:none !important;
@@ -86,6 +86,96 @@ td.left{text-align:left}
   font-size:.75rem;
   color:var(--muted);
 }
+
+/* ================= BARBELL CALCULATOR ================= */
+.barbell-box{
+  max-width:520px;
+  background:#14161c;
+  border:1px solid #2a2d36;
+  border-radius:14px;
+  padding:18px;
+  margin:30px auto 40px;
+}
+
+.barbell-box h2{
+  margin:0 0 14px;
+  font-size:1.1rem;
+  color:#bfc6d6;
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.controls input,
+.controls select{
+  background:#0c0e12;
+  border:1px solid #2a2d36;
+  color:#d9dbe1;
+  padding:8px;
+  border-radius:8px;
+}
+
+.controls label{
+  font-size:.75rem;
+  color:#9da1ac;
+}
+
+.toggle{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.8rem;
+}
+
+.bar{
+  margin-top:18px;
+  display:flex;
+  justify-content:center;
+}
+
+.bar-shaft{
+  height:10px;
+  width:100%;
+  background:#777;
+  border-radius:6px;
+  position:relative;
+}
+
+.plates{
+  position:absolute;
+  display:flex;
+  left:50%;
+  transform:translateX(-50%);
+}
+
+.plate{
+  height:46px;
+  margin:0 2px;
+  border-radius:4px;
+  animation:pop .25s ease;
+}
+
+@keyframes pop{
+  from{transform:scale(.7);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+.red{width:18px;background:#c0392b}
+.blue{width:16px;background:#2980b9}
+.yellow{width:14px;background:#f1c40f}
+.green{width:12px;background:#27ae60}
+.black{width:10px;background:#555}
+
+.result{
+  margin-top:12px;
+  font-size:.8rem;
+  color:#9da1ac;
+  text-align:center;
+}
 </style>
 </head>
 
@@ -115,6 +205,44 @@ td.left{text-align:left}
 </thead>
 <tbody id="tbody"></tbody>
 </table>
+
+<!-- ================= BARBELL CALCULATOR ================= -->
+<div class="barbell-box">
+  <h2>Barbell Calculator</h2>
+
+  <div class="controls">
+    <div>
+      <label>Target Lift</label>
+      <input id="targetWeight" type="number" placeholder="225">
+    </div>
+
+    <div>
+      <label>Units</label>
+      <select id="unit">
+        <option value="lb">lb</option>
+        <option value="kg">kg</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Bar Weight</label>
+      <input id="barWeight" type="number" value="45">
+    </div>
+
+    <div class="toggle">
+      <input id="includeBar" type="checkbox" checked>
+      <span>Include bar</span>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="bar-shaft">
+      <div class="plates" id="plates"></div>
+    </div>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -148,35 +276,23 @@ const logoutBtn=document.getElementById("logoutBtn");
 let isAdmin=false;
 let firstLoad=true;
 
-/* 🚫 VIEWER INTERACTION BLOCK (LOGIN SAFE) */
+/* viewer shield */
 function viewerShield(e){
   if(isAdmin) return;
-
-  // allow login panel
   if(e.target.closest("#authBox")) return;
-
   e.preventDefault();
   e.stopPropagation();
-
-  if(document.activeElement){
-    document.activeElement.blur();
-  }
-
-  return false;
+  if(document.activeElement) document.activeElement.blur();
 }
-
 ["touchstart","touchend","click","focus"].forEach(evt=>{
   document.addEventListener(evt,viewerShield,true);
 });
 
-/* 🔒 LOCK MODE */
 function lockAll(){
   isAdmin=false;
   table.classList.add("locked-content");
-
   titleEl.contentEditable="false";
   descEl.contentEditable="false";
-
   document.querySelectorAll("td,th").forEach(el=>{
     el.contentEditable="false";
     el.setAttribute("tabindex","-1");
@@ -184,25 +300,19 @@ function lockAll(){
   });
 }
 
-/* ✏️ ADMIN MODE */
 function enableEdit(){
   isAdmin=true;
   table.classList.remove("locked-content");
-
   titleEl.contentEditable="true";
   descEl.contentEditable="true";
-
   document.querySelectorAll("td,th").forEach(el=>{
     el.contentEditable="true";
     el.removeAttribute("tabindex");
   });
 }
 
-/* 🔐 AUTH */
-loginBtn.onclick=()=>auth
-  .signInWithEmailAndPassword(emailEl.value,passEl.value)
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
   .catch(e=>alert(e.message));
-
 logoutBtn.onclick=()=>auth.signOut();
 
 auth.onAuthStateChanged(user=>{
@@ -217,41 +327,32 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-/* 📥 INITIAL LOAD */
 db.ref("log").once("value").then(snap=>{
   const d=snap.val();
   if(!d) return;
-
   titleEl.innerText=d.title;
   descEl.innerHTML=d.desc;
   tbody.innerHTML=d.table;
   lastUpdatedEl.innerText="Last updated: "+d.updated;
-
   document.body.style.visibility="visible";
 });
 
-/* 🔁 LIVE VIEWER UPDATES */
 db.ref("log").on("value",snap=>{
   if(firstLoad){firstLoad=false;return;}
   if(isAdmin) return;
-
   const d=snap.val();
   if(!d) return;
-
   titleEl.innerText=d.title;
   descEl.innerHTML=d.desc;
   tbody.innerHTML=d.table;
   lastUpdatedEl.innerText="Last updated: "+d.updated;
 });
 
-/* 💾 SAVE (ADMIN ONLY) */
 document.addEventListener("input",()=>{
   if(!isAdmin) return;
-
   const now=new Date();
   const date=now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
   const time=now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
-
   db.ref("log").set({
     title:titleEl.innerText,
     desc:descEl.innerHTML,
@@ -260,7 +361,50 @@ document.addEventListener("input",()=>{
   });
 });
 
-/* DEFAULT */
+/* ================= CALCULATOR LOGIC ================= */
+const platesByUnit={
+  lb:[45,35,25,10,5,2.5],
+  kg:[25,20,15,10,5,2.5,1.25]
+};
+
+const target=document.getElementById("targetWeight");
+const unit=document.getElementById("unit");
+const barWeight=document.getElementById("barWeight");
+const includeBar=document.getElementById("includeBar");
+const platesEl=document.getElementById("plates");
+const result=document.getElementById("result");
+
+function updateCalc(){
+  platesEl.innerHTML="";
+  let total=Number(target.value)||0;
+  let bar=includeBar.checked?Number(barWeight.value)||0:0;
+  let perSide=(total-bar)/2;
+  if(perSide<=0){result.innerText="No plates needed";return;}
+
+  const used=[];
+  platesByUnit[unit.value].forEach(w=>{
+    while(perSide>=w-0.01){
+      perSide-=w;
+      used.push(w);
+    }
+  });
+
+  used.forEach(w=>{
+    const el=document.createElement("div");
+    el.className="plate";
+    el.classList.add(
+      w>=25?"red":w>=20?"blue":w>=15?"yellow":w>=10?"green":"black"
+    );
+    platesEl.appendChild(el);
+  });
+
+  result.innerText=`Plates per side: ${used.join(", ")} ${unit.value}`;
+}
+
+[target,unit,barWeight,includeBar].forEach(el=>{
+  el.addEventListener("input",updateCalc);
+});
+
 lockAll();
 </script>
 
