@@ -16,6 +16,7 @@
   --accent:#bfc6d6;
 }
 
+/* Hide page until Firebase data loads */
 body{
   visibility:hidden;
   font-family:"Segoe UI",Arial,sans-serif;
@@ -24,17 +25,20 @@ body{
   padding:24px;
 }
 
-/* Lock viewers */
+/* Lock all non-admin interaction */
 .locked-content,
 .locked-content *{
-  pointer-events:none!important;
-  user-select:none!important;
-  caret-color:transparent!important;
+  pointer-events:none !important;
+  user-select:none !important;
+  caret-color:transparent !important;
 }
 
-*:focus{outline:none}
+/* Remove focus outlines globally */
+*:focus{
+  outline:none !important;
+  box-shadow:none !important;
+}
 
-/* Layout */
 .top-bar{
   display:flex;
   justify-content:space-between;
@@ -61,7 +65,7 @@ table{
   box-shadow:0 0 0 1px var(--border);
 }
 
-th,td{
+th, td{
   border:1px solid var(--border);
   padding:10px;
   text-align:center;
@@ -73,101 +77,13 @@ th{
   font-size:.75rem;
 }
 
-td.left{text-align:left}
+td.left{
+  text-align:left;
+}
 
 .last-updated{
   font-size:.75rem;
   color:var(--muted);
-}
-
-/* ================= */
-/* BARBELL CALC */
-/* ================= */
-
-.calculator{
-  max-width:1020px;
-  margin-top:40px;
-  background:var(--bg-panel);
-  border:1px solid var(--border);
-  padding:20px;
-  border-radius:10px;
-}
-
-.calc-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:10px;
-}
-
-.unit-toggle button{
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:6px 12px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.barbell{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin:25px 0;
-}
-
-.bar{
-  width:260px;
-  height:8px;
-  background:#888;
-  border-radius:4px;
-}
-
-.sleeve{
-  display:flex;
-  align-items:center;
-}
-
-.plate{
-  margin:0 2px;
-  border-radius:4px;
-}
-
-/* Plate sizes */
-.big{height:90px;width:26px}
-.mid{height:75px;width:22px}
-.small{height:60px;width:18px}
-.tiny{height:45px;width:14px}
-
-/* Plate colors */
-.p45,.p25kg{background:#d32f2f}
-.p35,.p20kg{background:#1976d2}
-.p25,.p15kg{background:#fbc02d}
-.p10,.p10kg{background:#388e3c}
-.p5,.p5kg{background:#555}
-.p2_5,.p2_5kg,.p1_25kg{background:#999}
-
-.plates{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  justify-content:center;
-}
-
-.plates button{
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:6px 10px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.total{
-  text-align:center;
-  font-size:1.2rem;
-  margin-top:10px;
-  color:var(--accent);
 }
 </style>
 </head>
@@ -188,45 +104,16 @@ td.left{text-align:left}
 </div>
 
 <table id="table" class="locked-content">
-<thead>
-<tr>
-<th class="left">Lift</th>
-<th>Current</th>
-<th>1RM</th>
-<th>Strength Level</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
+  <thead>
+    <tr>
+      <th class="left">Lift</th>
+      <th>Current</th>
+      <th>1RM</th>
+      <th>Strength Level</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
 </table>
-
-<!-- ================= -->
-<!-- BARBELL CALC -->
-<!-- ================= -->
-
-<div class="calculator">
-  <div class="calc-header">
-    <div>Barbell Calculator</div>
-    <div class="unit-toggle">
-      <button onclick="setUnit('kg')">KG</button>
-      <button onclick="setUnit('lb')">LB</button>
-    </div>
-  </div>
-
-  <div class="barbell">
-    <div id="left" class="sleeve"></div>
-    <div class="bar"></div>
-    <div id="right" class="sleeve"></div>
-  </div>
-
-  <div class="plates" id="plateButtons"></div>
-
-  <div class="plates">
-    <button onclick="removePlate()">Undo</button>
-    <button onclick="resetBar()">Reset</button>
-  </div>
-
-  <div class="total" id="total"></div>
-</div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -234,113 +121,144 @@ td.left{text-align:left}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+/* 🔥 Firebase Init */
 firebase.initializeApp({
-  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain:"strenght-a9f37.firebaseapp.com",
-  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId:"strenght-a9f37"
+  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain: "strenght-a9f37.firebaseapp.com",
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
-const db=firebase.database();
+const auth = firebase.auth();
+const db   = firebase.database();
 
-/* Load */
-db.ref("log").once("value").then(s=>{
-  const d=s.val();
-  if(!d)return;
-  title.innerText=d.title;
-  desc.innerHTML=d.desc;
-  tbody.innerHTML=d.table;
-  lastUpdated.innerText="Last updated: "+d.updated;
-  document.body.style.visibility="visible";
-});
+/* DOM */
+const titleEl       = document.getElementById("title");
+const descEl        = document.getElementById("desc");
+const tbody         = document.getElementById("tbody");
+const table         = document.getElementById("table");
+const lastUpdatedEl = document.getElementById("lastUpdated");
+const emailEl       = document.getElementById("email");
+const passEl        = document.getElementById("password");
+const loginBtn      = document.getElementById("loginBtn");
+const logoutBtn     = document.getElementById("logoutBtn");
 
-/* ================= */
-/* CALCULATOR LOGIC */
-/* ================= */
+let isAdmin   = false;
+let firstLoad = true;
 
-const left=document.getElementById("left");
-const right=document.getElementById("right");
-const totalEl=document.getElementById("total");
-const plateBtns=document.getElementById("plateButtons");
-
-let unit="kg";
-let barWeight=20;
-let plates=[];
-
-const configs={
-  kg:{
-    bar:20,
-    plates:[
-      {w:25,c:"p25kg big"},
-      {w:20,c:"p20kg mid"},
-      {w:15,c:"p15kg mid"},
-      {w:10,c:"p10kg small"},
-      {w:5,c:"p5kg small"},
-      {w:2.5,c:"p2_5kg tiny"},
-      {w:1.25,c:"p1_25kg tiny"}
-    ]
-  },
-  lb:{
-    bar:45,
-    plates:[
-      {w:45,c:"p45 big"},
-      {w:35,c:"p35 mid"},
-      {w:25,c:"p25 mid"},
-      {w:10,c:"p10 small"},
-      {w:5,c:"p5 small"},
-      {w:2.5,c:"p2_5 tiny"}
-    ]
+/* 🚫 Block keyboard when not admin (except login) */
+document.addEventListener("keydown", e=>{
+  if(!isAdmin && !e.target.closest("#authBox")){
+    e.preventDefault();
   }
+});
+
+/* 🔒 Lock everything */
+function lockAll(){
+  isAdmin = false;
+  table.classList.add("locked-content");
+  titleEl.contentEditable = "false";
+  descEl.contentEditable  = "false";
+  document.querySelectorAll("td").forEach(td=>{
+    td.contentEditable = "false";
+    td.blur();
+  });
+}
+
+/* ✏️ Enable editing */
+function enableEdit(){
+  isAdmin = true;
+  table.classList.remove("locked-content");
+  titleEl.contentEditable = "true";
+  descEl.contentEditable  = "true";
+  document.querySelectorAll("td").forEach(td=>{
+    td.contentEditable = "true";
+  });
+}
+
+/* 🔐 Auth */
+loginBtn.onclick = ()=>{
+  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
+    .catch(e=>alert(e.message));
 };
 
-function setUnit(u){
-  unit=u;
-  plates=[];
-  barWeight=configs[u].bar;
-  buildButtons();
-  render();
-}
+logoutBtn.onclick = ()=>auth.signOut();
 
-function buildButtons(){
-  plateBtns.innerHTML="";
-  configs[unit].plates.forEach(p=>{
-    const b=document.createElement("button");
-    b.textContent=`+${p.w} ${unit}`;
-    b.onclick=()=>addPlate(p.w,p.c);
-    plateBtns.appendChild(b);
+auth.onAuthStateChanged(user=>{
+  if(user){
+    enableEdit();
+    loginBtn.style.display  = "none";
+    logoutBtn.style.display = "inline-block";
+  }else{
+    lockAll();
+    loginBtn.style.display  = "inline-block";
+    logoutBtn.style.display = "none";
+  }
+});
+
+/* 📥 Initial load (no flash) */
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val();
+  if(!d) return;
+
+  titleEl.innerText       = d.title;
+  descEl.innerHTML        = d.desc;
+  tbody.innerHTML         = d.table;
+  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+
+  document.body.style.visibility = "visible";
+});
+
+/* 🔁 Live updates (viewers only) */
+db.ref("log").on("value", snap=>{
+  if(firstLoad){
+    firstLoad = false;
+    return;
+  }
+  if(isAdmin) return;
+
+  const d = snap.val();
+  if(!d) return;
+
+  titleEl.innerText       = d.title;
+  descEl.innerHTML        = d.desc;
+  tbody.innerHTML         = d.table;
+  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+});
+
+/* 💾 Save edits (DATE + AM/PM TIME) */
+document.addEventListener("input", ()=>{
+  if(!isAdmin) return;
+
+  const now = new Date();
+
+  const datePart = now.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
   });
-}
 
-function addPlate(w,c){
-  plates.push({w,c});
-  render();
-}
-
-function removePlate(){
-  plates.pop();
-  render();
-}
-
-function resetBar(){
-  plates=[];
-  render();
-}
-
-function render(){
-  left.innerHTML="";
-  right.innerHTML="";
-  let total=barWeight;
-
-  plates.forEach(p=>{
-    left.innerHTML+=`<div class="plate ${p.c}"></div>`;
-    right.innerHTML+=`<div class="plate ${p.c}"></div>`;
-    total+=p.w*2;
+  const timePart = now.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
   });
 
-  totalEl.textContent=`Total: ${total} ${unit}`;
-}
+  const formatted = `${datePart} · ${timePart}`;
 
-setUnit("kg");
+  db.ref("log").set({
+    title:   titleEl.innerText,
+    desc:    descEl.innerHTML,
+    table:   tbody.innerHTML,
+    updated: formatted
+  });
+});
+
+/* Default lock */
+lockAll();
 </script>
 
 </body>
