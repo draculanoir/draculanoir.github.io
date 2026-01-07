@@ -16,7 +16,6 @@
   --accent:#bfc6d6;
 }
 
-/* Hide page until Firebase data loads */
 body{
   visibility:hidden;
   font-family:"Segoe UI",Arial,sans-serif;
@@ -25,18 +24,15 @@ body{
   padding:24px;
 }
 
-/* Lock all non-admin interaction */
+/* Lock viewers */
 .locked-content,
 .locked-content *{
-  pointer-events:none !important;
-  user-select:none !important;
-  caret-color:transparent !important;
+  pointer-events:none!important;
+  user-select:none!important;
+  caret-color:transparent!important;
 }
 
-/* Remove focus outlines globally */
-*:focus{
-  outline:none !important;
-}
+*:focus{outline:none}
 
 /* Layout */
 .top-bar{
@@ -77,16 +73,16 @@ th{
   font-size:.75rem;
 }
 
-td.left{ text-align:left; }
+td.left{text-align:left}
 
 .last-updated{
   font-size:.75rem;
   color:var(--muted);
 }
 
-/* ===================== */
-/* 🏋️ BARBELL CALCULATOR */
-/* ===================== */
+/* ================= */
+/* BARBELL CALC */
+/* ================= */
 
 .calculator{
   max-width:1020px;
@@ -97,16 +93,27 @@ td.left{ text-align:left; }
   border-radius:10px;
 }
 
-.calc-title{
-  font-size:1.1rem;
-  margin-bottom:12px;
+.calc-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.unit-toggle button{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 .barbell{
   display:flex;
-  align-items:center;
   justify-content:center;
-  margin:20px 0;
+  align-items:center;
+  margin:25px 0;
 }
 
 .bar{
@@ -122,19 +129,23 @@ td.left{ text-align:left; }
 }
 
 .plate{
-  width:22px;
-  height:80px;
   margin:0 2px;
   border-radius:4px;
 }
 
-.p25{background:#d32f2f}
-.p20{background:#1976d2}
-.p15{background:#fbc02d}
-.p10{background:#388e3c}
-.p5 {background:#555}
-.p2_5{background:#999}
-.p1_25{background:#bbb}
+/* Plate sizes */
+.big{height:90px;width:26px}
+.mid{height:75px;width:22px}
+.small{height:60px;width:18px}
+.tiny{height:45px;width:14px}
+
+/* Plate colors */
+.p45,.p25kg{background:#d32f2f}
+.p35,.p20kg{background:#1976d2}
+.p25,.p15kg{background:#fbc02d}
+.p10,.p10kg{background:#388e3c}
+.p5,.p5kg{background:#555}
+.p2_5,.p2_5kg,.p1_25kg{background:#999}
 
 .plates{
   display:flex;
@@ -188,12 +199,18 @@ td.left{ text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
-<!-- ===================== -->
-<!-- 🏋️ BARBELL CALCULATOR -->
-<!-- ===================== -->
+<!-- ================= -->
+<!-- BARBELL CALC -->
+<!-- ================= -->
 
 <div class="calculator">
-  <div class="calc-title">Barbell Calculator (20kg Bar)</div>
+  <div class="calc-header">
+    <div>Barbell Calculator</div>
+    <div class="unit-toggle">
+      <button onclick="setUnit('kg')">KG</button>
+      <button onclick="setUnit('lb')">LB</button>
+    </div>
+  </div>
 
   <div class="barbell">
     <div id="left" class="sleeve"></div>
@@ -201,19 +218,14 @@ td.left{ text-align:left; }
     <div id="right" class="sleeve"></div>
   </div>
 
+  <div class="plates" id="plateButtons"></div>
+
   <div class="plates">
-    <button onclick="addPlate(25)">+25</button>
-    <button onclick="addPlate(20)">+20</button>
-    <button onclick="addPlate(15)">+15</button>
-    <button onclick="addPlate(10)">+10</button>
-    <button onclick="addPlate(5)">+5</button>
-    <button onclick="addPlate(2.5)">+2.5</button>
-    <button onclick="addPlate(1.25)">+1.25</button>
     <button onclick="removePlate()">Undo</button>
     <button onclick="resetBar()">Reset</button>
   </div>
 
-  <div class="total" id="total">Total: 20 kg</div>
+  <div class="total" id="total"></div>
 </div>
 
 <!-- Firebase -->
@@ -222,7 +234,6 @@ td.left{ text-align:left; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* Firebase Init */
 firebase.initializeApp({
   apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain:"strenght-a9f37.firebaseapp.com",
@@ -230,58 +241,78 @@ firebase.initializeApp({
   projectId:"strenght-a9f37"
 });
 
-const auth=firebase.auth();
 const db=firebase.database();
-
-/* DOM */
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
-
-let isAdmin=false, firstLoad=true;
-
-/* Lock */
-function lockAll(){
-  table.classList.add("locked-content");
-  titleEl.contentEditable=false;
-  descEl.contentEditable=false;
-}
-
-/* Auth */
-auth.onAuthStateChanged(user=>{
-  if(user){
-    table.classList.remove("locked-content");
-    titleEl.contentEditable=true;
-    descEl.contentEditable=true;
-  }else lockAll();
-});
 
 /* Load */
 db.ref("log").once("value").then(s=>{
   const d=s.val();
   if(!d)return;
-  titleEl.innerText=d.title;
-  descEl.innerHTML=d.desc;
+  title.innerText=d.title;
+  desc.innerHTML=d.desc;
   tbody.innerHTML=d.table;
-  lastUpdatedEl.innerText="Last updated: "+d.updated;
+  lastUpdated.innerText="Last updated: "+d.updated;
   document.body.style.visibility="visible";
 });
 
-/* ===================== */
-/* 🧮 BARBELL LOGIC */
-/* ===================== */
+/* ================= */
+/* CALCULATOR LOGIC */
+/* ================= */
 
 const left=document.getElementById("left");
 const right=document.getElementById("right");
 const totalEl=document.getElementById("total");
+const plateBtns=document.getElementById("plateButtons");
 
+let unit="kg";
+let barWeight=20;
 let plates=[];
-const BAR=20;
 
-function addPlate(w){
-  plates.push(w);
+const configs={
+  kg:{
+    bar:20,
+    plates:[
+      {w:25,c:"p25kg big"},
+      {w:20,c:"p20kg mid"},
+      {w:15,c:"p15kg mid"},
+      {w:10,c:"p10kg small"},
+      {w:5,c:"p5kg small"},
+      {w:2.5,c:"p2_5kg tiny"},
+      {w:1.25,c:"p1_25kg tiny"}
+    ]
+  },
+  lb:{
+    bar:45,
+    plates:[
+      {w:45,c:"p45 big"},
+      {w:35,c:"p35 mid"},
+      {w:25,c:"p25 mid"},
+      {w:10,c:"p10 small"},
+      {w:5,c:"p5 small"},
+      {w:2.5,c:"p2_5 tiny"}
+    ]
+  }
+};
+
+function setUnit(u){
+  unit=u;
+  plates=[];
+  barWeight=configs[u].bar;
+  buildButtons();
+  render();
+}
+
+function buildButtons(){
+  plateBtns.innerHTML="";
+  configs[unit].plates.forEach(p=>{
+    const b=document.createElement("button");
+    b.textContent=`+${p.w} ${unit}`;
+    b.onclick=()=>addPlate(p.w,p.c);
+    plateBtns.appendChild(b);
+  });
+}
+
+function addPlate(w,c){
+  plates.push({w,c});
   render();
 }
 
@@ -298,17 +329,18 @@ function resetBar(){
 function render(){
   left.innerHTML="";
   right.innerHTML="";
-  let total=BAR;
+  let total=barWeight;
 
-  plates.forEach(w=>{
-    const cls="p"+String(w).replace(".","_");
-    left.innerHTML+=`<div class="plate ${cls}"></div>`;
-    right.innerHTML+=`<div class="plate ${cls}"></div>`;
-    total+=w*2;
+  plates.forEach(p=>{
+    left.innerHTML+=`<div class="plate ${p.c}"></div>`;
+    right.innerHTML+=`<div class="plate ${p.c}"></div>`;
+    total+=p.w*2;
   });
 
-  totalEl.innerText=`Total: ${total} kg`;
+  totalEl.textContent=`Total: ${total} ${unit}`;
 }
+
+setUnit("kg");
 </script>
 
 </body>
