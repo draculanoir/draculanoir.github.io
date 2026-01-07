@@ -32,8 +32,14 @@ body{
   caret-color:transparent !important;
 }
 
+.locked-content td,
+.locked-content th{
+  touch-action:none !important;
+}
+
 *:focus{
   outline:none !important;
+  box-shadow:none !important;
 }
 
 .top-bar{
@@ -51,6 +57,7 @@ body{
   color:var(--accent);
   padding:6px 10px;
   border-radius:6px;
+  margin-right:4px;
 }
 
 table{
@@ -69,42 +76,62 @@ th, td{
 
 th{
   background:var(--bg-header);
+  color:var(--accent);
   font-size:.75rem;
 }
 
-/* 🏋️ BARBELL */
+td.left{ text-align:left; }
+
+.last-updated{
+  font-size:.75rem;
+  color:var(--muted);
+}
+
+/* ============================= */
+/* 🏋️ BARBELL CALCULATOR STYLES */
+/* ============================= */
 .calculator{
   max-width:1020px;
-  margin:24px 0;
-  background:var(--bg-panel);
+  margin-top:32px;
   padding:16px;
+  background:var(--bg-panel);
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:8px;
 }
 
-.calc-controls input{
+.calculator input,
+.calculator button,
+.calculator label{
   background:transparent;
   border:1px solid var(--border);
-  color:var(--text);
-  padding:6px;
-  width:120px;
-  border-radius:6px;
-}
-
-.calc-controls button{
-  padding:6px 12px;
-  border:1px solid var(--border);
-  background:transparent;
   color:var(--accent);
+  padding:8px 12px;
   border-radius:6px;
-  cursor:pointer;
+  margin-right:6px;
+}
+
+/* 🔇 REMOVE NUMBER INPUT ARROWS (ONLY CHANGE) */
+.calculator input[type="number"]::-webkit-inner-spin-button,
+.calculator input[type="number"]::-webkit-outer-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.calculator input[type="number"]{
+  -moz-appearance:textfield;
 }
 
 .barbell{
+  margin-top:20px;
   display:flex;
   align-items:center;
   justify-content:center;
-  margin-top:16px;
+}
+
+.bar{
+  width:260px;
+  height:8px;
+  background:#777;
+  border-radius:4px;
 }
 
 .side{
@@ -112,39 +139,31 @@ th{
   align-items:center;
 }
 
-.bar{
-  width:140px;
-  height:8px;
-  background:#777;
-  border-radius:4px;
-  margin:0 10px;
-}
-
+/* Plates with centered text */
 .plate{
-  height:70px;
+  height:60px;
+  border-radius:4px;
   margin:0 2px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:.7rem;
   font-weight:600;
-  color:#000;
-  background:#ccc;
+  color:#111;
 }
 
-.p45{ width:42px }
-.p35{ width:38px }
-.p25{ width:34px }
-.p10{ width:28px }
-.p5{ width:24px }
-.p2_5{ width:20px }
+.p45{ width:26px; background:#c0392b; }
+.p35{ width:24px; background:#d35400; }
+.p25{ width:22px; background:#f1c40f; }
+.p10{ width:18px; background:#3498db; color:#fff; }
+.p5 { width:14px; background:#2ecc71; }
+.p2_5{ width:10px; background:#95a5a6; }
 
-/* 🔇 remove number arrows */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button{
-  -webkit-appearance:none;
+.note{
+  font-size:.75rem;
+  color:var(--muted);
+  margin-top:8px;
 }
-input[type=number]{ -moz-appearance:textfield }
 </style>
 </head>
 
@@ -160,34 +179,41 @@ input[type=number]{ -moz-appearance:textfield }
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
-  <div id="lastUpdated"></div>
+  <div id="lastUpdated" class="last-updated"></div>
 </div>
 
 <table id="table" class="locked-content">
-<thead>
-<tr>
-<th>Lift</th><th>Current</th><th>1RM</th><th>Level</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
+  <thead>
+    <tr>
+      <th class="left">Lift</th>
+      <th>Current</th>
+      <th>1RM</th>
+      <th>Strength Level</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
 </table>
 
-<!-- 🏋️ CALCULATOR -->
+<!-- 🏋️ BARBELL CALCULATOR -->
 <div class="calculator" id="calculator">
-  <div class="calc-controls">
-    <input id="targetWeight" type="number" placeholder="Target lbs">
-    <label>
-      <input type="checkbox" id="includeBar" checked> Include bar (45)
-    </label>
-    <button id="calcBtn">Calculate</button>
-    <span id="roundNote"></span>
-  </div>
+  <h3>Barbell Target Weight (lbs)</h3>
+
+  <input id="targetWeight" type="number" placeholder="Enter weight">
+
+  <label>
+    <input type="checkbox" id="includeBar" checked>
+    Include 45lb bar
+  </label>
+
+  <button id="calcBtn">Calculate</button>
 
   <div class="barbell">
     <div id="leftSide" class="side"></div>
     <div class="bar"></div>
     <div id="rightSide" class="side"></div>
   </div>
+
+  <div id="roundNote" class="note"></div>
 </div>
 
 <!-- Firebase -->
@@ -200,84 +226,139 @@ firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
   databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId: "strenght-a9f37"
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
-const auth=firebase.auth(), db=firebase.database();
-const titleEl=title=document.getElementById("title"),
-descEl=document.getElementById("desc"),
-tbody=document.getElementById("tbody"),
-table=document.getElementById("table");
+const auth = firebase.auth();
+const db = firebase.database();
 
-const emailEl=document.getElementById("email"),
-passEl=document.getElementById("password"),
-loginBtn=document.getElementById("loginBtn"),
-logoutBtn=document.getElementById("logoutBtn");
+const titleEl = document.getElementById("title");
+const descEl = document.getElementById("desc");
+const tbody = document.getElementById("tbody");
+const table = document.getElementById("table");
+const lastUpdatedEl = document.getElementById("lastUpdated");
 
-let isAdmin=false;
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-/* viewer shield */
-document.addEventListener("click",e=>{
+let isAdmin = false;
+let firstLoad = true;
+
+/* 🚫 VIEWER INTERACTION BLOCK */
+function viewerShield(e){
   if(isAdmin) return;
-  if(e.target.closest("#authBox")||e.target.closest("#calculator")) return;
-  e.preventDefault();e.stopPropagation();
-},true);
-
-function lockAll(){
-  isAdmin=false;
-  table.classList.add("locked-content");
+  if(e.target.closest("#authBox") || e.target.closest("#calculator")) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if(document.activeElement) document.activeElement.blur();
+  return false;
 }
 
-function enableEdit(){
-  isAdmin=true;
-  table.classList.remove("locked-content");
-}
-
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value)
-.catch(e=>alert(e.message));
-logoutBtn.onclick=()=>auth.signOut();
-
-auth.onAuthStateChanged(u=>{
-  if(u){enableEdit();loginBtn.style.display="none";logoutBtn.style.display="inline"}
-  else{lockAll();loginBtn.style.display="inline";logoutBtn.style.display="none"}
+["touchstart","touchend","click","focus"].forEach(evt=>{
+  document.addEventListener(evt, viewerShield, true);
 });
 
-/* 🏋️ CALC */
-document.getElementById("calcBtn").onclick=()=>{
-  const plates=[45,35,25,10,5,2.5];
-  const left=document.getElementById("leftSide"),
-        right=document.getElementById("rightSide"),
-        note=document.getElementById("roundNote");
+/* 🔒 LOCK MODE */
+function lockAll(){
+  isAdmin = false;
+  table.classList.add("locked-content");
+  titleEl.contentEditable = "false";
+  descEl.contentEditable = "false";
+}
 
-  left.innerHTML=right.innerHTML=note.innerText="";
+/* ✏️ ADMIN MODE */
+function enableEdit(){
+  isAdmin = true;
+  table.classList.remove("locked-content");
+  titleEl.contentEditable = "true";
+  descEl.contentEditable = "true";
+}
 
-  let target=Number(document.getElementById("targetWeight").value);
+/* 🔐 AUTH */
+loginBtn.onclick = () =>
+  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
+    .catch(e => alert(e.message));
+
+logoutBtn.onclick = () => auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    enableEdit();
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+  }else{
+    lockAll();
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+  }
+});
+
+/* 📥 INITIAL LOAD */
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val();
+  if(!d) return;
+  titleEl.innerText = d.title;
+  descEl.innerHTML = d.desc;
+  tbody.innerHTML = d.table;
+  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+  document.body.style.visibility = "visible";
+});
+
+/* 🏋️ BARBELL CALCULATOR LOGIC */
+document.getElementById("calcBtn").onclick = () => {
+  const plates = [45,35,25,10,5,2.5];
+  const left = document.getElementById("leftSide");
+  const right = document.getElementById("rightSide");
+  const note = document.getElementById("roundNote");
+  const includeBar = document.getElementById("includeBar").checked;
+
+  left.innerHTML = "";
+  right.innerHTML = "";
+  note.innerText = "";
+
+  let target = Number(document.getElementById("targetWeight").value);
   if(!target) return;
 
-  if(document.getElementById("includeBar").checked) target-=45;
-  let remaining=target/2, used=[];
+  const barWeight = includeBar ? 45 : 0;
+  let remaining = (target - barWeight) / 2;
+
+  if(remaining < 0){
+    note.innerText = "Target weight is less than the bar weight.";
+    return;
+  }
+
+  let used = [];
 
   plates.forEach(p=>{
-    while(remaining>=p){
-      remaining-=p;
+    while(remaining >= p){
+      remaining -= p;
       used.push(p);
     }
   });
 
-  if(remaining>0) note.innerText="Rounded down.";
+  if(remaining > 0){
+    note.innerText = "Rounded down to nearest achievable weight.";
+  }
 
+  // Right side
   used.forEach(p=>{
-    const cls=p===2.5?"p2_5":"p"+p;
-    right.innerHTML+=`<div class="plate ${cls}">${p}</div>`;
+    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    right.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
 
+  // Left side (reversed)
   [...used].reverse().forEach(p=>{
-    const cls=p===2.5?"p2_5":"p"+p;
-    left.innerHTML+=`<div class="plate ${cls}">${p}</div>`;
+    const cls = p === 2.5 ? "p2_5" : "p" + p;
+    left.innerHTML += `<div class="plate ${cls}">${p}</div>`;
   });
 };
 
-document.body.style.visibility="visible";
+lockAll();
 </script>
 
 </body>
