@@ -17,6 +17,7 @@
 }
 
 body{
+  visibility:hidden;
   font-family:"Segoe UI", Arial, sans-serif;
   background:radial-gradient(circle at top,#12141b,var(--bg-main));
   color:var(--text);
@@ -28,6 +29,7 @@ body{
 .locked-content *{
   pointer-events:none !important;
   user-select:none !important;
+  caret-color:transparent !important;
 }
 
 .top-bar{
@@ -75,7 +77,9 @@ td.left{ text-align:left; }
   color:var(--muted);
 }
 
+/* ============================= */
 /* 🏋️ BARBELL CALCULATOR */
+/* ============================= */
 .calculator{
   max-width:1020px;
   margin-top:32px;
@@ -98,6 +102,7 @@ td.left{ text-align:left; }
 .calculator input[type="number"]::-webkit-inner-spin-button,
 .calculator input[type="number"]::-webkit-outer-spin-button{
   -webkit-appearance:none;
+  margin:0;
 }
 .calculator input[type="number"]{
   -moz-appearance:textfield;
@@ -146,6 +151,10 @@ td.left{ text-align:left; }
   color:var(--muted);
   margin-top:8px;
 }
+.total{
+  margin-top:6px;
+  font-size:.85rem;
+}
 </style>
 </head>
 
@@ -176,16 +185,15 @@ td.left{ text-align:left; }
   <tbody id="tbody"></tbody>
 </table>
 
-<!-- 🏋️ BARBELL -->
 <div class="calculator">
-  <h3>Barbell Calculator (Live)</h3>
+  <h3>Barbell Calculator (lbs)</h3>
 
-  <input id="targetWeight" type="number" placeholder="Target weight (lbs)">
+  <input id="targetWeight" type="number" placeholder="Loaded weight">
   <input id="barWeight" type="number" value="45" placeholder="Bar weight">
 
   <label>
     <input type="checkbox" id="includeBar" checked>
-    Include bar
+    Include bar for plates
   </label>
 
   <div class="barbell">
@@ -194,8 +202,8 @@ td.left{ text-align:left; }
     <div id="rightSide" class="side"></div>
   </div>
 
-  <div id="trueLoad" class="note"></div>
   <div id="roundNote" class="note"></div>
+  <div id="trueLoad" class="total"></div>
 </div>
 
 <!-- Firebase -->
@@ -230,7 +238,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 let isAdmin = false;
 
-/* AUTH */
+/* 🔐 AUTH */
 loginBtn.onclick = () =>
   auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
     .catch(e => alert(e.message));
@@ -244,17 +252,18 @@ auth.onAuthStateChanged(user=>{
   logoutBtn.style.display = user ? "inline-block" : "none";
 });
 
-/* LOAD DATA */
-db.ref("log").once("value").then(s=>{
-  const d = s.val();
+/* 📥 LOAD */
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val();
   if(!d) return;
   titleEl.innerText = d.title;
   descEl.innerHTML = d.desc;
   tbody.innerHTML = d.table;
   lastUpdatedEl.innerText = "Last updated: " + d.updated;
+  document.body.style.visibility = "visible";
 });
 
-/* SAVE */
+/* 💾 SAVE */
 function saveData(){
   if(!isAdmin) return;
 
@@ -273,33 +282,37 @@ function saveData(){
   lastUpdatedEl.innerText = "Last updated: " + updated;
 }
 
-["input","blur","keyup","paste"].forEach(evt=>{
-  titleEl.addEventListener(evt, saveData);
-  descEl.addEventListener(evt, saveData);
-  tbody.addEventListener(evt, saveData);
+["input","keyup","blur","paste"].forEach(e=>{
+  titleEl.addEventListener(e, saveData);
+  descEl.addEventListener(e, saveData);
+  tbody.addEventListener(e, saveData);
 });
 
 /* 🏋️ LIVE BARBELL */
-["input","change"].forEach(e=>{
-  document.getElementById("targetWeight").addEventListener(e, updateBarbell);
-  document.getElementById("barWeight").addEventListener(e, updateBarbell);
-  document.getElementById("includeBar").addEventListener(e, updateBarbell);
-});
+const plates = [45,35,25,10,5,2.5];
+const left = document.getElementById("leftSide");
+const right = document.getElementById("rightSide");
+const note = document.getElementById("roundNote");
+const trueLoad = document.getElementById("trueLoad");
 
 function updateBarbell(){
-  const plates = [45,35,25,10,5,2.5];
-  const left = leftSide, right = rightSide;
-  const note = roundNote, trueLoad = document.getElementById("trueLoad");
-
-  left.innerHTML = right.innerHTML = note.innerText = "";
+  left.innerHTML = "";
+  right.innerHTML = "";
+  note.innerText = "";
 
   const target = Number(targetWeight.value);
-  const bar = includeBar.checked ? Number(barWeight.value) : 0;
+  const bar = Number(barWeight.value) || 0;
+  const include = includeBar.checked;
+
   if(!target) return;
 
-  let remaining = (target - bar) / 2;
-  let used = [];
+  let remaining = (target - (include ? bar : 0)) / 2;
+  if(remaining < 0){
+    note.innerText = "Target is less than bar weight.";
+    return;
+  }
 
+  let used = [];
   plates.forEach(p=>{
     while(remaining >= p){
       remaining -= p;
@@ -307,19 +320,28 @@ function updateBarbell(){
     }
   });
 
+  if(remaining > 0) note.innerText = "Rounded down.";
+
+  let plateTotal = 0;
   used.forEach(p=>{
+    plateTotal += p * 2;
     const c = p === 2.5 ? "p2_5" : "p"+p;
     right.innerHTML += `<div class="plate ${c}">${p}</div>`;
   });
+
   [...used].reverse().forEach(p=>{
     const c = p === 2.5 ? "p2_5" : "p"+p;
     left.innerHTML += `<div class="plate ${c}">${p}</div>`;
   });
 
-  const totalPlates = used.reduce((a,b)=>a+b,0)*2;
-  trueLoad.innerText = `True load: ${totalPlates + bar} lbs`;
+  trueLoad.innerText =
+    `Loaded: ${target} lbs · True load: ${plateTotal + bar} lbs`;
 }
-</script>
 
+[targetWeight, barWeight, includeBar].forEach(el=>{
+  el.addEventListener("input", updateBarbell);
+});
+
+</script>
 </body>
 </html>
