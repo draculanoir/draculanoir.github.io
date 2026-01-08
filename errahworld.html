@@ -79,10 +79,10 @@ td.left{ text-align:left; }
   color:var(--muted);
 }
 
-/* 🌍 IP INFO */
+/* 🌍 IP INFO DISPLAY */
 .ipinfo{
   max-width:1020px;
-  margin-top:10px;
+  margin:8px 0 14px;
   font-size:.75rem;
   color:var(--muted);
 }
@@ -156,7 +156,7 @@ td.left{ text-align:left; }
   <div id="lastUpdated" class="last-updated"></div>
 </div>
 
-<div id="ipInfo" class="ipinfo"></div>
+<div id="ipInfo" class="ipinfo">Loading IP info…</div>
 
 <table id="table" class="locked-content">
   <thead>
@@ -210,14 +210,18 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.database();
 
-/* 🌍 IPINFO */
-fetch("https://ipinfo.io/json?token=513ac66672e1f9")
-  .then(r => r.json())
-  .then(d => {
-    document.getElementById("ipInfo").innerText =
-      `IP: ${d.ip} · ${d.city}, ${d.region}, ${d.country}`;
-  })
-  .catch(()=>{});
+/* 🌍 IPINFO (COUNTS + SHOWS IN DASHBOARD) */
+fetch("https://api.ipinfo.io/json?token=513ac66672e1f9", {
+  cache: "no-store"
+})
+.then(r => r.json())
+.then(d => {
+  document.getElementById("ipInfo").innerText =
+    `IP: ${d.ip} · ${d.city}, ${d.region}, ${d.country}`;
+})
+.catch(() => {
+  document.getElementById("ipInfo").innerText = "IP info unavailable";
+});
 
 /* 🔐 AUTH */
 const titleEl = document.getElementById("title");
@@ -256,8 +260,7 @@ db.ref("log").once("value").then(s=>{
 /* 💾 SAVE */
 function saveData(){
   if(!auth.currentUser) return;
-  const now = new Date();
-  const updated = now.toLocaleString();
+  const updated = new Date().toLocaleString();
   db.ref("log").set({
     title:titleEl.innerText,
     desc:descEl.innerHTML,
