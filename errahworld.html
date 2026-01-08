@@ -24,11 +24,13 @@ body{
   padding:24px;
 }
 
-/* 🔒 VIEWER LOCK */
+/* 🔒 HARD READ-ONLY LOCK (DESKTOP + MOBILE) */
 .locked-content,
 .locked-content *{
   pointer-events:none !important;
   user-select:none !important;
+  -webkit-user-select:none !important;
+  touch-action:none !important;
   caret-color:transparent !important;
 }
 
@@ -228,6 +230,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 let isAdmin = false;
 
+/* 🔐 AUTH */
 loginBtn.onclick = () =>
   auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
     .catch(e => alert(e.message));
@@ -236,11 +239,19 @@ logoutBtn.onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(user=>{
   isAdmin = !!user;
+
   table.classList.toggle("locked-content", !isAdmin);
+
+  [titleEl, descEl, tbody].forEach(el=>{
+    el.contentEditable = isAdmin;
+    if(!isAdmin) el.blur();
+  });
+
   loginBtn.style.display = user ? "none" : "inline-block";
   logoutBtn.style.display = user ? "inline-block" : "none";
 });
 
+/* 📥 LOAD */
 db.ref("log").once("value").then(snap=>{
   const d = snap.val();
   if(!d) return;
@@ -251,6 +262,32 @@ db.ref("log").once("value").then(snap=>{
   document.body.style.visibility = "visible";
 });
 
+/* 💾 SAVE (FIXED) */
+function saveData(){
+  if(!isAdmin) return;
+
+  const now = new Date();
+  const date = now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  const time = now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
+  const updated = `${date} · ${time}`;
+
+  db.ref("log").set({
+    title: titleEl.innerText,
+    desc: descEl.innerHTML,
+    table: tbody.innerHTML,
+    updated
+  });
+
+  lastUpdatedEl.innerText = "Last updated: " + updated;
+}
+
+["input","keyup","paste","blur"].forEach(evt=>{
+  titleEl.addEventListener(evt, saveData);
+  descEl.addEventListener(evt, saveData);
+  tbody.addEventListener(evt, saveData);
+});
+
+/* 🏋️ BARBELL (UNCHANGED LOGIC) */
 const plates = [45,35,25,10,5,2.5];
 const left = document.getElementById("leftSide");
 const right = document.getElementById("rightSide");
@@ -268,9 +305,7 @@ function updateBarbell(){
 
   if(!target) return;
 
-  let remaining = include
-    ? (target - bar) / 2
-    : target / 2;
+  let remaining = include ? (target - bar) / 2 : target / 2;
 
   if(remaining < 0){
     note.innerText = "Target is less than bar weight.";
@@ -287,9 +322,7 @@ function updateBarbell(){
 
   if(remaining > 0) note.innerText = "Rounded down.";
 
-  let plateTotal = 0;
   used.forEach(p=>{
-    plateTotal += p * 2;
     const c = p === 2.5 ? "p2_5" : "p"+p;
     right.innerHTML += `<div class="plate ${c}">${p}</div>`;
   });
@@ -299,7 +332,7 @@ function updateBarbell(){
     left.innerHTML += `<div class="plate ${c}">${p}</div>`;
   });
 
-  const realLift = include ? target : plateTotal + bar;
+  const realLift = include ? target : (used.reduce((s,p)=>s+p*2,0) + bar);
 
   trueLoad.innerText =
     `Loaded: ${target} lbs · True load: ${realLift} lbs`;
