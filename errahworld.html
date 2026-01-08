@@ -17,7 +17,6 @@
 }
 
 body{
-  visibility:hidden;
   font-family:"Segoe UI", Arial, sans-serif;
   background:radial-gradient(circle at top,#12141b,var(--bg-main));
   color:var(--text);
@@ -90,11 +89,10 @@ td.left{ text-align:left; }
   border-radius:8px;
 }
 
-/* ✅ CONTROLS FIX */
+/* ✅ MOBILE FRIENDLY CONTROLS */
 .calculator-controls{
   display:flex;
   gap:8px;
-  align-items:center;
   flex-wrap:wrap;
 }
 
@@ -117,13 +115,10 @@ td.left{ text-align:left; }
   white-space:nowrap;
 }
 
-/* 📱 MOBILE ONLY */
 @media (max-width:600px){
   .calculator-controls{
     flex-direction:column;
-    align-items:stretch;
   }
-
   .calculator-controls input,
   .calculator-controls label{
     width:100%;
@@ -230,4 +225,88 @@ td.left{ text-align:left; }
   <div id="trueLoad" class="total"></div>
 </div>
 
-<!-- 🔥 YOUR EXISTING FIREBASE + JS BELOW IS UNCHANGED -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain: "strenght-a9f37.firebaseapp.com",
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+});
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+const titleEl = document.getElementById("title");
+const descEl = document.getElementById("desc");
+const tbody = document.getElementById("tbody");
+const table = document.getElementById("table");
+const lastUpdatedEl = document.getElementById("lastUpdated");
+
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+let isAdmin = false;
+
+/* 🔐 AUTH */
+loginBtn.onclick = () =>
+  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
+  .catch(e => alert(e.message));
+
+logoutBtn.onclick = () => auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  isAdmin = !!user;
+  table.classList.toggle("locked-content", !isAdmin);
+  loginBtn.style.display = user ? "none" : "inline-block";
+  logoutBtn.style.display = user ? "inline-block" : "none";
+});
+
+/* 📥 LOAD (SAFE) */
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val() || {};
+  titleEl.innerText = d.title || "";
+  descEl.innerHTML = d.desc || "";
+  tbody.innerHTML = d.table || "";
+  lastUpdatedEl.innerText = d.updated ? "Last updated: " + d.updated : "";
+});
+
+/* 🏋️ BARBELL LOGIC (UNCHANGED) */
+const plates=[45,35,25,10,5,2.5];
+const left=document.getElementById("leftSide");
+const right=document.getElementById("rightSide");
+const note=document.getElementById("roundNote");
+const trueLoad=document.getElementById("trueLoad");
+const targetWeight=document.getElementById("targetWeight");
+const barWeight=document.getElementById("barWeight");
+const includeBar=document.getElementById("includeBar");
+
+function updateBarbell(){
+  left.innerHTML="";
+  right.innerHTML="";
+  note.innerText="";
+  const target=+targetWeight.value;
+  const bar=+barWeight.value||0;
+  if(!target) return;
+  let remaining=(includeBar.checked?(target-bar):target)/2;
+  let used=[];
+  plates.forEach(p=>{while(remaining>=p){remaining-=p;used.push(p)}});
+  if(remaining>0) note.innerText="Rounded down.";
+  used.forEach(p=>right.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  [...used].reverse().forEach(p=>left.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  const real=includeBar.checked?target:(used.reduce((s,p)=>s+p*2,0)+bar);
+  trueLoad.innerText=`Loaded: ${target} lbs · True load: ${real} lbs`;
+}
+[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
+</script>
+
+</body>
+</html>
