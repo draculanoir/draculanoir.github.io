@@ -79,7 +79,7 @@ td.left{ text-align:left; }
   color:var(--muted);
 }
 
-/* 🏋️ BARBELL CALCULATOR */
+/* 🏋️ CALCULATOR */
 .calculator{
   max-width:1020px;
   margin-top:32px;
@@ -89,7 +89,6 @@ td.left{ text-align:left; }
   border-radius:8px;
 }
 
-/* ✅ MOBILE FRIENDLY CONTROLS */
 .calculator-controls{
   display:flex;
   gap:8px;
@@ -112,7 +111,6 @@ td.left{ text-align:left; }
   padding:8px 12px;
   border-radius:6px;
   color:var(--accent);
-  white-space:nowrap;
 }
 
 @media (max-width:600px){
@@ -132,21 +130,11 @@ td.left{ text-align:left; }
   justify-content:center;
 }
 
-.bar{
-  width:260px;
-  height:8px;
-  background:#777;
-  border-radius:4px;
-}
-
-.side{
-  display:flex;
-  align-items:center;
-}
+.bar{ width:260px; height:8px; background:#777; border-radius:4px; }
+.side{ display:flex; align-items:center; }
 
 .plate{
   height:60px;
-  border-radius:4px;
   margin:0 2px;
   display:flex;
   align-items:center;
@@ -154,6 +142,7 @@ td.left{ text-align:left; }
   font-size:.7rem;
   font-weight:600;
   color:#111;
+  border-radius:4px;
 }
 
 .p45{ width:26px; background:#c0392b; }
@@ -163,16 +152,8 @@ td.left{ text-align:left; }
 .p5 { width:14px; background:#2ecc71; }
 .p2_5{ width:10px; background:#95a5a6; }
 
-.note{
-  font-size:.75rem;
-  color:var(--muted);
-  margin-top:8px;
-}
-
-.total{
-  margin-top:6px;
-  font-size:.85rem;
-}
+.note{ font-size:.75rem; color:var(--muted); margin-top:8px; }
+.total{ margin-top:6px; font-size:.85rem; }
 </style>
 </head>
 
@@ -205,14 +186,10 @@ td.left{ text-align:left; }
 
 <div class="calculator">
   <h3>Barbell Calculator (lbs)</h3>
-
   <div class="calculator-controls">
     <input id="targetWeight" type="number" placeholder="Loaded weight">
     <input id="barWeight" type="number" value="45" placeholder="Bar weight">
-    <label>
-      <input type="checkbox" id="includeBar" checked>
-      Include bar for plates
-    </label>
+    <label><input type="checkbox" id="includeBar" checked> Include bar</label>
   </div>
 
   <div class="barbell">
@@ -240,46 +217,74 @@ firebase.initializeApp({
   appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
-const auth = firebase.auth();
-const db = firebase.database();
+const auth=firebase.auth();
+const db=firebase.database();
 
-const titleEl = document.getElementById("title");
-const descEl = document.getElementById("desc");
-const tbody = document.getElementById("tbody");
-const table = document.getElementById("table");
-const lastUpdatedEl = document.getElementById("lastUpdated");
+const titleEl=document.getElementById("title");
+const descEl=document.getElementById("desc");
+const tbody=document.getElementById("tbody");
+const table=document.getElementById("table");
+const lastUpdatedEl=document.getElementById("lastUpdated");
 
-const emailEl = document.getElementById("email");
-const passEl = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+const emailEl=document.getElementById("email");
+const passEl=document.getElementById("password");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
 
-let isAdmin = false;
+let isAdmin=false;
 
 /* 🔐 AUTH */
-loginBtn.onclick = () =>
-  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
-  .catch(e => alert(e.message));
-
-logoutBtn.onclick = () => auth.signOut();
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
+logoutBtn.onclick=()=>auth.signOut();
 
 auth.onAuthStateChanged(user=>{
-  isAdmin = !!user;
-  table.classList.toggle("locked-content", !isAdmin);
-  loginBtn.style.display = user ? "none" : "inline-block";
-  logoutBtn.style.display = user ? "inline-block" : "none";
+  isAdmin=!!user;
+  table.classList.toggle("locked-content",!isAdmin);
+
+  [titleEl,descEl,tbody].forEach(el=>{
+    el.contentEditable=isAdmin;
+    if(!isAdmin) el.blur();
+  });
+
+  loginBtn.style.display=user?"none":"inline-block";
+  logoutBtn.style.display=user?"inline-block":"none";
 });
 
-/* 📥 LOAD (SAFE) */
+/* 📥 LOAD */
 db.ref("log").once("value").then(snap=>{
-  const d = snap.val() || {};
-  titleEl.innerText = d.title || "";
-  descEl.innerHTML = d.desc || "";
-  tbody.innerHTML = d.table || "";
-  lastUpdatedEl.innerText = d.updated ? "Last updated: " + d.updated : "";
+  const d=snap.val()||{};
+  titleEl.innerText=d.title||"";
+  descEl.innerHTML=d.desc||"";
+  tbody.innerHTML=d.table||"";
+  lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
 });
 
-/* 🏋️ BARBELL LOGIC (UNCHANGED) */
+/* 💾 SAVE (RESTORED) */
+function saveData(){
+  if(!isAdmin) return;
+
+  const now=new Date();
+  const date=now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  const time=now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
+  const updated=`${date} · ${time}`;
+
+  db.ref("log").set({
+    title:titleEl.innerText,
+    desc:descEl.innerHTML,
+    table:tbody.innerHTML,
+    updated
+  });
+
+  lastUpdatedEl.innerText="Last updated: "+updated;
+}
+
+["input","keyup","paste","blur"].forEach(evt=>{
+  titleEl.addEventListener(evt,saveData);
+  descEl.addEventListener(evt,saveData);
+  tbody.addEventListener(evt,saveData);
+});
+
+/* 🏋️ BARBELL */
 const plates=[45,35,25,10,5,2.5];
 const left=document.getElementById("leftSide");
 const right=document.getElementById("rightSide");
@@ -290,18 +295,20 @@ const barWeight=document.getElementById("barWeight");
 const includeBar=document.getElementById("includeBar");
 
 function updateBarbell(){
-  left.innerHTML="";
-  right.innerHTML="";
-  note.innerText="";
+  left.innerHTML=""; right.innerHTML=""; note.innerText="";
   const target=+targetWeight.value;
   const bar=+barWeight.value||0;
   if(!target) return;
+
   let remaining=(includeBar.checked?(target-bar):target)/2;
   let used=[];
   plates.forEach(p=>{while(remaining>=p){remaining-=p;used.push(p)}});
+
   if(remaining>0) note.innerText="Rounded down.";
+
   used.forEach(p=>right.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
   [...used].reverse().forEach(p=>left.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+
   const real=includeBar.checked?target:(used.reduce((s,p)=>s+p*2,0)+bar);
   trueLoad.innerText=`Loaded: ${target} lbs · True load: ${real} lbs`;
 }
