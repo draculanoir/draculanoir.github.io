@@ -164,7 +164,7 @@ td.left{ text-align:left; }
   <tbody id="tbody"></tbody>
 </table>
 
-<div class="calculator">
+<div class="calculator" id="calculator">
   <h3>Barbell Calculator (lbs)</h3>
 
   <input id="targetWeight" type="number" placeholder="Loaded weight">
@@ -191,7 +191,6 @@ td.left{ text-align:left; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* ✅ FORCE VISIBILITY AFTER LOAD */
 window.addEventListener("DOMContentLoaded",()=>{
   document.body.style.visibility="visible";
 });
@@ -206,21 +205,75 @@ firebase.initializeApp({
   appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
+const auth=firebase.auth();
+const db=firebase.database();
+
+const titleEl=title;
+const descEl=desc;
+const tbodyEl=tbody;
+const tableEl=table;
+const lastUpdatedEl=lastUpdated;
+
+let isAdmin=false;
+let firstLoad=true;
+
+/* 🔐 AUTH */
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value)
+  .catch(e=>alert(e.message));
+logoutBtn.onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  isAdmin=!!user;
+  tableEl.classList.toggle("locked-content",!isAdmin);
+  titleEl.contentEditable=isAdmin;
+  descEl.contentEditable=isAdmin;
+  loginBtn.style.display=user?"none":"inline-block";
+  logoutBtn.style.display=user?"inline-block":"none";
+});
+
+/* 📥 LOAD + LIVE VIEW */
+db.ref("log").on("value",snap=>{
+  const d=snap.val();
+  if(!d) return;
+  if(!isAdmin || firstLoad){
+    titleEl.innerText=d.title||"";
+    descEl.innerHTML=d.desc||"";
+    tbodyEl.innerHTML=d.table||"";
+    lastUpdatedEl.innerText="Last updated: "+d.updated;
+  }
+  firstLoad=false;
+});
+
+/* 💾 SAVE (ADMIN ONLY — RESTORED) */
+document.addEventListener("input",()=>{
+  if(!isAdmin) return;
+  const now=new Date();
+  const date=now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  const time=now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
+  db.ref("log").set({
+    title:titleEl.innerText,
+    desc:descEl.innerHTML,
+    table:tbodyEl.innerHTML,
+    updated:`${date} · ${time}`
+  });
+});
+
+/* 🏋️ BARBELL (LIVE) */
 const plates=[45,35,25,10,5,2.5];
 
 function updateBarbell(){
-  leftSide.innerHTML=""; rightSide.innerHTML=""; roundNote.innerText="";
+  leftSide.innerHTML="";
+  rightSide.innerHTML="";
+  roundNote.innerText="";
   const loaded=Number(targetWeight.value);
   const bar=Number(barWeight.value)||0;
-  const include=includeBar.checked;
   if(!loaded) return;
 
-  let remaining=(loaded-(include?bar:0))/2;
-  if(remaining<0){ roundNote.innerText="Target is less than bar."; return; }
+  let remaining=(loaded-(includeBar.checked?bar:0))/2;
+  if(remaining<0){ roundNote.innerText="Target less than bar"; return; }
 
   let used=[];
-  plates.forEach(p=>{ while(remaining>=p){ remaining-=p; used.push(p); }});
-  if(remaining>0) roundNote.innerText="Rounded down.";
+  plates.forEach(p=>{ while(remaining>=p){ remaining-=p; used.push(p);} });
 
   used.forEach(p=>{
     const c=p===2.5?"p2_5":"p"+p;
@@ -231,8 +284,8 @@ function updateBarbell(){
     leftSide.innerHTML+=`<div class="plate ${c}">${p}</div>`;
   });
 
-  trueLoad.innerText =
-    `Loaded: ${loaded} lbs · True load: ${loaded + bar} lbs`;
+  trueLoad.innerText=
+    `Loaded: ${loaded} lbs · True load: ${loaded+bar} lbs`;
 }
 
 [targetWeight,barWeight,includeBar].forEach(el=>{
