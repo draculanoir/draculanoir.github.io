@@ -79,15 +79,7 @@ td.left{ text-align:left; }
   color:var(--muted);
 }
 
-/* 🌍 IP INFO */
-.ipinfo{
-  max-width:1020px;
-  margin-top:10px;
-  font-size:.75rem;
-  color:var(--muted);
-}
-
-/* 🏋️ BARBELL */
+/* 🏋️ BARBELL CALCULATOR */
 .calculator{
   max-width:1020px;
   margin-top:32px;
@@ -114,8 +106,17 @@ td.left{ text-align:left; }
   justify-content:center;
 }
 
-.bar{ width:260px;height:8px;background:#777;border-radius:4px; }
-.side{ display:flex;align-items:center; }
+.bar{
+  width:260px;
+  height:8px;
+  background:#777;
+  border-radius:4px;
+}
+
+.side{
+  display:flex;
+  align-items:center;
+}
 
 .plate{
   height:60px;
@@ -129,15 +130,23 @@ td.left{ text-align:left; }
   color:#111;
 }
 
-.p45{ width:26px;background:#c0392b; }
-.p35{ width:24px;background:#d35400; }
-.p25{ width:22px;background:#f1c40f; }
-.p10{ width:18px;background:#3498db;color:#fff; }
-.p5{ width:14px;background:#2ecc71; }
-.p2_5{ width:10px;background:#95a5a6; }
+.p45{ width:26px; background:#c0392b; }
+.p35{ width:24px; background:#d35400; }
+.p25{ width:22px; background:#f1c40f; }
+.p10{ width:18px; background:#3498db; color:#fff; }
+.p5 { width:14px; background:#2ecc71; }
+.p2_5{ width:10px; background:#95a5a6; }
 
-.note{ font-size:.75rem;color:var(--muted);margin-top:8px; }
-.total{ margin-top:6px;font-size:.85rem; }
+.note{
+  font-size:.75rem;
+  color:var(--muted);
+  margin-top:8px;
+}
+
+.total{
+  margin-top:6px;
+  font-size:.85rem;
+}
 </style>
 </head>
 
@@ -156,8 +165,6 @@ td.left{ text-align:left; }
   <div id="lastUpdated" class="last-updated"></div>
 </div>
 
-<div id="ipInfo" class="ipinfo"></div>
-
 <table id="table" class="locked-content">
   <thead>
     <tr>
@@ -172,13 +179,10 @@ td.left{ text-align:left; }
 
 <div class="calculator">
   <h3>Barbell Calculator (lbs)</h3>
-
   <input id="targetWeight" type="number" placeholder="Loaded weight">
-  <input id="barWeight" type="number" value="45">
-
+  <input id="barWeight" type="number" value="45" placeholder="Bar weight">
   <label>
-    <input type="checkbox" id="includeBar" checked>
-    Include bar for plates
+    <input type="checkbox" id="includeBar" checked> Include bar for plates
   </label>
 
   <div class="barbell">
@@ -196,7 +200,6 @@ td.left{ text-align:left; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* 🔥 FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
@@ -210,84 +213,132 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.database();
 
-/* 🌍 IPINFO */
-fetch("https://ipinfo.io/json?token=513ac66672e1f9")
-  .then(r => r.json())
-  .then(d => {
-    document.getElementById("ipInfo").innerText =
-      `IP: ${d.ip} · ${d.city}, ${d.region}, ${d.country}`;
-  })
-  .catch(()=>{});
-
-/* 🔐 AUTH */
 const titleEl = document.getElementById("title");
 const descEl = document.getElementById("desc");
 const tbody = document.getElementById("tbody");
 const table = document.getElementById("table");
 const lastUpdatedEl = document.getElementById("lastUpdated");
 
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+let isAdmin = false;
+
+/* 🔐 AUTH */
 loginBtn.onclick = () =>
-  auth.signInWithEmailAndPassword(email.value, password.value)
-    .catch(e => alert(e.message));
+  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
+  .catch(e => alert(e.message));
 
 logoutBtn.onclick = () => auth.signOut();
 
 auth.onAuthStateChanged(user=>{
-  table.classList.toggle("locked-content", !user);
+  isAdmin = !!user;
+  table.classList.toggle("locked-content", !isAdmin);
+
   [titleEl, descEl, tbody].forEach(el=>{
-    el.contentEditable = !!user;
-    if(!user) el.blur();
+    el.contentEditable = isAdmin;
+    if(!isAdmin) el.blur();
   });
+
   loginBtn.style.display = user ? "none" : "inline-block";
   logoutBtn.style.display = user ? "inline-block" : "none";
 });
 
 /* 📥 LOAD */
-db.ref("log").once("value").then(s=>{
-  const d = s.val();
+db.ref("log").once("value").then(snap=>{
+  const d = snap.val();
   if(!d) return;
-  titleEl.innerText = d.title;
-  descEl.innerHTML = d.desc;
-  tbody.innerHTML = d.table;
-  lastUpdatedEl.innerText = "Last updated: " + d.updated;
+  titleEl.innerText = d.title || "";
+  descEl.innerHTML = d.desc || "";
+  tbody.innerHTML = d.table || "";
+  lastUpdatedEl.innerText = "Last updated: " + (d.updated || "");
   document.body.style.visibility = "visible";
 });
 
 /* 💾 SAVE */
 function saveData(){
-  if(!auth.currentUser) return;
+  if(!isAdmin) return;
+
   const now = new Date();
-  const updated = now.toLocaleString();
+  const date = now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  const time = now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
+  const updated = `${date} · ${time}`;
+
   db.ref("log").set({
-    title:titleEl.innerText,
-    desc:descEl.innerHTML,
-    table:tbody.innerHTML,
+    title: titleEl.innerText,
+    desc: descEl.innerHTML,
+    table: tbody.innerHTML,
     updated
   });
+
   lastUpdatedEl.innerText = "Last updated: " + updated;
 }
-["input","keyup","paste","blur"].forEach(e=>{
-  titleEl.addEventListener(e, saveData);
-  descEl.addEventListener(e, saveData);
-  tbody.addEventListener(e, saveData);
+
+["input","keyup","paste","blur"].forEach(evt=>{
+  titleEl.addEventListener(evt, saveData);
+  descEl.addEventListener(evt, saveData);
+  tbody.addEventListener(evt, saveData);
 });
 
 /* 🏋️ BARBELL */
-const plates=[45,35,25,10,5,2.5];
+const plates = [45,35,25,10,5,2.5];
+const left = document.getElementById("leftSide");
+const right = document.getElementById("rightSide");
+const note = document.getElementById("roundNote");
+const trueLoad = document.getElementById("trueLoad");
+
+const targetWeight = document.getElementById("targetWeight");
+const barWeight = document.getElementById("barWeight");
+const includeBar = document.getElementById("includeBar");
+
 function updateBarbell(){
-  leftSide.innerHTML=rightSide.innerHTML=roundNote.innerText="";
-  const t=+targetWeight.value,b=+barWeight.value||0;
-  if(!t) return;
-  let r=(includeBar.checked?(t-b):t)/2;
-  if(r<0){roundNote.innerText="Target less than bar.";return;}
-  let u=[];
-  plates.forEach(p=>{while(r>=p){r-=p;u.push(p)}});
-  if(r>0) roundNote.innerText="Rounded down.";
-  u.forEach(p=>rightSide.innerHTML+=`<div class="plate p${p==2.5?"2_5":p}">${p}</div>`);
-  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate p${p==2.5?"2_5":p}">${p}</div>`);
-  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked?t:(u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
+  left.innerHTML = "";
+  right.innerHTML = "";
+  note.innerText = "";
+
+  const target = Number(targetWeight.value);
+  const bar = Number(barWeight.value) || 0;
+  const include = includeBar.checked;
+  if(!target) return;
+
+  let remaining = include ? (target - bar) / 2 : target / 2;
+  if(remaining < 0){
+    note.innerText = "Target is less than bar weight.";
+    return;
+  }
+
+  let used = [];
+  plates.forEach(p=>{
+    while(remaining >= p){
+      remaining -= p;
+      used.push(p);
+    }
+  });
+
+  if(remaining > 0) note.innerText = "Rounded down.";
+
+  used.forEach(p=>{
+    const c = p === 2.5 ? "p2_5" : "p"+p;
+    right.innerHTML += `<div class="plate ${c}">${p}</div>`;
+  });
+
+  [...used].reverse().forEach(p=>{
+    const c = p === 2.5 ? "p2_5" : "p"+p;
+    left.innerHTML += `<div class="plate ${c}">${p}</div>`;
+  });
+
+  const realLift = include
+    ? target
+    : (used.reduce((s,p)=>s+p*2,0) + bar);
+
+  trueLoad.innerText = `Loaded: ${target} lbs · True load: ${realLift} lbs`;
 }
-[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
+
+[targetWeight, barWeight, includeBar].forEach(el=>{
+  el.addEventListener("input", updateBarbell);
+});
 </script>
 
 </body>
