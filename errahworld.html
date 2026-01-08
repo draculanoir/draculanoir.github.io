@@ -233,7 +233,6 @@ const logoutBtn=document.getElementById("logoutBtn");
 
 let isAdmin=false;
 
-/* 🔐 AUTH */
 loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
 logoutBtn.onclick=()=>auth.signOut();
 
@@ -250,7 +249,6 @@ auth.onAuthStateChanged(user=>{
   logoutBtn.style.display=user?"inline-block":"none";
 });
 
-/* 📥 LOAD */
 db.ref("log").once("value").then(snap=>{
   const d=snap.val()||{};
   titleEl.innerText=d.title||"";
@@ -259,29 +257,23 @@ db.ref("log").once("value").then(snap=>{
   lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
 });
 
-/* 💾 SAVE */
 function saveData(){
   if(!isAdmin) return;
-
   const now=new Date();
-  const date=now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
-  const time=now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
-  const updated=`${date} · ${time}`;
-
+  const updated=now.toLocaleString();
   db.ref("log").set({
     title:titleEl.innerText,
     desc:descEl.innerHTML,
     table:tbody.innerHTML,
     updated
   });
-
   lastUpdatedEl.innerText="Last updated: "+updated;
 }
 
-["input","keyup","paste","blur"].forEach(evt=>{
-  titleEl.addEventListener(evt,saveData);
-  descEl.addEventListener(evt,saveData);
-  tbody.addEventListener(evt,saveData);
+["input","keyup","paste","blur"].forEach(e=>{
+  titleEl.addEventListener(e,saveData);
+  descEl.addEventListener(e,saveData);
+  tbody.addEventListener(e,saveData);
 });
 
 /* 🏋️ BARBELL */
@@ -290,9 +282,6 @@ const left=document.getElementById("leftSide");
 const right=document.getElementById("rightSide");
 const note=document.getElementById("roundNote");
 const trueLoad=document.getElementById("trueLoad");
-const targetWeight=document.getElementById("targetWeight");
-const barWeight=document.getElementById("barWeight");
-const includeBar=document.getElementById("includeBar");
 
 function updateBarbell(){
   left.innerHTML=""; right.innerHTML=""; note.innerText="";
@@ -312,33 +301,20 @@ function updateBarbell(){
   const real=includeBar.checked?target:(used.reduce((s,p)=>s+p*2,0)+bar);
   trueLoad.innerText=`Loaded: ${target} lbs · True load: ${real} lbs`;
 }
+
 [targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 </script>
 
-<!-- 🌍 IPinfo Dev Source (CLIENT-SIDE) -->
+<!-- 🌍 IPinfo DEV SOURCE (ONLY VALID METHOD) -->
 <script>
-(function(){
-  fetch("https://ipinfo.io/json?token=513ac66672e1f9")
-    .then(r=>r.json())
-    .then(d=>{
-      console.log("IPinfo:",d);
-      fetch("https://ipinfo.io/track?token=513ac66672e1f9",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({
-          ip:d.ip,
-          city:d.city,
-          region:d.region,
-          country:d.country,
-          org:d.org,
-          page:location.pathname,
-          ua:navigator.userAgent,
-          time:new Date().toISOString()
-        })
-      });
-    })
-    .catch(()=>{});
-})();
+fetch("https://ipinfo.io/json?token=513ac66672e1f9", {
+  cache: "no-store"
+})
+.then(r => r.json())
+.then(d => {
+  console.log("IPinfo dev source hit:", d.ip, d.country);
+})
+.catch(() => {});
 </script>
 
 </body>
