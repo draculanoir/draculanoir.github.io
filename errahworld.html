@@ -28,12 +28,10 @@ body{
 .locked-content *{
   pointer-events:none !important;
   user-select:none !important;
-  touch-action:none !important;
   caret-color:transparent !important;
 }
 
-.hidden{ display:none; }
-
+/* Layout */
 .top-bar{
   display:flex;
   justify-content:space-between;
@@ -41,6 +39,7 @@ body{
   max-width:1020px;
   margin-bottom:12px;
   gap:8px;
+  flex-wrap:wrap;
 }
 
 #authBox input,
@@ -52,20 +51,20 @@ body{
   border-radius:6px;
 }
 
+/* Main table */
 table{
   width:100%;
   max-width:1020px;
   border-collapse:collapse;
   background:var(--bg-panel);
   box-shadow:0 0 0 1px var(--border);
-  margin-bottom:24px;
 }
 
 th, td{
   border:1px solid var(--border);
   padding:8px;
-  font-size:.75rem;
   text-align:center;
+  font-size:.8rem;
 }
 
 th{
@@ -80,7 +79,7 @@ td.left{ text-align:left; }
   color:var(--muted);
 }
 
-/* 🏋️ CALCULATOR */
+/* Calculator */
 .calculator{
   max-width:1020px;
   margin-top:32px;
@@ -90,24 +89,80 @@ td.left{ text-align:left; }
   border-radius:8px;
 }
 
-/* 🧾 VISITS */
-.visits-box{
+.calculator-controls{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.calculator input{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:8px;
+  border-radius:6px;
+}
+
+.calculator label{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+
+.barbell{
+  margin-top:16px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.bar{ width:260px;height:8px;background:#777;border-radius:4px; }
+.side{ display:flex; }
+
+.plate{ height:60px;margin:0 2px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;color:#111;border-radius:4px; }
+.p45{width:26px;background:#c0392b;}
+.p35{width:24px;background:#d35400;}
+.p25{width:22px;background:#f1c40f;}
+.p10{width:18px;background:#3498db;color:#fff;}
+.p5{width:14px;background:#2ecc71;}
+.p2_5{width:10px;background:#95a5a6;}
+
+.note,.total{font-size:.75rem;color:var(--muted);margin-top:6px}
+
+/* 🔐 ADMIN DASHBOARD */
+#adminPanel{
+  display:none;
   max-width:1020px;
+  margin-top:40px;
+  padding:16px;
   background:var(--bg-panel);
   border:1px solid var(--border);
   border-radius:8px;
-  padding:16px;
 }
 
-.visits-box h3{
-  margin:0 0 12px;
-  font-size:.9rem;
-  color:var(--accent);
+#adminPanel h3{
+  margin-bottom:10px;
 }
 
-.visits-table{
-  max-height:300px;
+#visitTable{
+  width:100%;
+  font-size:.7rem;
+}
+
+#visitTable th{
+  position:sticky;
+  top:0;
+}
+
+.scroll{
+  max-height:320px;
   overflow:auto;
+  border:1px solid var(--border);
+}
+
+@media(max-width:600px){
+  body{padding:12px}
+  th,td{font-size:.7rem}
 }
 </style>
 </head>
@@ -139,24 +194,43 @@ td.left{ text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
-<!-- 👁️ ADMIN VISITS SECTION -->
-<div id="visitsSection" class="visits-box hidden">
-  <h3>Visitor Logs</h3>
-  <div class="visits-table">
-    <table>
-      <thead>
-        <tr>
-          <th>IP</th>
-          <th>Country</th>
-          <th>City</th>
-          <th>ISP</th>
-          <th>Page</th>
-          <th>Time</th>
-        </tr>
-      </thead>
-      <tbody id="visitsBody"></tbody>
-    </table>
-  </div>
+<!-- 🏋️ Calculator -->
+<div class="calculator">
+<h3>Barbell Calculator (lbs)</h3>
+<div class="calculator-controls">
+  <input id="targetWeight" type="number" placeholder="Loaded weight">
+  <input id="barWeight" type="number" value="45">
+  <label><input type="checkbox" id="includeBar" checked> Include bar</label>
+</div>
+
+<div class="barbell">
+  <div id="leftSide" class="side"></div>
+  <div class="bar"></div>
+  <div id="rightSide" class="side"></div>
+</div>
+
+<div id="trueLoad" class="total"></div>
+</div>
+
+<!-- 🔐 ADMIN DASHBOARD -->
+<div id="adminPanel">
+<h3>Visitor Dashboard</h3>
+<p id="visitCount" class="note"></p>
+
+<div class="scroll">
+<table id="visitTable">
+<thead>
+<tr>
+  <th>IP</th>
+  <th>Location</th>
+  <th>Org</th>
+  <th>Device</th>
+  <th>Time</th>
+</tr>
+</thead>
+<tbody id="visitBody"></tbody>
+</table>
+</div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -165,72 +239,42 @@ td.left{ text-align:left; }
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain: "strenght-a9f37.firebaseapp.com",
-  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId: "strenght-a9f37",
-  storageBucket: "strenght-a9f37.firebasestorage.app",
-  messagingSenderId: "469926449178",
-  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain:"strenght-a9f37.firebaseapp.com",
+  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com"
 });
 
 const auth=firebase.auth();
 const db=firebase.database();
 
-const visitsSection=document.getElementById("visitsSection");
-const visitsBody=document.getElementById("visitsBody");
-
-/* 🔐 AUTH */
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value);
-logoutBtn.onclick=()=>auth.signOut();
+const adminPanel=document.getElementById("adminPanel");
+const visitBody=document.getElementById("visitBody");
+const visitCount=document.getElementById("visitCount");
 
 auth.onAuthStateChanged(user=>{
-  visitsSection.classList.toggle("hidden",!user);
-  loginBtn.style.display=user?"none":"inline-block";
-  logoutBtn.style.display=user?"inline-block":"none";
+  adminPanel.style.display=user?"block":"none";
   if(user) loadVisits();
 });
 
-/* 📥 LOAD VISITS */
 function loadVisits(){
-  db.ref("visits").limitToLast(100).on("value",snap=>{
-    visitsBody.innerHTML="";
+  db.ref("visits").limitToLast(200).on("value",snap=>{
+    visitBody.innerHTML="";
+    let count=0;
     snap.forEach(s=>{
+      count++;
       const v=s.val();
-      visitsBody.innerHTML=
-        `<tr>
-          <td>${v.ip||""}</td>
-          <td>${v.country||""}</td>
-          <td>${v.city||""}</td>
-          <td>${v.org||""}</td>
-          <td>${v.page||""}</td>
-          <td>${new Date(v.time).toLocaleString()}</td>
-        </tr>` + visitsBody.innerHTML;
+      visitBody.innerHTML+=`
+      <tr>
+        <td>${v.ip||""}</td>
+        <td>${v.city||""}, ${v.country||""}</td>
+        <td>${v.org||""}</td>
+        <td>${v.ua?.slice(0,30)||""}</td>
+        <td>${new Date(v.time).toLocaleString()}</td>
+      </tr>`;
     });
+    visitCount.innerText=`Total logged visits: ${count}`;
   });
 }
-</script>
-
-<!-- 🌍 LOG VISITOR -->
-<script>
-(function(){
-  const last=localStorage.getItem("visitLogged");
-  if(last && Date.now()-last<86400000) return;
-
-  fetch("https://ipinfo.io/json?token=513ac66672e1f9",{cache:"no-store"})
-    .then(r=>r.json())
-    .then(d=>{
-      firebase.database().ref("visits").push({
-        ip:d.ip,
-        country:d.country,
-        city:d.city,
-        org:d.org,
-        page:location.pathname,
-        time:new Date().toISOString()
-      });
-      localStorage.setItem("visitLogged",Date.now());
-    });
-})();
 </script>
 
 </body>
