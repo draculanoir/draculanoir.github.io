@@ -111,10 +111,7 @@ td.left{ text-align:left; }
   border-radius:4px;
 }
 
-.side{
-  display:flex;
-  align-items:center;
-}
+.side{ display:flex; align-items:center; }
 
 .plate{
   height:60px;
@@ -194,6 +191,11 @@ td.left{ text-align:left; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+/* ✅ FORCE VISIBILITY AFTER LOAD */
+window.addEventListener("DOMContentLoaded",()=>{
+  document.body.style.visibility="visible";
+});
+
 firebase.initializeApp({
   apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain: "strenght-a9f37.firebaseapp.com",
@@ -205,33 +207,31 @@ firebase.initializeApp({
 });
 
 const plates=[45,35,25,10,5,2.5];
-const left=leftSide,right=rightSide,note=roundNote,trueLoadEl=trueLoad;
 
 function updateBarbell(){
-  left.innerHTML=""; right.innerHTML=""; note.innerText="";
+  leftSide.innerHTML=""; rightSide.innerHTML=""; roundNote.innerText="";
   const loaded=Number(targetWeight.value);
   const bar=Number(barWeight.value)||0;
   const include=includeBar.checked;
   if(!loaded) return;
 
   let remaining=(loaded-(include?bar:0))/2;
-  if(remaining<0){ note.innerText="Target is less than bar."; return; }
+  if(remaining<0){ roundNote.innerText="Target is less than bar."; return; }
 
   let used=[];
   plates.forEach(p=>{ while(remaining>=p){ remaining-=p; used.push(p); }});
-  if(remaining>0) note.innerText="Rounded down.";
+  if(remaining>0) roundNote.innerText="Rounded down.";
 
   used.forEach(p=>{
     const c=p===2.5?"p2_5":"p"+p;
-    right.innerHTML+=`<div class="plate ${c}">${p}</div>`;
+    rightSide.innerHTML+=`<div class="plate ${c}">${p}</div>`;
   });
   [...used].reverse().forEach(p=>{
     const c=p===2.5?"p2_5":"p"+p;
-    left.innerHTML+=`<div class="plate ${c}">${p}</div>`;
+    leftSide.innerHTML+=`<div class="plate ${c}">${p}</div>`;
   });
 
-  /* ✅ FIXED TRUE LOAD LOGIC */
-  trueLoadEl.innerText =
+  trueLoad.innerText =
     `Loaded: ${loaded} lbs · True load: ${loaded + bar} lbs`;
 }
 
@@ -239,5 +239,6 @@ function updateBarbell(){
   el.addEventListener("input",updateBarbell);
 });
 </script>
+
 </body>
 </html>
