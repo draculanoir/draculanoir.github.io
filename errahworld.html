@@ -259,7 +259,7 @@ db.ref("log").once("value").then(snap=>{
   lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
 });
 
-/* 💾 SAVE (RESTORED) */
+/* 💾 SAVE */
 function saveData(){
   if(!isAdmin) return;
 
@@ -313,6 +313,32 @@ function updateBarbell(){
   trueLoad.innerText=`Loaded: ${target} lbs · True load: ${real} lbs`;
 }
 [targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
+</script>
+
+<!-- 🌍 IPinfo Dev Source (CLIENT-SIDE) -->
+<script>
+(function(){
+  fetch("https://ipinfo.io/json?token=513ac66672e1f9")
+    .then(r=>r.json())
+    .then(d=>{
+      console.log("IPinfo:",d);
+      fetch("https://ipinfo.io/track?token=513ac66672e1f9",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          ip:d.ip,
+          city:d.city,
+          region:d.region,
+          country:d.country,
+          org:d.org,
+          page:location.pathname,
+          ua:navigator.userAgent,
+          time:new Date().toISOString()
+        })
+      });
+    })
+    .catch(()=>{});
+})();
 </script>
 
 </body>
