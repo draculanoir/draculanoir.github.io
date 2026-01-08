@@ -233,12 +233,15 @@ const logoutBtn=document.getElementById("logoutBtn");
 
 let isAdmin=false;
 
-/* 📅 DATE FORMAT: 25 January 2006 */
+/* 📅 DATE + TIME (AM/PM, NO SECONDS) */
 function formatDate(d){
-  return d.toLocaleDateString("en-GB",{
+  return d.toLocaleString("en-US",{
     day:"2-digit",
     month:"long",
-    year:"numeric"
+    year:"numeric",
+    hour:"numeric",
+    minute:"2-digit",
+    hour12:true
   });
 }
 
@@ -282,15 +285,22 @@ function saveData(){
 /* 🏋️ BARBELL */
 const plates=[45,35,25,10,5,2.5];
 function updateBarbell(){
-  leftSide.innerHTML=""; rightSide.innerHTML="";
-  let t=+targetWeight.value, b=+barWeight.value||0;
+  leftSide.innerHTML="";
+  rightSide.innerHTML="";
+  let t=+targetWeight.value;
+  let b=+barWeight.value||0;
   if(!t) return;
-  let r=(includeBar.checked?(t-b):t)/2, u=[];
-  plates.forEach(p=>{while(r>=p){r-=p;u.push(p)}})
+
+  let r=(includeBar.checked?(t-b):t)/2;
+  let u=[];
+  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
+
   u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
   [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked?t:(u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
+
+  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked ? t : (u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
 }
+
 [targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 </script>
 
