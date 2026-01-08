@@ -233,6 +233,15 @@ const logoutBtn=document.getElementById("logoutBtn");
 
 let isAdmin=false;
 
+/* 📅 DATE FORMAT: 25 January 2006 */
+function formatDate(d){
+  return d.toLocaleDateString("en-GB",{
+    day:"2-digit",
+    month:"long",
+    year:"numeric"
+  });
+}
+
 loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
 logoutBtn.onclick=()=>auth.signOut();
 
@@ -254,7 +263,7 @@ db.ref("log").once("value").then(snap=>{
 
 function saveData(){
   if(!isAdmin) return;
-  const updated=new Date().toLocaleString();
+  const updated=formatDate(new Date());
   db.ref("log").set({
     title:titleEl.innerText,
     desc:descEl.innerHTML,
@@ -283,32 +292,6 @@ function updateBarbell(){
   trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked?t:(u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
 }
 [targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
-</script>
-
-<!-- 🌍 VISITOR IP LOGGING TO FIREBASE -->
-<script>
-(function(){
-  const LIMIT_HOURS = 24;
-  const last = localStorage.getItem("lastVisitLogged");
-  if(last && Date.now() - last < LIMIT_HOURS*3600000) return;
-
-  fetch("https://ipinfo.io/json?token=513ac66672e1f9",{cache:"no-store"})
-    .then(r=>r.json())
-    .then(d=>{
-      firebase.database().ref("visits").push({
-        ip:d.ip||"",
-        city:d.city||"",
-        region:d.region||"",
-        country:d.country||"",
-        org:d.org||"",
-        ua:navigator.userAgent,
-        page:location.pathname,
-        time:new Date().toISOString()
-      });
-      localStorage.setItem("lastVisitLogged",Date.now());
-    })
-    .catch(()=>{});
-})();
 </script>
 
 </body>
