@@ -28,10 +28,11 @@ body{
 .locked-content *{
   pointer-events:none !important;
   user-select:none !important;
-  -webkit-user-select:none !important;
   touch-action:none !important;
   caret-color:transparent !important;
 }
+
+.hidden{ display:none; }
 
 .top-bar{
   display:flex;
@@ -39,7 +40,6 @@ body{
   align-items:center;
   max-width:1020px;
   margin-bottom:12px;
-  flex-wrap:wrap;
   gap:8px;
 }
 
@@ -58,18 +58,19 @@ table{
   border-collapse:collapse;
   background:var(--bg-panel);
   box-shadow:0 0 0 1px var(--border);
+  margin-bottom:24px;
 }
 
 th, td{
   border:1px solid var(--border);
-  padding:10px;
+  padding:8px;
+  font-size:.75rem;
   text-align:center;
 }
 
 th{
   background:var(--bg-header);
   color:var(--accent);
-  font-size:.75rem;
 }
 
 td.left{ text-align:left; }
@@ -89,71 +90,25 @@ td.left{ text-align:left; }
   border-radius:8px;
 }
 
-.calculator-controls{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
+/* 🧾 VISITS */
+.visits-box{
+  max-width:1020px;
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:16px;
 }
 
-.calculator input{
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:8px 12px;
-  border-radius:6px;
-}
-
-.calculator label{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  border:1px solid var(--border);
-  padding:8px 12px;
-  border-radius:6px;
+.visits-box h3{
+  margin:0 0 12px;
+  font-size:.9rem;
   color:var(--accent);
 }
 
-@media (max-width:600px){
-  .calculator-controls{
-    flex-direction:column;
-  }
-  .calculator-controls input,
-  .calculator-controls label{
-    width:100%;
-  }
+.visits-table{
+  max-height:300px;
+  overflow:auto;
 }
-
-.barbell{
-  margin-top:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.bar{ width:260px; height:8px; background:#777; border-radius:4px; }
-.side{ display:flex; align-items:center; }
-
-.plate{
-  height:60px;
-  margin:0 2px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:.7rem;
-  font-weight:600;
-  color:#111;
-  border-radius:4px;
-}
-
-.p45{ width:26px; background:#c0392b; }
-.p35{ width:24px; background:#d35400; }
-.p25{ width:22px; background:#f1c40f; }
-.p10{ width:18px; background:#3498db; color:#fff; }
-.p5 { width:14px; background:#2ecc71; }
-.p2_5{ width:10px; background:#95a5a6; }
-
-.note{ font-size:.75rem; color:var(--muted); margin-top:8px; }
-.total{ margin-top:6px; font-size:.85rem; }
 </style>
 </head>
 
@@ -173,33 +128,35 @@ td.left{ text-align:left; }
 </div>
 
 <table id="table" class="locked-content">
-  <thead>
-    <tr>
-      <th class="left">Lift</th>
-      <th>Current</th>
-      <th>1RM</th>
-      <th>Strength Level</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
+<thead>
+<tr>
+  <th class="left">Lift</th>
+  <th>Current</th>
+  <th>1RM</th>
+  <th>Strength</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
 </table>
 
-<div class="calculator">
-  <h3>Barbell Calculator (lbs)</h3>
-  <div class="calculator-controls">
-    <input id="targetWeight" type="number" placeholder="Loaded weight">
-    <input id="barWeight" type="number" value="45">
-    <label><input type="checkbox" id="includeBar" checked> Include bar</label>
+<!-- 👁️ ADMIN VISITS SECTION -->
+<div id="visitsSection" class="visits-box hidden">
+  <h3>Visitor Logs</h3>
+  <div class="visits-table">
+    <table>
+      <thead>
+        <tr>
+          <th>IP</th>
+          <th>Country</th>
+          <th>City</th>
+          <th>ISP</th>
+          <th>Page</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="visitsBody"></tbody>
+    </table>
   </div>
-
-  <div class="barbell">
-    <div id="leftSide" class="side"></div>
-    <div class="bar"></div>
-    <div id="rightSide" class="side"></div>
-  </div>
-
-  <div id="roundNote" class="note"></div>
-  <div id="trueLoad" class="total"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -220,94 +177,59 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.database();
 
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
+const visitsSection=document.getElementById("visitsSection");
+const visitsBody=document.getElementById("visitsBody");
 
-const emailEl=document.getElementById("email");
-const passEl=document.getElementById("password");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
-
-let isAdmin=false;
-
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
+/* 🔐 AUTH */
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value);
 logoutBtn.onclick=()=>auth.signOut();
 
 auth.onAuthStateChanged(user=>{
-  isAdmin=!!user;
-  table.classList.toggle("locked-content",!isAdmin);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
+  visitsSection.classList.toggle("hidden",!user);
   loginBtn.style.display=user?"none":"inline-block";
   logoutBtn.style.display=user?"inline-block":"none";
+  if(user) loadVisits();
 });
 
-db.ref("log").once("value").then(snap=>{
-  const d=snap.val()||{};
-  titleEl.innerText=d.title||"";
-  descEl.innerHTML=d.desc||"";
-  tbody.innerHTML=d.table||"";
-  lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
-});
-
-function saveData(){
-  if(!isAdmin) return;
-  const updated=new Date().toLocaleString();
-  db.ref("log").set({
-    title:titleEl.innerText,
-    desc:descEl.innerHTML,
-    table:tbody.innerHTML,
-    updated
+/* 📥 LOAD VISITS */
+function loadVisits(){
+  db.ref("visits").limitToLast(100).on("value",snap=>{
+    visitsBody.innerHTML="";
+    snap.forEach(s=>{
+      const v=s.val();
+      visitsBody.innerHTML=
+        `<tr>
+          <td>${v.ip||""}</td>
+          <td>${v.country||""}</td>
+          <td>${v.city||""}</td>
+          <td>${v.org||""}</td>
+          <td>${v.page||""}</td>
+          <td>${new Date(v.time).toLocaleString()}</td>
+        </tr>` + visitsBody.innerHTML;
+    });
   });
-  lastUpdatedEl.innerText="Last updated: "+updated;
 }
-
-["input","keyup","paste","blur"].forEach(e=>{
-  titleEl.addEventListener(e,saveData);
-  descEl.addEventListener(e,saveData);
-  tbody.addEventListener(e,saveData);
-});
-
-/* 🏋️ BARBELL */
-const plates=[45,35,25,10,5,2.5];
-function updateBarbell(){
-  leftSide.innerHTML=""; rightSide.innerHTML="";
-  let t=+targetWeight.value, b=+barWeight.value||0;
-  if(!t) return;
-  let r=(includeBar.checked?(t-b):t)/2, u=[];
-  plates.forEach(p=>{while(r>=p){r-=p;u.push(p)}})
-  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked?t:(u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
-}
-[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 </script>
 
-<!-- 🌍 VISITOR IP LOGGING TO FIREBASE -->
+<!-- 🌍 LOG VISITOR -->
 <script>
 (function(){
-  const LIMIT_HOURS = 24;
-  const last = localStorage.getItem("lastVisitLogged");
-  if(last && Date.now() - last < LIMIT_HOURS*3600000) return;
+  const last=localStorage.getItem("visitLogged");
+  if(last && Date.now()-last<86400000) return;
 
   fetch("https://ipinfo.io/json?token=513ac66672e1f9",{cache:"no-store"})
     .then(r=>r.json())
     .then(d=>{
       firebase.database().ref("visits").push({
-        ip:d.ip||"",
-        city:d.city||"",
-        region:d.region||"",
-        country:d.country||"",
-        org:d.org||"",
-        ua:navigator.userAgent,
+        ip:d.ip,
+        country:d.country,
+        city:d.city,
+        org:d.org,
         page:location.pathname,
         time:new Date().toISOString()
       });
-      localStorage.setItem("lastVisitLogged",Date.now());
-    })
-    .catch(()=>{});
+      localStorage.setItem("visitLogged",Date.now());
+    });
 })();
 </script>
 
