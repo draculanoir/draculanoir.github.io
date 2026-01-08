@@ -148,15 +148,15 @@ td.left{ text-align:left; }
 .note{
   font-size:.75rem;
   color:var(--muted);
-  margin-top:8px;
+  margin-top:6px;
 }
 </style>
 </head>
 
 <body>
 
-<h1 id="title" contenteditable="false"></h1>
-<p id="desc" contenteditable="false"></p>
+<h1 id="title"></h1>
+<p id="desc"></p>
 
 <div class="top-bar">
   <div id="authBox">
@@ -177,18 +177,20 @@ td.left{ text-align:left; }
       <th>Strength Level</th>
     </tr>
   </thead>
-  <tbody id="tbody" contenteditable="false"></tbody>
+  <tbody id="tbody"></tbody>
 </table>
 
 <!-- 🏋️ BARBELL CALCULATOR -->
 <div class="calculator">
   <h3>Barbell Target Weight (lbs)</h3>
 
-  <input id="targetWeight" type="number" placeholder="Enter weight">
+  <input id="targetWeight" type="number" placeholder="Target weight">
+
+  <input id="barWeight" type="number" value="45" placeholder="Bar weight">
 
   <label>
     <input type="checkbox" id="includeBar" checked>
-    Include 45lb bar
+    Include bar
   </label>
 
   <div class="barbell">
@@ -198,6 +200,7 @@ td.left{ text-align:left; }
   </div>
 
   <div id="totalWeight" class="note"></div>
+  <div id="trueLoad" class="note"></div>
   <div id="roundNote" class="note"></div>
 </div>
 
@@ -270,18 +273,13 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-/* 💾 SAVE DATA */
+/* 💾 SAVE DATA (DO NOT TOUCH) */
 function saveData(){
   if(!isAdmin) return;
 
   const now = new Date();
-  const date = now.toLocaleDateString("en-GB", {
-    day:"numeric", month:"long", year:"numeric"
-  });
-  const time = now.toLocaleTimeString("en-US", {
-    hour:"numeric", minute:"2-digit", hour12:true
-  });
-
+  const date = now.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  const time = now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",hour12:true});
   const updated = `${date} · ${time}`;
 
   db.ref("log").set({
@@ -294,7 +292,6 @@ function saveData(){
   lastUpdatedEl.innerText = "Last updated: " + updated;
 }
 
-/* Save on edit */
 ["blur","input"].forEach(evt=>{
   titleEl.addEventListener(evt, saveData);
   descEl.addEventListener(evt, saveData);
@@ -315,23 +312,27 @@ db.ref("log").once("value").then(snap=>{
 /* 🏋️ LIVE BARBELL */
 const plates = [45,35,25,10,5,2.5];
 const targetInput = document.getElementById("targetWeight");
+const barInput = document.getElementById("barWeight");
 const includeBarEl = document.getElementById("includeBar");
 const left = document.getElementById("leftSide");
 const right = document.getElementById("rightSide");
 const note = document.getElementById("roundNote");
 const totalEl = document.getElementById("totalWeight");
+const trueEl = document.getElementById("trueLoad");
 
 function updateBarbell(){
   left.innerHTML = "";
   right.innerHTML = "";
   note.innerText = "";
   totalEl.innerText = "";
+  trueEl.innerText = "";
 
   const target = Number(targetInput.value);
+  const barWeight = Number(barInput.value) || 0;
   if(!target) return;
 
-  const barWeight = includeBarEl.checked ? 45 : 0;
-  let remaining = (target - barWeight) / 2;
+  const bar = includeBarEl.checked ? barWeight : 0;
+  let remaining = (target - bar) / 2;
 
   if(remaining < 0){
     note.innerText = "Target weight is less than the bar.";
@@ -346,8 +347,11 @@ function updateBarbell(){
     }
   });
 
-  const totalLoaded = barWeight + used.reduce((a,b)=>a+b,0)*2;
-  totalEl.innerText = "Total loaded: " + totalLoaded + " lbs";
+  const platesTotal = used.reduce((a,b)=>a+b,0) * 2;
+  const trueLoad = platesTotal + bar;
+
+  totalEl.innerText = "Plates loaded: " + platesTotal + " lb";
+  trueEl.innerText = "True load (plates + bar): " + trueLoad + " lb";
 
   if(remaining > 0){
     note.innerText = "Rounded down to nearest achievable weight.";
@@ -364,7 +368,7 @@ function updateBarbell(){
   });
 }
 
-targetInput.addEventListener("input", updateBarbell);
+[targetInput, barInput].forEach(el=>el.addEventListener("input", updateBarbell));
 includeBarEl.addEventListener("change", updateBarbell);
 
 lockAll();
