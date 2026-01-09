@@ -38,7 +38,7 @@ body{
   50%{ transform:translateY(-6px); }
 }
 
-/* LOCK */
+/* 🔒 HARD READ-ONLY LOCK */
 .locked-content,
 .locked-content *{
   pointer-events:none!important;
@@ -46,12 +46,14 @@ body{
   caret-color:transparent!important;
 }
 
+/* TITLE */
 h1{
   margin:0 0 12px;
   font-size:2.2rem;
   font-weight:700;
 }
 
+/* DESCRIPTION */
 #desc{
   max-width:900px;
   padding:18px 22px;
@@ -80,7 +82,10 @@ h1{
   animation:float 8s ease-in-out infinite;
 }
 
-#timer{ font-weight:700; color:var(--accent); }
+#timer{
+  font-weight:700;
+  color:var(--accent);
+}
 
 /* TOP BAR */
 .top-bar{
@@ -88,27 +93,9 @@ h1{
   justify-content:space-between;
   align-items:center;
   max-width:1020px;
-  margin-bottom:16px;
+  margin-bottom:18px;
   gap:12px;
   flex-wrap:wrap;
-}
-
-/* UPDATES BUTTON */
-.updates-btn{
-  background:linear-gradient(135deg,#5b6cff,#3b46a6);
-  border:none;
-  color:white;
-  padding:12px 22px;
-  border-radius:18px;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:var(--shadow);
-  transition:.25s ease;
-  animation:float 10s ease-in-out infinite;
-}
-
-.updates-btn:hover{
-  transform:translateY(-3px);
 }
 
 /* AUTH */
@@ -121,7 +108,7 @@ h1{
   border-radius:20px;
   box-shadow:var(--shadow);
   backdrop-filter:blur(16px);
-  animation:float 11s ease-in-out infinite;
+  animation:float 10s ease-in-out infinite;
 }
 
 #authBox input{
@@ -130,7 +117,10 @@ h1{
   color:var(--accent);
   padding:10px 14px;
   border-radius:12px;
+  min-width:160px;
 }
+
+#authBox input::placeholder{ color:#8f97b5; }
 
 #authBox button{
   background:linear-gradient(135deg,#3a43a0,#2a2f66);
@@ -140,22 +130,18 @@ h1{
   border-radius:14px;
   font-weight:600;
   cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,.5);
+  transition:.25s ease;
 }
 
-/* LAST UPDATED – PREMIUM */
+#authBox button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 14px 30px rgba(0,0,0,.65);
+}
+
 .last-updated{
-  max-width:1020px;
-  margin:12px 0 22px;
-  padding:12px 18px;
-  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
-  border:1px solid var(--border);
-  border-radius:14px;
-  color:var(--muted);
   font-size:.75rem;
-  letter-spacing:.03em;
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(12px);
-  animation:float 13s ease-in-out infinite;
+  color:var(--muted);
 }
 
 /* TABLE */
@@ -167,7 +153,7 @@ table{
   border-radius:22px;
   overflow:hidden;
   box-shadow:var(--shadow);
-  animation:float 12s ease-in-out infinite;
+  animation:float 11s ease-in-out infinite;
 }
 
 th,td{
@@ -186,9 +172,78 @@ th{
 
 td.left{ text-align:left; }
 
+/* CALCULATOR */
+.calculator{
+  max-width:1020px;
+  margin-top:54px;
+  padding:26px;
+  background:var(--bg-panel);
+  border-radius:24px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  animation:float 12s ease-in-out infinite;
+}
+
+.calculator-controls{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.calculator input,
+.calculator label{
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:12px 16px;
+  border-radius:14px;
+}
+
+/* BARBELL */
+.barbell{
+  margin-top:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bar{
+  width:300px;
+  height:12px;
+  background:linear-gradient(#bbb,#666);
+  border-radius:8px;
+}
+
+.side{ display:flex; }
+
+.plate{
+  height:68px;
+  margin:0 2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.7rem;
+  font-weight:700;
+  color:#111;
+  border-radius:7px;
+  box-shadow:0 8px 18px rgba(0,0,0,.6);
+}
+
+.p45{ width:30px; background:#c0392b; }
+.p35{ width:28px; background:#d35400; }
+.p25{ width:26px; background:#f1c40f; }
+.p10{ width:22px; background:#3498db; color:#fff; }
+.p5 { width:18px; background:#2ecc71; }
+.p2_5{ width:14px; background:#bdc3c7; }
+
+.note{ font-size:.75rem; color:var(--muted); margin-top:12px; }
+.total{ margin-top:8px; }
+
 @media(max-width:600px){
   body{ padding:16px; }
   #authBox{ flex-direction:column; width:100%; }
+  #authBox input,#authBox button{ width:100%; }
+  .calculator-controls{ flex-direction:column; }
 }
 </style>
 </head>
@@ -204,17 +259,14 @@ td.left{ text-align:left; }
 </div>
 
 <div class="top-bar">
-  <button id="updatesBtn" class="updates-btn">View Updates</button>
-
   <div id="authBox">
     <input id="email" placeholder="admin email">
     <input id="password" type="password" placeholder="password">
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
+  <div id="lastUpdated" class="last-updated"></div>
 </div>
-
-<div id="lastUpdated" class="last-updated"></div>
 
 <table id="table" class="locked-content">
 <thead>
@@ -227,6 +279,24 @@ td.left{ text-align:left; }
 </thead>
 <tbody id="tbody"></tbody>
 </table>
+
+<div class="calculator">
+<h3>Barbell Calculator (lbs)</h3>
+<div class="calculator-controls">
+<input id="targetWeight" type="number" placeholder="Loaded weight">
+<input id="barWeight" type="number" value="45">
+<label><input type="checkbox" id="includeBar" checked> Include bar</label>
+</div>
+
+<div class="barbell">
+<div id="leftSide" class="side"></div>
+<div class="bar"></div>
+<div id="rightSide" class="side"></div>
+</div>
+
+<div id="roundNote" class="note"></div>
+<div id="trueLoad" class="total"></div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -246,65 +316,96 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.database();
 
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value).catch(e=>alert(e.message));
+const titleEl=document.getElementById("title");
+const descEl=document.getElementById("desc");
+const tbody=document.getElementById("tbody");
+const table=document.getElementById("table");
+const lastUpdatedEl=document.getElementById("lastUpdated");
+
+const emailEl=document.getElementById("email");
+const passEl=document.getElementById("password");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+
+let isAdmin=false;
+
+function formatDate(d){
+  return d.toLocaleString("en-US",{day:"2-digit",month:"long",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
+}
+
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
 logoutBtn.onclick=()=>auth.signOut();
 
 auth.onAuthStateChanged(user=>{
-  table.classList.toggle("locked-content",!user);
-  [title,desc,tbody].forEach(el=>el.contentEditable=!!user);
+  isAdmin=!!user;
+  table.classList.toggle("locked-content",!isAdmin);
+  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
   loginBtn.style.display=user?"none":"inline-block";
   logoutBtn.style.display=user?"inline-block":"none";
 });
 
-db.ref("log").on("value",snap=>{
+db.ref("log").once("value").then(snap=>{
   const d=snap.val()||{};
-  title.innerText=d.title||"";
-  desc.innerHTML=d.desc||"";
+  titleEl.innerText=d.title||"";
+  descEl.innerHTML=d.desc||"";
   tbody.innerHTML=d.table||"";
-  lastUpdated.innerText=d.updated?"Last updated: "+d.updated:"";
+  lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
 });
 
 function saveData(){
-  if(!auth.currentUser) return;
-  const updated=new Date().toLocaleString("en-US",{
-    day:"2-digit",
-    month:"long",
-    year:"numeric",
-    hour:"numeric",
-    minute:"2-digit",
-    hour12:true
-  });
+  if(!isAdmin) return;
+  const updated=formatDate(new Date());
   db.ref("log").set({
-    title:title.innerText,
-    desc:desc.innerHTML,
+    title:titleEl.innerText,
+    desc:descEl.innerHTML,
     table:tbody.innerHTML,
     updated
   });
+  lastUpdatedEl.innerText="Last updated: "+updated;
 }
 
-["input","keyup","blur"].forEach(e=>{
-  title.addEventListener(e,saveData);
-  desc.addEventListener(e,saveData);
+["input","keyup","paste","blur"].forEach(e=>{
+  titleEl.addEventListener(e,saveData);
+  descEl.addEventListener(e,saveData);
   tbody.addEventListener(e,saveData);
 });
 
-document.getElementById("updatesBtn").onclick=()=>{
-  window.location.href="updates.html";
-};
+const plates=[45,35,25,10,5,2.5];
+function updateBarbell(){
+  leftSide.innerHTML="";
+  rightSide.innerHTML="";
+  let t=+targetWeight.value;
+  let b=+barWeight.value||0;
+  if(!t) return;
+
+  let r=(includeBar.checked?(t-b):t)/2;
+  let u=[];
+  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
+
+  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+
+  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked ? t : (u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
+}
+
+[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 </script>
 
 <script>
+/* COUNTDOWN */
 const targetDate=new Date("February 3, 2026 00:00:00").getTime();
 const timerEl=document.getElementById("timer");
-
-setInterval(()=>{
+function updateTimer(){
   const diff=targetDate-Date.now();
   if(diff<=0){ timerEl.textContent="RM DAY 🔥"; return; }
   const d=Math.floor(diff/86400000);
   const h=Math.floor(diff/3600000)%24;
   const m=Math.floor(diff/60000)%60;
-  timerEl.textContent=`${d}d ${h}h ${m}m`;
-},1000);
+  const s=Math.floor(diff/1000)%60;
+  timerEl.textContent=`${d}d ${h}h ${m}m ${s}s`;
+}
+updateTimer();
+setInterval(updateTimer,1000);
 </script>
 
 </body>
