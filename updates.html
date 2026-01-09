@@ -25,9 +25,7 @@ body{
   margin:0;
   padding:28px;
   font-family:Inter,system-ui,sans-serif;
-  background:
-    radial-gradient(1000px 500px at top,#1c2340,transparent 60%),
-    var(--bg);
+  background:radial-gradient(1000px 500px at top,#1c2340,transparent 60%),var(--bg);
   color:var(--text);
 }
 
@@ -36,16 +34,21 @@ body{
   margin:auto;
 }
 
-h1{
+h1{ margin-bottom:14px }
+
+/* ADMIN TOGGLE */
+#adminToggle{
+  font-size:.75rem;
+  color:var(--muted);
+  cursor:pointer;
   margin-bottom:18px;
 }
 
-/* ADMIN AUTH (HIDDEN BY DEFAULT) */
+/* AUTH */
 #authBox{
   display:none;
-  margin-bottom:24px;
   gap:10px;
-  flex-wrap:wrap;
+  margin-bottom:20px;
 }
 
 #authBox input{
@@ -66,15 +69,15 @@ h1{
   cursor:pointer;
 }
 
-/* POST BOX */
+/* POST */
 #postBox{
   display:none;
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:18px;
   padding:18px;
+  margin-bottom:26px;
   box-shadow:var(--shadow);
-  margin-bottom:30px;
 }
 
 #postBox textarea{
@@ -86,14 +89,13 @@ h1{
   border:1px solid var(--border);
   border-radius:14px;
   padding:14px;
-  font-family:inherit;
 }
 
 .update{
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:18px;
-  padding:16px 18px;
+  padding:16px;
   margin-bottom:14px;
   box-shadow:var(--shadow);
 }
@@ -101,15 +103,15 @@ h1{
 .time{
   font-size:.7rem;
   color:var(--muted);
-  margin-bottom:8px;
+  margin-bottom:6px;
 }
 
 .delete{
-  margin-top:10px;
   background:none;
-  color:var(--danger);
   border:none;
+  color:var(--danger);
   font-size:.75rem;
+  margin-top:8px;
   cursor:pointer;
 }
 </style>
@@ -120,7 +122,8 @@ h1{
 
 <h1>Updates</h1>
 
-<!-- ADMIN LOGIN -->
+<div id="adminToggle">Admin login</div>
+
 <div id="authBox">
   <input id="email" placeholder="admin email">
   <input id="password" type="password" placeholder="password">
@@ -128,13 +131,11 @@ h1{
   <button id="logoutBtn" style="display:none">Logout</button>
 </div>
 
-<!-- ADMIN POST -->
 <div id="postBox">
   <textarea id="postText" placeholder="Write an update..."></textarea>
-  <button id="postBtn">Post Update</button>
+  <button id="postBtn">Post update</button>
 </div>
 
-<!-- PUBLIC UPDATES -->
 <div id="updates"></div>
 
 </div>
@@ -159,6 +160,7 @@ const auth = firebase.auth();
 const db = firebase.database();
 
 /* DOM */
+const adminToggle = document.getElementById("adminToggle");
 const authBox = document.getElementById("authBox");
 const emailEl = document.getElementById("email");
 const passEl = document.getElementById("password");
@@ -168,34 +170,23 @@ const logoutBtn = document.getElementById("logoutBtn");
 const postBox = document.getElementById("postBox");
 const postText = document.getElementById("postText");
 const postBtn = document.getElementById("postBtn");
-
 const updatesEl = document.getElementById("updates");
 
 let isAdmin = false;
 
-/* DATE FORMAT */
+/* DATE */
 function formatDate(d){
   return d.toLocaleDateString("en-GB",{
-    day:"2-digit",
-    month:"long",
-    year:"numeric"
-  }) + " · " + d.toLocaleTimeString("en-US",{
-    hour:"numeric",
-    minute:"2-digit",
-    hour12:true
+    day:"2-digit",month:"long",year:"numeric"
+  })+" · "+d.toLocaleTimeString("en-US",{
+    hour:"numeric",minute:"2-digit",hour12:true
   });
 }
 
-/* AUTH STATE */
-auth.onAuthStateChanged(user=>{
-  isAdmin = !!user;
-
-  authBox.style.display = user ? "none" : "flex";
-  postBox.style.display = isAdmin ? "block" : "none";
-
-  loginBtn.style.display = user ? "none" : "inline-block";
-  logoutBtn.style.display = user ? "inline-block" : "none";
-});
+/* ADMIN TOGGLE */
+adminToggle.onclick = () => {
+  authBox.style.display = authBox.style.display === "flex" ? "none" : "flex";
+};
 
 /* LOGIN */
 loginBtn.onclick = () =>
@@ -203,6 +194,14 @@ loginBtn.onclick = () =>
     .catch(e=>alert(e.message));
 
 logoutBtn.onclick = () => auth.signOut();
+
+/* AUTH STATE */
+auth.onAuthStateChanged(user=>{
+  isAdmin = !!user;
+  postBox.style.display = isAdmin ? "block" : "none";
+  loginBtn.style.display = isAdmin ? "none" : "inline-block";
+  logoutBtn.style.display = isAdmin ? "inline-block" : "none";
+});
 
 /* POST */
 postBtn.onclick = () => {
@@ -217,7 +216,7 @@ postBtn.onclick = () => {
   postText.value = "";
 };
 
-/* LOAD UPDATES (PUBLIC) */
+/* LOAD UPDATES */
 db.ref("updates").orderByChild("ts").on("value", snap=>{
   updatesEl.innerHTML = "";
   const data = snap.val() || {};
