@@ -32,6 +32,7 @@ body{
   color:var(--text);
 }
 
+/* FLOAT */
 @keyframes float{
   0%,100%{ transform:translateY(0); }
   50%{ transform:translateY(-6px); }
@@ -86,48 +87,18 @@ h1{
   color:var(--accent);
 }
 
-/* 🔔 NOTIFICATION */
-.notification{
-  max-width:1020px;
-  margin:20px 0;
-  padding:18px 22px;
-  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
-  border:1px solid var(--border);
-  border-radius:18px;
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(14px);
-}
-
-.notification.hidden{ display:none; }
-
-.notif-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-#notifDate{
-  font-size:.75rem;
-  color:var(--muted);
-}
-
-#toggleNotif{
-  background:none;
-  border:none;
-  color:var(--accent);
-  cursor:pointer;
-  font-weight:600;
-}
-
-/* AUTH */
+/* TOP BAR */
 .top-bar{
   display:flex;
   justify-content:space-between;
   align-items:center;
   max-width:1020px;
   margin-bottom:18px;
+  gap:12px;
+  flex-wrap:wrap;
 }
 
+/* AUTH */
 #authBox{
   display:flex;
   gap:10px;
@@ -136,6 +107,8 @@ h1{
   border:1px solid var(--border);
   border-radius:20px;
   box-shadow:var(--shadow);
+  backdrop-filter:blur(16px);
+  animation:float 10s ease-in-out infinite;
 }
 
 #authBox input{
@@ -144,7 +117,10 @@ h1{
   color:var(--accent);
   padding:10px 14px;
   border-radius:12px;
+  min-width:160px;
 }
+
+#authBox input::placeholder{ color:#8f97b5; }
 
 #authBox button{
   background:linear-gradient(135deg,#3a43a0,#2a2f66);
@@ -152,7 +128,20 @@ h1{
   color:#fff;
   padding:10px 18px;
   border-radius:14px;
+  font-weight:600;
   cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,.5);
+  transition:.25s ease;
+}
+
+#authBox button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 14px 30px rgba(0,0,0,.65);
+}
+
+.last-updated{
+  font-size:.75rem;
+  color:var(--muted);
 }
 
 /* TABLE */
@@ -164,6 +153,7 @@ table{
   border-radius:22px;
   overflow:hidden;
   box-shadow:var(--shadow);
+  animation:float 11s ease-in-out infinite;
 }
 
 th,td{
@@ -191,6 +181,7 @@ td.left{ text-align:left; }
   border-radius:24px;
   border:1px solid var(--border);
   box-shadow:var(--shadow);
+  animation:float 12s ease-in-out infinite;
 }
 
 .calculator-controls{
@@ -208,6 +199,7 @@ td.left{ text-align:left; }
   border-radius:14px;
 }
 
+/* BARBELL */
 .barbell{
   margin-top:30px;
   display:flex;
@@ -234,6 +226,7 @@ td.left{ text-align:left; }
   font-weight:700;
   color:#111;
   border-radius:7px;
+  box-shadow:0 8px 18px rgba(0,0,0,.6);
 }
 
 .p45{ width:30px; background:#c0392b; }
@@ -242,6 +235,16 @@ td.left{ text-align:left; }
 .p10{ width:22px; background:#3498db; color:#fff; }
 .p5 { width:18px; background:#2ecc71; }
 .p2_5{ width:14px; background:#bdc3c7; }
+
+.note{ font-size:.75rem; color:var(--muted); margin-top:12px; }
+.total{ margin-top:8px; }
+
+@media(max-width:600px){
+  body{ padding:16px; }
+  #authBox{ flex-direction:column; width:100%; }
+  #authBox input,#authBox button{ width:100%; }
+  .calculator-controls{ flex-direction:column; }
+}
 </style>
 </head>
 
@@ -252,26 +255,17 @@ td.left{ text-align:left; }
 
 <div class="countdown">
   <strong>Road to RM Drop 🏋️</strong>
-  <div id="timer"></div>
-</div>
-
-<div id="notification" class="notification hidden">
-  <div class="notif-header">
-    <strong>Update</strong>
-    <span id="notifDate"></span>
-    <button id="toggleNotif">Hide</button>
-  </div>
-  <div id="notifBody"></div>
+  <div id="timer">Loading…</div>
 </div>
 
 <div class="top-bar">
   <div id="authBox">
     <input id="email" placeholder="admin email">
-    <input id="password" type="password">
+    <input id="password" type="password" placeholder="password">
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
-  <div id="lastUpdated"></div>
+  <div id="lastUpdated" class="last-updated"></div>
 </div>
 
 <table id="table" class="locked-content">
@@ -300,7 +294,8 @@ td.left{ text-align:left; }
 <div id="rightSide" class="side"></div>
 </div>
 
-<div id="trueLoad"></div>
+<div id="roundNote" class="note"></div>
+<div id="trueLoad" class="total"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -321,31 +316,60 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.database();
 
-/* === ORIGINAL LOG DATA === */
-db.ref("log").once("value").then(s=>{
-  const d=s.val()||{};
-  title.innerText=d.title||"";
-  desc.innerHTML=d.desc||"";
+const titleEl=document.getElementById("title");
+const descEl=document.getElementById("desc");
+const tbody=document.getElementById("tbody");
+const table=document.getElementById("table");
+const lastUpdatedEl=document.getElementById("lastUpdated");
+
+const emailEl=document.getElementById("email");
+const passEl=document.getElementById("password");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+
+let isAdmin=false;
+
+function formatDate(d){
+  return d.toLocaleString("en-US",{day:"2-digit",month:"long",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
+}
+
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
+logoutBtn.onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  isAdmin=!!user;
+  table.classList.toggle("locked-content",!isAdmin);
+  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
+  loginBtn.style.display=user?"none":"inline-block";
+  logoutBtn.style.display=user?"inline-block":"none";
+});
+
+db.ref("log").once("value").then(snap=>{
+  const d=snap.val()||{};
+  titleEl.innerText=d.title||"";
+  descEl.innerHTML=d.desc||"";
   tbody.innerHTML=d.table||"";
-  lastUpdated.innerText=d.updated?"Last updated: "+d.updated:"";
+  lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
 });
 
-/* === NOTIFICATION (SEPARATE NODE) === */
-const notifRef=db.ref("notification");
-notifRef.on("value",s=>{
-  const d=s.val();
-  if(!d) return;
-  notifBody.innerText=d.text;
-  notifDate.innerText=d.date;
-  notification.classList.toggle("hidden",localStorage.getItem("hideNotif")==="1");
+function saveData(){
+  if(!isAdmin) return;
+  const updated=formatDate(new Date());
+  db.ref("log").set({
+    title:titleEl.innerText,
+    desc:descEl.innerHTML,
+    table:tbody.innerHTML,
+    updated
+  });
+  lastUpdatedEl.innerText="Last updated: "+updated;
+}
+
+["input","keyup","paste","blur"].forEach(e=>{
+  titleEl.addEventListener(e,saveData);
+  descEl.addEventListener(e,saveData);
+  tbody.addEventListener(e,saveData);
 });
 
-toggleNotif.onclick=()=>{
-  const h=notification.classList.toggle("hidden");
-  localStorage.setItem("hideNotif",h?"1":"0");
-};
-
-/* === BARBELL === */
 const plates=[45,35,25,10,5,2.5];
 function updateBarbell(){
   leftSide.innerHTML="";
@@ -353,22 +377,35 @@ function updateBarbell(){
   let t=+targetWeight.value;
   let b=+barWeight.value||0;
   if(!t) return;
+
   let r=(includeBar.checked?(t-b):t)/2;
   let u=[];
-  plates.forEach(p=>{while(r>=p){r-=p;u.push(p);}});
+  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
+
   u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
   [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  trueLoad.innerText=`Loaded: ${t} lbs`;
+
+  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked ? t : (u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
 }
+
 [targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 </script>
 
 <script>
-const targetDate=new Date("February 3, 2026").getTime();
-setInterval(()=>{
-  const d=targetDate-Date.now();
-  timer.innerText=d<=0?"RM DAY 🔥":Math.floor(d/86400000)+" days";
-},1000);
+/* COUNTDOWN */
+const targetDate=new Date("February 3, 2026 00:00:00").getTime();
+const timerEl=document.getElementById("timer");
+function updateTimer(){
+  const diff=targetDate-Date.now();
+  if(diff<=0){ timerEl.textContent="RM DAY 🔥"; return; }
+  const d=Math.floor(diff/86400000);
+  const h=Math.floor(diff/3600000)%24;
+  const m=Math.floor(diff/60000)%60;
+  const s=Math.floor(diff/1000)%60;
+  timerEl.textContent=`${d}d ${h}h ${m}m ${s}s`;
+}
+updateTimer();
+setInterval(updateTimer,1000);
 </script>
 
 </body>
