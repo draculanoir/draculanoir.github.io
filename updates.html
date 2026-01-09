@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Updates</title>
+<title>Updates</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -25,12 +25,10 @@ body{
   margin:0;
   padding:28px;
   font-family:Inter,system-ui,sans-serif;
-  background:radial-gradient(1000px 500px at top,#1c2340,transparent 60%),var(--bg);
+  background:
+    radial-gradient(1000px 500px at top,#1c2340,transparent 60%),
+    var(--bg);
   color:var(--text);
-}
-
-h1{
-  margin-bottom:18px;
 }
 
 .container{
@@ -38,7 +36,39 @@ h1{
   margin:auto;
 }
 
-.post-box{
+h1{
+  margin-bottom:18px;
+}
+
+/* ADMIN AUTH (HIDDEN BY DEFAULT) */
+#authBox{
+  display:none;
+  margin-bottom:24px;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+#authBox input{
+  background:#0f1324;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:12px;
+}
+
+#authBox button{
+  background:linear-gradient(135deg,#3a43a0,#2a2f66);
+  border:none;
+  color:#fff;
+  padding:10px 18px;
+  border-radius:14px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* POST BOX */
+#postBox{
+  display:none;
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:18px;
@@ -47,7 +77,7 @@ h1{
   margin-bottom:30px;
 }
 
-textarea{
+#postBox textarea{
   width:100%;
   min-height:90px;
   resize:none;
@@ -57,17 +87,6 @@ textarea{
   border-radius:14px;
   padding:14px;
   font-family:inherit;
-}
-
-button{
-  margin-top:12px;
-  padding:10px 18px;
-  border-radius:14px;
-  border:none;
-  background:linear-gradient(135deg,#3a43a0,#2a2f66);
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
 }
 
 .update{
@@ -93,25 +112,6 @@ button{
   font-size:.75rem;
   cursor:pointer;
 }
-
-.auth{
-  margin-bottom:24px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.auth input{
-  background:#0f1324;
-  border:1px solid var(--border);
-  color:var(--text);
-  padding:10px 14px;
-  border-radius:12px;
-}
-
-@media(max-width:600px){
-  body{ padding:16px }
-}
 </style>
 </head>
 
@@ -120,18 +120,21 @@ button{
 
 <h1>Updates</h1>
 
-<div class="auth">
+<!-- ADMIN LOGIN -->
+<div id="authBox">
   <input id="email" placeholder="admin email">
   <input id="password" type="password" placeholder="password">
   <button id="loginBtn">Login</button>
   <button id="logoutBtn" style="display:none">Logout</button>
 </div>
 
-<div id="postBox" class="post-box" style="display:none">
+<!-- ADMIN POST -->
+<div id="postBox">
   <textarea id="postText" placeholder="Write an update..."></textarea>
   <button id="postBtn">Post Update</button>
 </div>
 
+<!-- PUBLIC UPDATES -->
 <div id="updates"></div>
 
 </div>
@@ -156,13 +159,16 @@ const auth = firebase.auth();
 const db = firebase.database();
 
 /* DOM */
+const authBox = document.getElementById("authBox");
 const emailEl = document.getElementById("email");
 const passEl = document.getElementById("password");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+
 const postBox = document.getElementById("postBox");
 const postText = document.getElementById("postText");
 const postBtn = document.getElementById("postBtn");
+
 const updatesEl = document.getElementById("updates");
 
 let isAdmin = false;
@@ -180,26 +186,29 @@ function formatDate(d){
   });
 }
 
-/* AUTH */
+/* AUTH STATE */
+auth.onAuthStateChanged(user=>{
+  isAdmin = !!user;
+
+  authBox.style.display = user ? "none" : "flex";
+  postBox.style.display = isAdmin ? "block" : "none";
+
+  loginBtn.style.display = user ? "none" : "inline-block";
+  logoutBtn.style.display = user ? "inline-block" : "none";
+});
+
+/* LOGIN */
 loginBtn.onclick = () =>
   auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
     .catch(e=>alert(e.message));
 
 logoutBtn.onclick = () => auth.signOut();
 
-auth.onAuthStateChanged(user=>{
-  isAdmin = !!user;
-  postBox.style.display = isAdmin ? "block" : "none";
-  loginBtn.style.display = user ? "none" : "inline-block";
-  logoutBtn.style.display = user ? "inline-block" : "none";
-});
-
-/* POST UPDATE */
+/* POST */
 postBtn.onclick = () => {
   if(!postText.value.trim()) return;
 
-  const ref = db.ref("updates").push();
-  ref.set({
+  db.ref("updates").push({
     text: postText.value,
     time: formatDate(new Date()),
     ts: Date.now()
@@ -208,7 +217,7 @@ postBtn.onclick = () => {
   postText.value = "";
 };
 
-/* LOAD UPDATES */
+/* LOAD UPDATES (PUBLIC) */
 db.ref("updates").orderByChild("ts").on("value", snap=>{
   updatesEl.innerHTML = "";
   const data = snap.val() || {};
