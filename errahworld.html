@@ -45,12 +45,10 @@ body{
   caret-color:transparent!important;
 }
 
-h1{
-  margin:0 0 12px;
-  font-size:2.2rem;
-  font-weight:700;
-}
+/* TITLE */
+h1{ margin:0 0 12px; font-size:2.2rem; }
 
+/* DESCRIPTION */
 #desc{
   max-width:900px;
   padding:18px 22px;
@@ -59,60 +57,14 @@ h1{
   border:1px solid var(--border);
   border-radius:18px;
   color:var(--muted);
-  line-height:1.55;
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(14px);
-  animation:float 9s ease-in-out infinite;
-}
-
-/* 🔔 NOTIFICATIONS */
-.notifications{
-  max-width:1020px;
-  margin-bottom:26px;
-  padding:20px 22px;
-  background:linear-gradient(135deg,#1e2452,#161a3a);
-  border-radius:20px;
   box-shadow:var(--shadow);
   animation:float 9s ease-in-out infinite;
 }
-
-.notifications-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:12px;
-}
-
-.notifications-header strong{
-  font-size:.75rem;
-  letter-spacing:.18em;
-  color:var(--accent);
-}
-
-.toggle-btn{
-  background:rgba(0,0,0,.25);
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:6px 14px;
-  border-radius:12px;
-  font-size:.7rem;
-  cursor:pointer;
-}
-
-#notificationsContent{
-  padding:14px 16px;
-  background:rgba(0,0,0,.28);
-  border-radius:14px;
-  line-height:1.55;
-  font-size:.85rem;
-}
-
-.hidden{ display:none; }
 
 /* COUNTDOWN */
 .countdown{
   max-width:1020px;
-  margin:18px 0 28px;
+  margin-bottom:28px;
   padding:18px 22px;
   background:linear-gradient(135deg,#2b3160,#1b1f3d);
   border-radius:18px;
@@ -120,7 +72,6 @@ h1{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  animation:float 8s ease-in-out infinite;
 }
 
 #timer{ font-weight:700; color:var(--accent); }
@@ -153,7 +104,6 @@ h1{
   color:var(--accent);
   padding:10px 14px;
   border-radius:12px;
-  min-width:160px;
 }
 
 #authBox button{
@@ -166,9 +116,43 @@ h1{
   cursor:pointer;
 }
 
-.last-updated{
-  font-size:.75rem;
-  color:var(--muted);
+/* 🔔 NOTIFICATIONS */
+#notifBell{
+  cursor:pointer;
+  font-size:1.2rem;
+}
+
+#notifCount{
+  background:#ff4757;
+  color:#fff;
+  font-size:.65rem;
+  padding:2px 6px;
+  border-radius:999px;
+  margin-left:6px;
+}
+
+#notifPanel{
+  position:fixed;
+  top:90px;
+  right:30px;
+  width:320px;
+  max-height:420px;
+  overflow:auto;
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  display:none;
+  padding:14px;
+  z-index:999;
+}
+
+.notif{
+  padding:10px 12px;
+  margin-bottom:8px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+  font-size:.85rem;
 }
 
 /* TABLE */
@@ -191,83 +175,11 @@ th,td{
 th{
   background:var(--bg-header);
   font-size:.7rem;
-  letter-spacing:.16em;
   text-transform:uppercase;
   color:var(--accent);
 }
 
 td.left{ text-align:left; }
-
-/* CALCULATOR */
-.calculator{
-  max-width:1020px;
-  margin-top:54px;
-  padding:26px;
-  background:var(--bg-panel);
-  border-radius:24px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-}
-
-.calculator-controls{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.calculator input,
-.calculator label{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:12px 16px;
-  border-radius:14px;
-}
-
-/* BARBELL */
-.barbell{
-  margin-top:30px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.bar{
-  width:300px;
-  height:12px;
-  background:linear-gradient(#bbb,#666);
-  border-radius:8px;
-}
-
-.side{ display:flex; }
-
-.plate{
-  height:68px;
-  margin:0 2px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:.7rem;
-  font-weight:700;
-  color:#111;
-  border-radius:7px;
-  box-shadow:0 8px 18px rgba(0,0,0,.6);
-}
-
-.p45{ width:30px; background:#c0392b; }
-.p35{ width:28px; background:#d35400; }
-.p25{ width:26px; background:#f1c40f; }
-.p10{ width:22px; background:#3498db; color:#fff; }
-.p5 { width:18px; background:#2ecc71; }
-.p2_5{ width:14px; background:#bdc3c7; }
-
-.note{ font-size:.75rem; color:var(--muted); margin-top:12px; }
-.total{ margin-top:8px; }
-
-@media(max-width:600px){
-  body{ padding:16px; }
-  #authBox{ flex-direction:column; width:100%; }
-}
 </style>
 </head>
 
@@ -276,17 +188,9 @@ td.left{ text-align:left; }
 <h1 id="title"></h1>
 <p id="desc"></p>
 
-<div class="notifications">
-  <div class="notifications-header">
-    <strong>UPDATES</strong>
-    <button id="toggleUpdates" class="toggle-btn">Hide</button>
-  </div>
-  <div id="notificationsContent" class="locked-content">No updates yet.</div>
-</div>
-
 <div class="countdown">
   <strong>Road to RM Drop 🏋️</strong>
-  <div id="timer">Loading…</div>
+  <div id="timer"></div>
 </div>
 
 <div class="top-bar">
@@ -296,7 +200,15 @@ td.left{ text-align:left; }
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
-  <div id="lastUpdated" class="last-updated"></div>
+
+  <div>
+    <span id="notifBell">🔔 <span id="notifCount">0</span></span>
+  </div>
+</div>
+
+<div id="notifPanel">
+  <h4>Notifications</h4>
+  <div id="notifList"></div>
 </div>
 
 <table id="table" class="locked-content">
@@ -305,29 +217,11 @@ td.left{ text-align:left; }
 <th class="left">Lift</th>
 <th>Current</th>
 <th>1RM</th>
-<th>Strength Level</th>
+<th>Strength</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
-
-<div class="calculator">
-<h3>Barbell Calculator (lbs)</h3>
-<div class="calculator-controls">
-<input id="targetWeight" type="number" placeholder="Loaded weight">
-<input id="barWeight" type="number" value="45">
-<label><input type="checkbox" id="includeBar" checked> Include bar</label>
-</div>
-
-<div class="barbell">
-  <div id="leftSide" class="side"></div>
-  <div class="bar"></div>
-  <div id="rightSide" class="side"></div>
-</div>
-
-<div id="roundNote" class="note"></div>
-<div id="trueLoad" class="total"></div>
-</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -338,114 +232,70 @@ firebase.initializeApp({
   apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain:"strenght-a9f37.firebaseapp.com",
   databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId:"strenght-a9f37"
+  projectId:"strenght-a9f37",
+  storageBucket:"strenght-a9f37.firebasestorage.app",
+  messagingSenderId:"469926449178",
+  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
-const auth = firebase.auth();
-const db = firebase.database();
+const auth=firebase.auth();
+const db=firebase.database();
 
-const emailEl = document.getElementById("email");
-const passEl = document.getElementById("password");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+/* AUTH */
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value);
+logoutBtn.onclick=()=>auth.signOut();
 
-const titleEl = document.getElementById("title");
-const descEl = document.getElementById("desc");
-const tbody = document.getElementById("tbody");
-const table = document.getElementById("table");
-const notifEl = document.getElementById("notificationsContent");
-const lastUpdatedEl = document.getElementById("lastUpdated");
-
-let isAdmin = false;
-
-/* LOGIN */
-loginBtn.onclick = () => {
-  auth.signInWithEmailAndPassword(
-    emailEl.value.trim(),
-    passEl.value.trim()
-  ).catch(err => alert(err.message));
-};
-
-/* LOGOUT */
-logoutBtn.onclick = () => auth.signOut();
-
-/* AUTH STATE */
-auth.onAuthStateChanged(user=>{
-  isAdmin = !!user;
-  loginBtn.style.display = user ? "none" : "inline-block";
-  logoutBtn.style.display = user ? "inline-block" : "none";
-
-  [titleEl, descEl, tbody, notifEl].forEach(el=>{
-    el.contentEditable = isAdmin;
-  });
-
-  table.classList.toggle("locked-content", !isAdmin);
-  notifEl.classList.toggle("locked-content", !isAdmin);
+auth.onAuthStateChanged(u=>{
+  table.classList.toggle("locked-content",!u);
+  loginBtn.style.display=u?"none":"inline-block";
+  logoutBtn.style.display=u?"inline-block":"none";
 });
 
-/* LOAD DATA */
-db.ref("log").once("value").then(snap=>{
-  const d = snap.val() || {};
-  titleEl.innerText = d.title || "";
-  descEl.innerHTML = d.desc || "";
-  tbody.innerHTML = d.table || "";
-  notifEl.innerHTML = d.notifications || "No updates yet.";
-  lastUpdatedEl.innerText = d.updated ? "Last updated: " + d.updated : "";
-});
-
-/* SAVE */
-function saveData(){
-  if(!isAdmin) return;
-  const updated = new Date().toLocaleString();
-  db.ref("log").update({
-    title: titleEl.innerText,
-    desc: descEl.innerHTML,
-    table: tbody.innerHTML,
-    notifications: notifEl.innerHTML,
-    updated
-  });
-  lastUpdatedEl.innerText = "Last updated: " + updated;
+/* 🔊 VOICE */
+function playVoice(text){
+  const msg=new SpeechSynthesisUtterance(text);
+  msg.rate=.9; msg.pitch=1.05;
+  speechSynthesis.speak(msg);
 }
 
-["input","keyup","paste","blur"].forEach(e=>{
-  titleEl.addEventListener(e, saveData);
-  descEl.addEventListener(e, saveData);
-  tbody.addEventListener(e, saveData);
-  notifEl.addEventListener(e, saveData);
-});
+/* 🔔 NOTIFICATIONS */
+const notifBell=document.getElementById("notifBell");
+const notifPanel=document.getElementById("notifPanel");
+const notifList=document.getElementById("notifList");
+const notifCount=document.getElementById("notifCount");
 
-/* TOGGLE UPDATES */
-document.getElementById("toggleUpdates").onclick = ()=>{
-  notifEl.classList.toggle("hidden");
+let lastSeen=localStorage.getItem("lastSeenNotif")||0;
+
+notifBell.onclick=()=>{
+  notifPanel.style.display=notifPanel.style.display==="block"?"none":"block";
+  notifCount.textContent="0";
+  localStorage.setItem("lastSeenNotif",Date.now());
+  playVoice("Notifications opened");
 };
 
-/* BARBELL */
-const plates=[45,35,25,10,5,2.5];
-function updateBarbell(){
-  leftSide.innerHTML="";
-  rightSide.innerHTML="";
-  let t=+targetWeight.value;
-  let b=+barWeight.value||0;
-  if(!t) return;
+db.ref("notifications").on("value",snap=>{
+  const data=snap.val()||{};
+  notifList.innerHTML="";
+  let unread=0;
 
-  let r=(includeBar.checked?(t-b):t)/2;
-  let u=[];
-  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
+  Object.values(data).sort((a,b)=>b.timestamp-a.timestamp).forEach(n=>{
+    notifList.innerHTML+=`<div class="notif">${n.text}</div>`;
+    if(n.timestamp>lastSeen) unread++;
+  });
 
-  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  notifCount.textContent=unread;
+  if(unread>0) playVoice("New update available");
+});
 
-  trueLoad.innerText = `Loaded: ${t} lbs`;
-}
-[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
-</script>
-
-<script>
-const targetDate = new Date("February 3, 2026").getTime();
-const timerEl = document.getElementById("timer");
+/* COUNTDOWN */
+const targetDate=new Date("February 3, 2026").getTime();
+const timerEl=document.getElementById("timer");
 setInterval(()=>{
-  const d = targetDate - Date.now();
-  timerEl.textContent = d<=0 ? "RM DAY 🔥" : Math.floor(d/86400000)+"d";
+  const d=targetDate-Date.now();
+  timerEl.textContent=d<=0?"RM DAY 🔥":
+    Math.floor(d/86400000)+"d "+
+    Math.floor(d/3600000)%24+"h "+
+    Math.floor(d/60000)%60+"m";
 },1000);
 </script>
 
