@@ -32,12 +32,13 @@ body{
   color:var(--text);
 }
 
+/* FLOAT */
 @keyframes float{
   0%,100%{ transform:translateY(0); }
   50%{ transform:translateY(-6px); }
 }
 
-/* 🔒 LOCK */
+/* LOCK */
 .locked-content,
 .locked-content *{
   pointer-events:none!important;
@@ -87,7 +88,7 @@ h1{
   justify-content:space-between;
   align-items:center;
   max-width:1020px;
-  margin-bottom:18px;
+  margin-bottom:16px;
   gap:12px;
   flex-wrap:wrap;
 }
@@ -97,17 +98,17 @@ h1{
   background:linear-gradient(135deg,#5b6cff,#3b46a6);
   border:none;
   color:white;
-  padding:12px 20px;
-  border-radius:16px;
+  padding:12px 22px;
+  border-radius:18px;
   font-weight:600;
   cursor:pointer;
-  box-shadow:0 10px 25px rgba(0,0,0,.5);
+  box-shadow:var(--shadow);
   transition:.25s ease;
+  animation:float 10s ease-in-out infinite;
 }
 
 .updates-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 16px 36px rgba(0,0,0,.65);
+  transform:translateY(-3px);
 }
 
 /* AUTH */
@@ -120,7 +121,7 @@ h1{
   border-radius:20px;
   box-shadow:var(--shadow);
   backdrop-filter:blur(16px);
-  animation:float 10s ease-in-out infinite;
+  animation:float 11s ease-in-out infinite;
 }
 
 #authBox input{
@@ -141,7 +142,21 @@ h1{
   cursor:pointer;
 }
 
-.last-updated{ font-size:.75rem; color:var(--muted); }
+/* LAST UPDATED – PREMIUM */
+.last-updated{
+  max-width:1020px;
+  margin:12px 0 22px;
+  padding:12px 18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+  border:1px solid var(--border);
+  border-radius:14px;
+  color:var(--muted);
+  font-size:.75rem;
+  letter-spacing:.03em;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(12px);
+  animation:float 13s ease-in-out infinite;
+}
 
 /* TABLE */
 table{
@@ -152,6 +167,7 @@ table{
   border-radius:22px;
   overflow:hidden;
   box-shadow:var(--shadow);
+  animation:float 12s ease-in-out infinite;
 }
 
 th,td{
@@ -230,48 +246,48 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.database();
 
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
-
 loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value).catch(e=>alert(e.message));
 logoutBtn.onclick=()=>auth.signOut();
 
 auth.onAuthStateChanged(user=>{
   table.classList.toggle("locked-content",!user);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=!!user);
+  [title,desc,tbody].forEach(el=>el.contentEditable=!!user);
   loginBtn.style.display=user?"none":"inline-block";
   logoutBtn.style.display=user?"inline-block":"none";
 });
 
 db.ref("log").on("value",snap=>{
   const d=snap.val()||{};
-  titleEl.innerText=d.title||"";
-  descEl.innerHTML=d.desc||"";
+  title.innerText=d.title||"";
+  desc.innerHTML=d.desc||"";
   tbody.innerHTML=d.table||"";
-  lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
+  lastUpdated.innerText=d.updated?"Last updated: "+d.updated:"";
 });
 
 function saveData(){
   if(!auth.currentUser) return;
-  const updated=new Date().toLocaleString("en-US",{month:"long",day:"2-digit",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
+  const updated=new Date().toLocaleString("en-US",{
+    day:"2-digit",
+    month:"long",
+    year:"numeric",
+    hour:"numeric",
+    minute:"2-digit",
+    hour12:true
+  });
   db.ref("log").set({
-    title:titleEl.innerText,
-    desc:descEl.innerHTML,
+    title:title.innerText,
+    desc:desc.innerHTML,
     table:tbody.innerHTML,
     updated
   });
 }
 
 ["input","keyup","blur"].forEach(e=>{
-  titleEl.addEventListener(e,saveData);
-  descEl.addEventListener(e,saveData);
+  title.addEventListener(e,saveData);
+  desc.addEventListener(e,saveData);
   tbody.addEventListener(e,saveData);
 });
 
-/* REDIRECT */
 document.getElementById("updatesBtn").onclick=()=>{
   window.location.href="updates.html";
 };
@@ -280,6 +296,7 @@ document.getElementById("updatesBtn").onclick=()=>{
 <script>
 const targetDate=new Date("February 3, 2026 00:00:00").getTime();
 const timerEl=document.getElementById("timer");
+
 setInterval(()=>{
   const diff=targetDate-Date.now();
   if(diff<=0){ timerEl.textContent="RM DAY 🔥"; return; }
