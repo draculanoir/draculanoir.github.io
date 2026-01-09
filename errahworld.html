@@ -145,7 +145,6 @@ h1{
   border:1px solid var(--border);
   border-radius:20px;
   box-shadow:var(--shadow);
-  backdrop-filter:blur(16px);
 }
 
 #authBox input{
@@ -277,7 +276,6 @@ td.left{ text-align:left; }
 <h1 id="title"></h1>
 <p id="desc"></p>
 
-<!-- 🔔 UPDATES -->
 <div class="notifications">
   <div class="notifications-header">
     <strong>UPDATES</strong>
@@ -322,9 +320,9 @@ td.left{ text-align:left; }
 </div>
 
 <div class="barbell">
-<div id="leftSide" class="side"></div>
-<div class="bar"></div>
-<div id="rightSide" class="side"></div>
+  <div id="leftSide" class="side"></div>
+  <div class="bar"></div>
+  <div id="rightSide" class="side"></div>
 </div>
 
 <div id="roundNote" class="note"></div>
@@ -343,58 +341,85 @@ firebase.initializeApp({
   projectId:"strenght-a9f37"
 });
 
-const auth=firebase.auth();
-const db=firebase.database();
+const auth = firebase.auth();
+const db = firebase.database();
 
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const notifEl=document.getElementById("notificationsContent");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-let isAdmin=false;
+const titleEl = document.getElementById("title");
+const descEl = document.getElementById("desc");
+const tbody = document.getElementById("tbody");
+const table = document.getElementById("table");
+const notifEl = document.getElementById("notificationsContent");
+const lastUpdatedEl = document.getElementById("lastUpdated");
 
+let isAdmin = false;
+
+/* LOGIN */
+loginBtn.onclick = () => {
+  auth.signInWithEmailAndPassword(
+    emailEl.value.trim(),
+    passEl.value.trim()
+  ).catch(err => alert(err.message));
+};
+
+/* LOGOUT */
+logoutBtn.onclick = () => auth.signOut();
+
+/* AUTH STATE */
 auth.onAuthStateChanged(user=>{
-  isAdmin=!!user;
-  [titleEl,descEl,tbody,notifEl].forEach(el=>el.contentEditable=isAdmin);
-  table.classList.toggle("locked-content",!isAdmin);
-  notifEl.classList.toggle("locked-content",!isAdmin);
+  isAdmin = !!user;
+  loginBtn.style.display = user ? "none" : "inline-block";
+  logoutBtn.style.display = user ? "inline-block" : "none";
+
+  [titleEl, descEl, tbody, notifEl].forEach(el=>{
+    el.contentEditable = isAdmin;
+  });
+
+  table.classList.toggle("locked-content", !isAdmin);
+  notifEl.classList.toggle("locked-content", !isAdmin);
 });
 
+/* LOAD DATA */
 db.ref("log").once("value").then(snap=>{
-  const d=snap.val()||{};
-  titleEl.innerText=d.title||"";
-  descEl.innerHTML=d.desc||"";
-  tbody.innerHTML=d.table||"";
-  notifEl.innerHTML=d.notifications||"No updates yet.";
-  lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
+  const d = snap.val() || {};
+  titleEl.innerText = d.title || "";
+  descEl.innerHTML = d.desc || "";
+  tbody.innerHTML = d.table || "";
+  notifEl.innerHTML = d.notifications || "No updates yet.";
+  lastUpdatedEl.innerText = d.updated ? "Last updated: " + d.updated : "";
 });
 
+/* SAVE */
 function saveData(){
   if(!isAdmin) return;
+  const updated = new Date().toLocaleString();
   db.ref("log").update({
-    title:titleEl.innerText,
-    desc:descEl.innerHTML,
-    table:tbody.innerHTML,
-    notifications:notifEl.innerHTML,
-    updated:new Date().toLocaleString()
+    title: titleEl.innerText,
+    desc: descEl.innerHTML,
+    table: tbody.innerHTML,
+    notifications: notifEl.innerHTML,
+    updated
   });
+  lastUpdatedEl.innerText = "Last updated: " + updated;
 }
 
 ["input","keyup","paste","blur"].forEach(e=>{
-  titleEl.addEventListener(e,saveData);
-  descEl.addEventListener(e,saveData);
-  tbody.addEventListener(e,saveData);
-  notifEl.addEventListener(e,saveData);
+  titleEl.addEventListener(e, saveData);
+  descEl.addEventListener(e, saveData);
+  tbody.addEventListener(e, saveData);
+  notifEl.addEventListener(e, saveData);
 });
 
-/* TOGGLE */
-document.getElementById("toggleUpdates").onclick=()=>{
+/* TOGGLE UPDATES */
+document.getElementById("toggleUpdates").onclick = ()=>{
   notifEl.classList.toggle("hidden");
 };
 
-/* BARBELL LOGIC */
+/* BARBELL */
 const plates=[45,35,25,10,5,2.5];
 function updateBarbell(){
   leftSide.innerHTML="";
@@ -410,18 +435,17 @@ function updateBarbell(){
   u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
   [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
 
-  trueLoad.innerText=`Loaded: ${t} lbs`;
+  trueLoad.innerText = `Loaded: ${t} lbs`;
 }
-
 [targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 </script>
 
 <script>
-const targetDate=new Date("February 3, 2026").getTime();
-const timerEl=document.getElementById("timer");
+const targetDate = new Date("February 3, 2026").getTime();
+const timerEl = document.getElementById("timer");
 setInterval(()=>{
-  const d=targetDate-Date.now();
-  timerEl.textContent=d<=0?"RM DAY 🔥":Math.floor(d/86400000)+"d";
+  const d = targetDate - Date.now();
+  timerEl.textContent = d<=0 ? "RM DAY 🔥" : Math.floor(d/86400000)+"d";
 },1000);
 </script>
 
