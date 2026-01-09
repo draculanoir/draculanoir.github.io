@@ -288,11 +288,11 @@ td.left{ text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
-<!-- ✅ BARBELL CALCULATOR -->
+<!-- BARBELL CALCULATOR -->
 <div class="calculator">
 <h3>Barbell Calculator (lbs)</h3>
 <div class="calculator-controls">
-<input id="targetWeight" type="number" placeholder="Loaded weight">
+<input id="targetWeight" type="number" placeholder="Target weight">
 <input id="barWeight" type="number" value="45">
 <label><input type="checkbox" id="includeBar" checked> Include bar</label>
 </div>
@@ -365,20 +365,47 @@ function saveData(){
 
 /* BARBELL LOGIC */
 const plates=[45,35,25,10,5,2.5];
+
 function updateBarbell(){
   leftSide.innerHTML="";
   rightSide.innerHTML="";
-  let t=+targetWeight.value;
-  let b=+barWeight.value||0;
-  if(!t) return;
-  let r=(includeBar.checked?(t-b):t)/2;
-  let u=[];
-  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
-  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  trueLoad.innerText=`Loaded: ${t} lbs`;
+  roundNote.innerText="";
+  trueLoad.innerText="";
+
+  const target=+targetWeight.value;
+  const bar=+barWeight.value||0;
+  if(!target) return;
+
+  let perSide = includeBar.checked ? (target - bar)/2 : target/2;
+  if(perSide < 0) perSide = 0;
+
+  let used=[];
+  plates.forEach(p=>{
+    while(perSide >= p){
+      perSide -= p;
+      used.push(p);
+    }
+  });
+
+  used.forEach(p=>{
+    rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`;
+  });
+  [...used].reverse().forEach(p=>{
+    leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`;
+  });
+
+  const platesTotal = used.reduce((s,p)=>s+p*2,0);
+  const trueTotal = includeBar.checked ? platesTotal + bar : platesTotal;
+
+  trueLoad.innerText=`True load: ${trueTotal} lbs`;
+  if(trueTotal !== target){
+    roundNote.innerText=`Closest possible load to ${target} lbs`;
+  }
 }
-[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
+
+[targetWeight,barWeight,includeBar].forEach(el=>{
+  el.addEventListener("input",updateBarbell);
+});
 
 document.getElementById("updatesBtn").onclick=()=>{
   window.location.href="updates.html";
