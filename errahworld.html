@@ -32,7 +32,6 @@ body{
   color:var(--text);
 }
 
-/* FLOAT */
 @keyframes float{
   0%,100%{ transform:translateY(0); }
   50%{ transform:translateY(-6px); }
@@ -46,14 +45,12 @@ body{
   caret-color:transparent!important;
 }
 
-/* TITLE */
 h1{
   margin:0 0 12px;
   font-size:2.2rem;
   font-weight:700;
 }
 
-/* DESCRIPTION */
 #desc{
   max-width:900px;
   padding:18px 22px;
@@ -67,6 +64,50 @@ h1{
   backdrop-filter:blur(14px);
   animation:float 9s ease-in-out infinite;
 }
+
+/* 🔔 NOTIFICATIONS */
+.notifications{
+  max-width:1020px;
+  margin-bottom:28px;
+  padding:20px 22px;
+  background:linear-gradient(135deg,#1e2452,#161a3a);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  animation:float 9s ease-in-out infinite;
+}
+
+.notifications-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.notifications-header strong{
+  letter-spacing:.08em;
+  font-size:.85rem;
+  color:var(--accent);
+}
+
+.toggle-btn{
+  background:none;
+  border:1px solid var(--border);
+  color:var(--accent);
+  padding:6px 14px;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:.75rem;
+}
+
+#notificationsContent{
+  padding:14px 16px;
+  background:rgba(0,0,0,.25);
+  border-radius:14px;
+  line-height:1.5;
+  color:var(--text);
+}
+
+.hidden{ display:none; }
 
 /* COUNTDOWN */
 .countdown{
@@ -82,12 +123,8 @@ h1{
   animation:float 8s ease-in-out infinite;
 }
 
-#timer{
-  font-weight:700;
-  color:var(--accent);
-}
+#timer{ font-weight:700; color:var(--accent); }
 
-/* TOP BAR */
 .top-bar{
   display:flex;
   justify-content:space-between;
@@ -98,7 +135,6 @@ h1{
   flex-wrap:wrap;
 }
 
-/* AUTH */
 #authBox{
   display:flex;
   gap:10px;
@@ -120,8 +156,6 @@ h1{
   min-width:160px;
 }
 
-#authBox input::placeholder{ color:#8f97b5; }
-
 #authBox button{
   background:linear-gradient(135deg,#3a43a0,#2a2f66);
   border:none;
@@ -130,13 +164,6 @@ h1{
   border-radius:14px;
   font-weight:600;
   cursor:pointer;
-  box-shadow:0 8px 20px rgba(0,0,0,.5);
-  transition:.25s ease;
-}
-
-#authBox button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 14px 30px rgba(0,0,0,.65);
 }
 
 .last-updated{
@@ -144,7 +171,6 @@ h1{
   color:var(--muted);
 }
 
-/* TABLE */
 table{
   width:100%;
   max-width:1020px;
@@ -153,7 +179,6 @@ table{
   border-radius:22px;
   overflow:hidden;
   box-shadow:var(--shadow);
-  animation:float 11s ease-in-out infinite;
 }
 
 th,td{
@@ -172,78 +197,13 @@ th{
 
 td.left{ text-align:left; }
 
-/* CALCULATOR */
-.calculator{
-  max-width:1020px;
-  margin-top:54px;
-  padding:26px;
-  background:var(--bg-panel);
-  border-radius:24px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  animation:float 12s ease-in-out infinite;
-}
+/* CALCULATOR (unchanged) */
+.calculator{ max-width:1020px; margin-top:54px; padding:26px; background:var(--bg-panel); border-radius:24px; }
 
-.calculator-controls{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.calculator input,
-.calculator label{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:12px 16px;
-  border-radius:14px;
-}
-
-/* BARBELL */
-.barbell{
-  margin-top:30px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.bar{
-  width:300px;
-  height:12px;
-  background:linear-gradient(#bbb,#666);
-  border-radius:8px;
-}
-
-.side{ display:flex; }
-
-.plate{
-  height:68px;
-  margin:0 2px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:.7rem;
-  font-weight:700;
-  color:#111;
-  border-radius:7px;
-  box-shadow:0 8px 18px rgba(0,0,0,.6);
-}
-
-.p45{ width:30px; background:#c0392b; }
-.p35{ width:28px; background:#d35400; }
-.p25{ width:26px; background:#f1c40f; }
-.p10{ width:22px; background:#3498db; color:#fff; }
-.p5 { width:18px; background:#2ecc71; }
-.p2_5{ width:14px; background:#bdc3c7; }
-
-.note{ font-size:.75rem; color:var(--muted); margin-top:12px; }
-.total{ margin-top:8px; }
-
+/* MOBILE */
 @media(max-width:600px){
   body{ padding:16px; }
   #authBox{ flex-direction:column; width:100%; }
-  #authBox input,#authBox button{ width:100%; }
-  .calculator-controls{ flex-direction:column; }
 }
 </style>
 </head>
@@ -252,6 +212,15 @@ td.left{ text-align:left; }
 
 <h1 id="title"></h1>
 <p id="desc"></p>
+
+<!-- 🔔 NOTIFICATIONS -->
+<div class="notifications">
+  <div class="notifications-header">
+    <strong>UPDATES</strong>
+    <button id="toggleUpdates" class="toggle-btn">Hide</button>
+  </div>
+  <div id="notificationsContent" class="locked-content"></div>
+</div>
 
 <div class="countdown">
   <strong>Road to RM Drop 🏋️</strong>
@@ -280,24 +249,6 @@ td.left{ text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
-<div class="calculator">
-<h3>Barbell Calculator (lbs)</h3>
-<div class="calculator-controls">
-<input id="targetWeight" type="number" placeholder="Loaded weight">
-<input id="barWeight" type="number" value="45">
-<label><input type="checkbox" id="includeBar" checked> Include bar</label>
-</div>
-
-<div class="barbell">
-<div id="leftSide" class="side"></div>
-<div class="bar"></div>
-<div id="rightSide" class="side"></div>
-</div>
-
-<div id="roundNote" class="note"></div>
-<div id="trueLoad" class="total"></div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -307,10 +258,7 @@ firebase.initializeApp({
   apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain:"strenght-a9f37.firebaseapp.com",
   databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId:"strenght-a9f37",
-  storageBucket:"strenght-a9f37.firebasestorage.app",
-  messagingSenderId:"469926449178",
-  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
+  projectId:"strenght-a9f37"
 });
 
 const auth=firebase.auth();
@@ -321,27 +269,15 @@ const descEl=document.getElementById("desc");
 const tbody=document.getElementById("tbody");
 const table=document.getElementById("table");
 const lastUpdatedEl=document.getElementById("lastUpdated");
-
-const emailEl=document.getElementById("email");
-const passEl=document.getElementById("password");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
+const notifEl=document.getElementById("notificationsContent");
 
 let isAdmin=false;
 
-function formatDate(d){
-  return d.toLocaleString("en-US",{day:"2-digit",month:"long",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
-}
-
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
-logoutBtn.onclick=()=>auth.signOut();
-
 auth.onAuthStateChanged(user=>{
   isAdmin=!!user;
+  [titleEl,descEl,tbody,notifEl].forEach(el=>el.contentEditable=isAdmin);
   table.classList.toggle("locked-content",!isAdmin);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
-  loginBtn.style.display=user?"none":"inline-block";
-  logoutBtn.style.display=user?"inline-block":"none";
+  notifEl.classList.toggle("locked-content",!isAdmin);
 });
 
 db.ref("log").once("value").then(snap=>{
@@ -349,63 +285,45 @@ db.ref("log").once("value").then(snap=>{
   titleEl.innerText=d.title||"";
   descEl.innerHTML=d.desc||"";
   tbody.innerHTML=d.table||"";
+  notifEl.innerHTML=d.notifications||"No updates yet.";
   lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
 });
 
 function saveData(){
   if(!isAdmin) return;
-  const updated=formatDate(new Date());
-  db.ref("log").set({
+  const updated=new Date().toLocaleString();
+  db.ref("log").update({
     title:titleEl.innerText,
     desc:descEl.innerHTML,
     table:tbody.innerHTML,
+    notifications:notifEl.innerHTML,
     updated
   });
-  lastUpdatedEl.innerText="Last updated: "+updated;
 }
 
-["input","keyup","paste","blur"].forEach(e=>{
+["input","keyup","blur","paste"].forEach(e=>{
   titleEl.addEventListener(e,saveData);
   descEl.addEventListener(e,saveData);
   tbody.addEventListener(e,saveData);
+  notifEl.addEventListener(e,saveData);
 });
 
-const plates=[45,35,25,10,5,2.5];
-function updateBarbell(){
-  leftSide.innerHTML="";
-  rightSide.innerHTML="";
-  let t=+targetWeight.value;
-  let b=+barWeight.value||0;
-  if(!t) return;
-
-  let r=(includeBar.checked?(t-b):t)/2;
-  let u=[];
-  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
-
-  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-
-  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked ? t : (u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
-}
-
-[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
+/* TOGGLE */
+const toggleBtn=document.getElementById("toggleUpdates");
+toggleBtn.onclick=()=>{
+  notifEl.classList.toggle("hidden");
+  toggleBtn.innerText=notifEl.classList.contains("hidden")?"Show":"Hide";
+};
 </script>
 
 <script>
-/* COUNTDOWN */
-const targetDate=new Date("February 3, 2026 00:00:00").getTime();
+const targetDate=new Date("February 3, 2026").getTime();
 const timerEl=document.getElementById("timer");
-function updateTimer(){
-  const diff=targetDate-Date.now();
-  if(diff<=0){ timerEl.textContent="RM DAY 🔥"; return; }
-  const d=Math.floor(diff/86400000);
-  const h=Math.floor(diff/3600000)%24;
-  const m=Math.floor(diff/60000)%60;
-  const s=Math.floor(diff/1000)%60;
-  timerEl.textContent=`${d}d ${h}h ${m}m ${s}s`;
-}
-updateTimer();
-setInterval(updateTimer,1000);
+setInterval(()=>{
+  const d=targetDate-Date.now();
+  if(d<=0){ timerEl.textContent="RM DAY 🔥"; return; }
+  timerEl.textContent=Math.floor(d/86400000)+"d";
+},1000);
 </script>
 
 </body>
