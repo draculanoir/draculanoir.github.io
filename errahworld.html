@@ -45,12 +45,14 @@ body{
   caret-color:transparent!important;
 }
 
+/* TITLE */
 h1{
   margin:0 0 12px;
   font-size:2.2rem;
   font-weight:700;
 }
 
+/* DESCRIPTION */
 #desc{
   max-width:900px;
   padding:18px 22px;
@@ -65,6 +67,7 @@ h1{
   animation:float 9s ease-in-out infinite;
 }
 
+/* COUNTDOWN */
 .countdown{
   max-width:1020px;
   margin:18px 0 28px;
@@ -78,16 +81,51 @@ h1{
   animation:float 8s ease-in-out infinite;
 }
 
-#timer{ font-weight:700; color:var(--accent); }
+#timer{
+  font-weight:700;
+  color:var(--accent);
+}
 
+/* 🔔 NOTIFICATION */
+.notification{
+  max-width:1020px;
+  margin:20px 0;
+  padding:18px 22px;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(14px);
+}
+
+.notification.hidden{ display:none; }
+
+.notif-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+#notifDate{
+  font-size:.75rem;
+  color:var(--muted);
+}
+
+#toggleNotif{
+  background:none;
+  border:none;
+  color:var(--accent);
+  cursor:pointer;
+  font-weight:600;
+}
+
+/* AUTH */
 .top-bar{
   display:flex;
   justify-content:space-between;
   align-items:center;
   max-width:1020px;
   margin-bottom:18px;
-  gap:12px;
-  flex-wrap:wrap;
 }
 
 #authBox{
@@ -98,8 +136,6 @@ h1{
   border:1px solid var(--border);
   border-radius:20px;
   box-shadow:var(--shadow);
-  backdrop-filter:blur(16px);
-  animation:float 10s ease-in-out infinite;
 }
 
 #authBox input{
@@ -108,7 +144,6 @@ h1{
   color:var(--accent);
   padding:10px 14px;
   border-radius:12px;
-  min-width:160px;
 }
 
 #authBox button{
@@ -117,12 +152,10 @@ h1{
   color:#fff;
   padding:10px 18px;
   border-radius:14px;
-  font-weight:600;
   cursor:pointer;
 }
 
-.last-updated{ font-size:.75rem; color:var(--muted); }
-
+/* TABLE */
 table{
   width:100%;
   max-width:1020px;
@@ -131,7 +164,6 @@ table{
   border-radius:22px;
   overflow:hidden;
   box-shadow:var(--shadow);
-  animation:float 11s ease-in-out infinite;
 }
 
 th,td{
@@ -150,54 +182,66 @@ th{
 
 td.left{ text-align:left; }
 
-/* 🔔 NOTIFICATIONS */
-.notification{
+/* CALCULATOR */
+.calculator{
   max-width:1020px;
-  margin:20px 0;
-  padding:18px 22px;
-  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+  margin-top:54px;
+  padding:26px;
+  background:var(--bg-panel);
+  border-radius:24px;
   border:1px solid var(--border);
-  border-radius:18px;
   box-shadow:var(--shadow);
-  backdrop-filter:blur(14px);
 }
-.notification.hidden{ display:none; }
 
-.notif-header{
+.calculator-controls{
   display:flex;
-  justify-content:space-between;
-  align-items:center;
   gap:12px;
+  flex-wrap:wrap;
 }
 
-#notifDate{ font-size:.75rem; color:var(--muted); }
-
-#toggleNotif{
-  background:none;
-  border:none;
-  color:var(--accent);
-  cursor:pointer;
-  font-weight:600;
-}
-
-.notification.admin input{
-  width:100%;
-  margin:10px 0;
-  padding:12px;
-  border-radius:12px;
+.calculator input,
+.calculator label{
+  background:rgba(255,255,255,.06);
   border:1px solid var(--border);
-  background:rgba(0,0,0,.3);
-  color:var(--text);
+  color:var(--accent);
+  padding:12px 16px;
+  border-radius:14px;
 }
 
-.notification.admin button{
-  padding:10px 16px;
-  border-radius:12px;
-  border:none;
-  background:linear-gradient(135deg,#3a43a0,#2a2f66);
-  color:#fff;
-  cursor:pointer;
+.barbell{
+  margin-top:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
+
+.bar{
+  width:300px;
+  height:12px;
+  background:linear-gradient(#bbb,#666);
+  border-radius:8px;
+}
+
+.side{ display:flex; }
+
+.plate{
+  height:68px;
+  margin:0 2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.7rem;
+  font-weight:700;
+  color:#111;
+  border-radius:7px;
+}
+
+.p45{ width:30px; background:#c0392b; }
+.p35{ width:28px; background:#d35400; }
+.p25{ width:26px; background:#f1c40f; }
+.p10{ width:22px; background:#3498db; color:#fff; }
+.p5 { width:18px; background:#2ecc71; }
+.p2_5{ width:14px; background:#bdc3c7; }
 </style>
 </head>
 
@@ -208,10 +252,9 @@ td.left{ text-align:left; }
 
 <div class="countdown">
   <strong>Road to RM Drop 🏋️</strong>
-  <div id="timer">Loading…</div>
+  <div id="timer"></div>
 </div>
 
-<!-- 🔔 NOTIFICATION -->
 <div id="notification" class="notification hidden">
   <div class="notif-header">
     <strong>Update</strong>
@@ -221,21 +264,14 @@ td.left{ text-align:left; }
   <div id="notifBody"></div>
 </div>
 
-<!-- 🔔 ADMIN NOTIFICATION PANEL -->
-<div id="notifAdmin" class="notification admin hidden">
-  <h4>Post Notification</h4>
-  <input id="notifInput" placeholder="Write notification..." />
-  <button id="postNotif">Post</button>
-</div>
-
 <div class="top-bar">
   <div id="authBox">
     <input id="email" placeholder="admin email">
-    <input id="password" type="password" placeholder="password">
+    <input id="password" type="password">
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
-  <div id="lastUpdated" class="last-updated"></div>
+  <div id="lastUpdated"></div>
 </div>
 
 <table id="table" class="locked-content">
@@ -249,6 +285,23 @@ td.left{ text-align:left; }
 </thead>
 <tbody id="tbody"></tbody>
 </table>
+
+<div class="calculator">
+<h3>Barbell Calculator (lbs)</h3>
+<div class="calculator-controls">
+<input id="targetWeight" type="number" placeholder="Loaded weight">
+<input id="barWeight" type="number" value="45">
+<label><input type="checkbox" id="includeBar" checked> Include bar</label>
+</div>
+
+<div class="barbell">
+<div id="leftSide" class="side"></div>
+<div class="bar"></div>
+<div id="rightSide" class="side"></div>
+</div>
+
+<div id="trueLoad"></div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -268,44 +321,23 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.database();
 
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
-
-const emailEl=document.getElementById("email");
-const passEl=document.getElementById("password");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
-
-let isAdmin=false;
-
-function formatDate(d){
-  return d.toLocaleString("en-US",{day:"2-digit",month:"long",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
-}
-
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
-logoutBtn.onclick=()=>auth.signOut();
-
-auth.onAuthStateChanged(user=>{
-  isAdmin=!!user;
-  table.classList.toggle("locked-content",!isAdmin);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
-  loginBtn.style.display=user?"none":"inline-block";
-  logoutBtn.style.display=user?"inline-block":"none";
-  document.getElementById("notifAdmin").classList.toggle("hidden",!user);
+/* === ORIGINAL LOG DATA === */
+db.ref("log").once("value").then(s=>{
+  const d=s.val()||{};
+  title.innerText=d.title||"";
+  desc.innerHTML=d.desc||"";
+  tbody.innerHTML=d.table||"";
+  lastUpdated.innerText=d.updated?"Last updated: "+d.updated:"";
 });
 
+/* === NOTIFICATION (SEPARATE NODE) === */
 const notifRef=db.ref("notification");
-
 notifRef.on("value",s=>{
   const d=s.val();
   if(!d) return;
   notifBody.innerText=d.text;
   notifDate.innerText=d.date;
-  const hidden=localStorage.getItem("hideNotif")==="1";
-  notification.classList.toggle("hidden",hidden);
+  notification.classList.toggle("hidden",localStorage.getItem("hideNotif")==="1");
 });
 
 toggleNotif.onclick=()=>{
@@ -313,27 +345,30 @@ toggleNotif.onclick=()=>{
   localStorage.setItem("hideNotif",h?"1":"0");
 };
 
-postNotif.onclick=()=>{
-  if(!isAdmin||!notifInput.value.trim())return;
-  notifRef.set({ text:notifInput.value.trim(), date:formatDate(new Date()) });
-  notifInput.value="";
-};
+/* === BARBELL === */
+const plates=[45,35,25,10,5,2.5];
+function updateBarbell(){
+  leftSide.innerHTML="";
+  rightSide.innerHTML="";
+  let t=+targetWeight.value;
+  let b=+barWeight.value||0;
+  if(!t) return;
+  let r=(includeBar.checked?(t-b):t)/2;
+  let u=[];
+  plates.forEach(p=>{while(r>=p){r-=p;u.push(p);}});
+  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  trueLoad.innerText=`Loaded: ${t} lbs`;
+}
+[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 </script>
 
 <script>
-const targetDate=new Date("February 3, 2026 00:00:00").getTime();
-const timerEl=document.getElementById("timer");
-function updateTimer(){
-  const diff=targetDate-Date.now();
-  if(diff<=0){ timerEl.textContent="RM DAY 🔥"; return; }
-  const d=Math.floor(diff/86400000);
-  const h=Math.floor(diff/3600000)%24;
-  const m=Math.floor(diff/60000)%60;
-  const s=Math.floor(diff/1000)%60;
-  timerEl.textContent=`${d}d ${h}h ${m}m ${s}s`;
-}
-updateTimer();
-setInterval(updateTimer,1000);
+const targetDate=new Date("February 3, 2026").getTime();
+setInterval(()=>{
+  const d=targetDate-Date.now();
+  timer.innerText=d<=0?"RM DAY 🔥":Math.floor(d/86400000)+" days";
+},1000);
 </script>
 
 </body>
