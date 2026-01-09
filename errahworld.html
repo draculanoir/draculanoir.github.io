@@ -2,302 +2,165 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Elite Strength Log</title>
+<title>Strength Log – 1RM Tracking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
-
 :root{
-  --bg-main:#0a0c13;
-  --bg-panel:rgba(22,26,42,.9);
-  --bg-header:rgba(30,36,66,.95);
-  --border:rgba(255,255,255,.08);
-  --text:#f1f3f9;
-  --muted:#a7aec3;
-  --accent:#cfd6ff;
-  --gold:#e6d7a3;
-  --shadow:0 22px 50px rgba(0,0,0,.6);
+  --bg-main:#0c0e12;
+  --bg-panel:#14161c;
+  --bg-header:#1b1e26;
+  --border:#2a2d36;
+  --text:#d9dbe1;
+  --muted:#9da1ac;
+  --accent:#bfc6d6;
 }
-
-*{ box-sizing:border-box; }
 
 body{
-  margin:0;
-  padding:28px;
-  font-family:"Inter",system-ui,sans-serif;
-  background:
-    radial-gradient(1200px 600px at top,#1c2340,transparent 60%),
-    radial-gradient(900px 500px at bottom,#0b0f22,transparent 60%),
-    var(--bg-main);
+  font-family:"Segoe UI", Arial, sans-serif;
+  background:radial-gradient(circle at top,#12141b,var(--bg-main));
   color:var(--text);
+  padding:24px;
 }
 
-/* FLOAT */
-@keyframes float{
-  0%,100%{ transform:translateY(0); }
-  50%{ transform:translateY(-6px); }
-}
-
-/* LOCK */
+/* 🔒 HARD READ-ONLY LOCK */
 .locked-content,
 .locked-content *{
-  pointer-events:none!important;
-  user-select:none!important;
-  caret-color:transparent!important;
+  pointer-events:none !important;
+  user-select:none !important;
+  -webkit-user-select:none !important;
+  touch-action:none !important;
+  caret-color:transparent !important;
 }
 
-/* TITLE */
-h1{
-  margin:0 0 14px;
-  font-family:"Playfair Display",serif;
-  font-size:2.6rem;
-  font-weight:700;
-  letter-spacing:.04em;
-  background:linear-gradient(135deg,#ffffff,#cfd6ff,#e6d7a3);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-
-/* DESCRIPTION */
-#desc{
-  max-width:920px;
-  padding:22px 26px;
-  margin-bottom:30px;
-  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
-  border:1px solid var(--border);
-  border-radius:22px;
-  color:var(--muted);
-  line-height:1.7;
-  font-size:.95rem;
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(16px);
-  animation:float 9s ease-in-out infinite;
-}
-
-/* COUNTDOWN */
-.countdown{
-  max-width:1020px;
-  margin:20px 0 30px;
-  padding:18px 24px;
-  background:linear-gradient(135deg,#2c3270,#1a1e3f);
-  border-radius:20px;
-  box-shadow:var(--shadow);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-weight:600;
-  animation:float 8s ease-in-out infinite;
-}
-
-#timer{
-  font-family:"Playfair Display",serif;
-  font-size:1.05rem;
-  color:var(--gold);
-}
-
-/* TOP BAR */
 .top-bar{
   display:flex;
   justify-content:space-between;
   align-items:center;
   max-width:1020px;
-  margin-bottom:20px;
-  gap:14px;
+  margin-bottom:12px;
   flex-wrap:wrap;
+  gap:8px;
 }
 
-/* AUTH */
-#authBox{
-  display:flex;
-  gap:10px;
-  padding:16px 18px;
-  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
-  border:1px solid var(--border);
-  border-radius:22px;
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(18px);
-}
-
-#authBox input{
-  background:rgba(0,0,0,.3);
+#authBox input,
+#authBox button{
+  background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
-  padding:11px 14px;
-  border-radius:14px;
-  min-width:160px;
-  font-size:.85rem;
+  padding:6px 10px;
+  border-radius:6px;
 }
 
-#authBox button{
-  background:linear-gradient(135deg,#3d46b3,#2a2f66);
-  border:none;
-  color:#fff;
-  padding:11px 20px;
-  border-radius:14px;
-  font-weight:600;
-  cursor:pointer;
-  transition:.25s ease;
-}
-
-#authBox button:hover{
-  transform:translateY(-2px);
-}
-
-.last-updated{
-  font-size:.7rem;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--muted);
-}
-
-/* TABLE (BOARD) */
 table{
   width:100%;
   max-width:1020px;
   border-collapse:collapse;
   background:var(--bg-panel);
-  border-radius:24px;
-  overflow:hidden;
-  box-shadow:var(--shadow);
-  animation:float 11s ease-in-out infinite;
+  box-shadow:0 0 0 1px var(--border);
 }
 
-th,td{
-  padding:18px 16px;
+th, td{
+  border:1px solid var(--border);
+  padding:10px;
   text-align:center;
-  border-bottom:1px solid var(--border);
 }
 
 th{
-  background:linear-gradient(180deg,#20264a,#151936);
-  font-size:.65rem;
-  letter-spacing:.22em;
-  text-transform:uppercase;
-  color:var(--gold);
-  font-weight:600;
+  background:var(--bg-header);
+  color:var(--accent);
+  font-size:.75rem;
 }
 
-td{
-  font-size:.9rem;
-  font-weight:500;
+td.left{ text-align:left; }
+
+.last-updated{
+  font-size:.75rem;
+  color:var(--muted);
 }
 
-td.left{
-  text-align:left;
-  font-weight:600;
-  letter-spacing:.02em;
-}
-
-tbody tr:hover{
-  background:rgba(255,255,255,.03);
-}
-
-/* CALCULATOR */
+/* 🏋️ CALCULATOR */
 .calculator{
   max-width:1020px;
-  margin-top:56px;
-  padding:28px;
+  margin-top:32px;
+  padding:16px;
   background:var(--bg-panel);
-  border-radius:26px;
   border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  animation:float 12s ease-in-out infinite;
-}
-
-.calculator h3{
-  margin-top:0;
-  font-family:"Playfair Display",serif;
-  font-weight:600;
+  border-radius:8px;
 }
 
 .calculator-controls{
   display:flex;
-  gap:12px;
+  gap:8px;
   flex-wrap:wrap;
 }
 
-.calculator input,
-.calculator label{
-  background:rgba(255,255,255,.06);
+.calculator input{
+  background:transparent;
   border:1px solid var(--border);
   color:var(--accent);
-  padding:12px 16px;
-  border-radius:14px;
-  font-size:.85rem;
+  padding:8px 12px;
+  border-radius:6px;
 }
 
-/* BARBELL */
+.calculator label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid var(--border);
+  padding:8px 12px;
+  border-radius:6px;
+  color:var(--accent);
+}
+
+@media (max-width:600px){
+  .calculator-controls{
+    flex-direction:column;
+  }
+  .calculator-controls input,
+  .calculator-controls label{
+    width:100%;
+  }
+}
+
 .barbell{
-  margin-top:30px;
+  margin-top:20px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
-.bar{
-  width:300px;
-  height:12px;
-  background:linear-gradient(#bbb,#666);
-  border-radius:8px;
-}
-
-.side{ display:flex; }
+.bar{ width:260px; height:8px; background:#777; border-radius:4px; }
+.side{ display:flex; align-items:center; }
 
 .plate{
-  height:68px;
+  height:60px;
   margin:0 2px;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:.65rem;
-  font-weight:700;
-  color:#111;
-  border-radius:7px;
-  box-shadow:0 8px 18px rgba(0,0,0,.6);
-}
-
-.p45{ width:30px; background:#c0392b; }
-.p35{ width:28px; background:#d35400; }
-.p25{ width:26px; background:#f1c40f; }
-.p10{ width:22px; background:#3498db; color:#fff; }
-.p5 { width:18px; background:#2ecc71; }
-.p2_5{ width:14px; background:#bdc3c7; }
-
-.note{
-  font-size:.75rem;
-  color:var(--muted);
-  margin-top:12px;
-}
-
-.total{
-  margin-top:8px;
+  font-size:.7rem;
   font-weight:600;
+  color:#111;
+  border-radius:4px;
 }
 
-@media(max-width:600px){
-  body{ padding:16px; }
-  #authBox{ flex-direction:column; width:100%; }
-  #authBox input,#authBox button{ width:100%; }
-  .calculator-controls{ flex-direction:column; }
-}
+.p45{ width:26px; background:#c0392b; }
+.p35{ width:24px; background:#d35400; }
+.p25{ width:22px; background:#f1c40f; }
+.p10{ width:18px; background:#3498db; color:#fff; }
+.p5 { width:14px; background:#2ecc71; }
+.p2_5{ width:10px; background:#95a5a6; }
+
+.note{ font-size:.75rem; color:var(--muted); margin-top:8px; }
+.total{ margin-top:6px; font-size:.85rem; }
 </style>
 </head>
 
 <body>
 
-<h1 id="title">Elite Strength Performance Log</h1>
-
-<p id="desc">
-This dashboard tracks verified one-rep max performances with competition-standard depth and execution.
-Data is maintained privately and updated only by the administrator.  
-All entries reflect disciplined training progression, strength benchmarks, and long-term performance goals.
-</p>
-
-<div class="countdown">
-  <span>RM Release Countdown</span>
-  <div id="timer">Loading…</div>
-</div>
+<h1 id="title"></h1>
+<p id="desc"></p>
 
 <div class="top-bar">
   <div id="authBox">
@@ -310,58 +173,134 @@ All entries reflect disciplined training progression, strength benchmarks, and l
 </div>
 
 <table id="table" class="locked-content">
-<thead>
-<tr>
-<th class="left">Lift</th>
-<th>Current</th>
-<th>1RM</th>
-<th>Level</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
+  <thead>
+    <tr>
+      <th class="left">Lift</th>
+      <th>Current</th>
+      <th>1RM</th>
+      <th>Strength Level</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
 </table>
 
 <div class="calculator">
-<h3>Barbell Load Calculator</h3>
-<div class="calculator-controls">
-<input id="targetWeight" type="number" placeholder="Loaded weight">
-<input id="barWeight" type="number" value="45">
-<label><input type="checkbox" id="includeBar" checked> Include bar</label>
+  <h3>Barbell Calculator (lbs)</h3>
+  <div class="calculator-controls">
+    <input id="targetWeight" type="number" placeholder="Loaded weight">
+    <input id="barWeight" type="number" value="45">
+    <label><input type="checkbox" id="includeBar" checked> Include bar</label>
+  </div>
+
+  <div class="barbell">
+    <div id="leftSide" class="side"></div>
+    <div class="bar"></div>
+    <div id="rightSide" class="side"></div>
+  </div>
+
+  <div id="roundNote" class="note"></div>
+  <div id="trueLoad" class="total"></div>
 </div>
 
-<div class="barbell">
-<div id="leftSide" class="side"></div>
-<div class="bar"></div>
-<div id="rightSide" class="side"></div>
-</div>
-
-<div id="roundNote" class="note"></div>
-<div id="trueLoad" class="total"></div>
-</div>
-
-<!-- 🔥 JS BELOW IS UNCHANGED -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* JS unchanged – same as your previous working version */
-</script>
+firebase.initializeApp({
+  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain: "strenght-a9f37.firebaseapp.com",
+  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId: "strenght-a9f37",
+  storageBucket: "strenght-a9f37.firebasestorage.app",
+  messagingSenderId: "469926449178",
+  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+});
 
-<script>
-const targetDate=new Date("February 3, 2026 00:00:00").getTime();
-const timerEl=document.getElementById("timer");
-function updateTimer(){
-  const diff=targetDate-Date.now();
-  if(diff<=0){ timerEl.textContent="RM DAY 🔥"; return; }
-  const d=Math.floor(diff/86400000);
-  const h=Math.floor(diff/3600000)%24;
-  const m=Math.floor(diff/60000)%60;
-  const s=Math.floor(diff/1000)%60;
-  timerEl.textContent=`${d}d ${h}h ${m}m ${s}s`;
+const auth=firebase.auth();
+const db=firebase.database();
+
+const titleEl=document.getElementById("title");
+const descEl=document.getElementById("desc");
+const tbody=document.getElementById("tbody");
+const table=document.getElementById("table");
+const lastUpdatedEl=document.getElementById("lastUpdated");
+
+const emailEl=document.getElementById("email");
+const passEl=document.getElementById("password");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+
+let isAdmin=false;
+
+function formatDate(d){
+  return d.toLocaleString("en-US",{
+    day:"2-digit",
+    month:"long",
+    year:"numeric",
+    hour:"numeric",
+    minute:"2-digit",
+    hour12:true
+  });
 }
-updateTimer();
-setInterval(updateTimer,1000);
+
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
+logoutBtn.onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  isAdmin=!!user;
+  table.classList.toggle("locked-content",!isAdmin);
+  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
+  loginBtn.style.display=user?"none":"inline-block";
+  logoutBtn.style.display=user?"inline-block":"none";
+});
+
+db.ref("log").once("value").then(snap=>{
+  const d=snap.val()||{};
+  titleEl.innerText=d.title||"";
+  descEl.innerHTML=d.desc||"";
+  tbody.innerHTML=d.table||"";
+  lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
+});
+
+function saveData(){
+  if(!isAdmin) return;
+  const updated=formatDate(new Date());
+  db.ref("log").set({
+    title:titleEl.innerText,
+    desc:descEl.innerHTML,
+    table:tbody.innerHTML,
+    updated
+  });
+  lastUpdatedEl.innerText="Last updated: "+updated;
+}
+
+["input","keyup","paste","blur"].forEach(e=>{
+  titleEl.addEventListener(e,saveData);
+  descEl.addEventListener(e,saveData);
+  tbody.addEventListener(e,saveData);
+});
+
+/* 🏋️ BARBELL */
+const plates=[45,35,25,10,5,2.5];
+function updateBarbell(){
+  leftSide.innerHTML="";
+  rightSide.innerHTML="";
+  let t=+targetWeight.value;
+  let b=+barWeight.value||0;
+  if(!t) return;
+
+  let r=(includeBar.checked?(t-b):t)/2;
+  let u=[];
+  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
+
+  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+
+  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked ? t : (u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
+}
+
+[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 </script>
 
 </body>
