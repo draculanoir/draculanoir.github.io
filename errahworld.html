@@ -114,8 +114,6 @@ h1{
   min-width:160px;
 }
 
-#authBox input::placeholder{ color:#8f97b5; }
-
 #authBox button{
   background:linear-gradient(135deg,#3a43a0,#2a2f66);
   border:none;
@@ -124,13 +122,6 @@ h1{
   border-radius:14px;
   font-weight:600;
   cursor:pointer;
-  box-shadow:0 8px 20px rgba(0,0,0,.5);
-  transition:.25s ease;
-}
-
-#authBox button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 14px 30px rgba(0,0,0,.65);
 }
 
 .last-updated{
@@ -146,7 +137,6 @@ table{
   border-radius:22px;
   overflow:hidden;
   box-shadow:var(--shadow);
-  animation:float 11s ease-in-out infinite;
 }
 
 th,td{
@@ -161,80 +151,6 @@ th{
   letter-spacing:.16em;
   text-transform:uppercase;
   color:var(--accent);
-}
-
-td.left{ text-align:left; }
-
-.calculator{
-  max-width:1020px;
-  margin-top:54px;
-  padding:26px;
-  background:var(--bg-panel);
-  border-radius:24px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  animation:float 12s ease-in-out infinite;
-}
-
-.calculator-controls{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.calculator input,
-.calculator label{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:12px 16px;
-  border-radius:14px;
-}
-
-.barbell{
-  margin-top:30px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.bar{
-  width:300px;
-  height:12px;
-  background:linear-gradient(#bbb,#666);
-  border-radius:8px;
-}
-
-.side{ display:flex; }
-
-.plate{
-  height:68px;
-  margin:0 2px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:.7rem;
-  font-weight:700;
-  color:#111;
-  border-radius:7px;
-  box-shadow:0 8px 18px rgba(0,0,0,.6);
-}
-
-.p45{ width:30px; background:#c0392b; }
-.p35{ width:28px; background:#d35400; }
-.p25{ width:26px; background:#f1c40f; }
-.p10{ width:22px; background:#3498db; color:#fff; }
-.p5 { width:18px; background:#2ecc71; }
-.p2_5{ width:14px; background:#bdc3c7; }
-
-.note{ font-size:.75rem; color:var(--muted); margin-top:12px; }
-.total{ margin-top:8px; }
-
-@media(max-width:600px){
-  body{ padding:16px; }
-  #authBox{ flex-direction:column; width:100%; }
-  #authBox input,#authBox button{ width:100%; }
-  .calculator-controls{ flex-direction:column; }
 }
 </style>
 </head>
@@ -271,24 +187,6 @@ td.left{ text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
-<div class="calculator">
-<h3>Barbell Calculator (lbs)</h3>
-<div class="calculator-controls">
-<input id="targetWeight" type="number" placeholder="Loaded weight">
-<input id="barWeight" type="number" value="45">
-<label><input type="checkbox" id="includeBar" checked> Include bar</label>
-</div>
-
-<div class="barbell">
-<div id="leftSide" class="side"></div>
-<div class="bar"></div>
-<div id="rightSide" class="side"></div>
-</div>
-
-<div id="roundNote" class="note"></div>
-<div id="trueLoad" class="total"></div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -313,20 +211,15 @@ const tbody=document.getElementById("tbody");
 const table=document.getElementById("table");
 const lastUpdatedEl=document.getElementById("lastUpdated");
 
-const emailEl=document.getElementById("email");
-const passEl=document.getElementById("password");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
-
 let isAdmin=false;
 
-/* ✅ FIXED DATE FORMAT */
+/* ✅ CAPITAL MONTH, NO SECONDS, AM/PM */
 function formatDate(d){
   const datePart = d.toLocaleDateString("en-US",{
     day:"2-digit",
     month:"long",
     year:"numeric"
-  }).toLowerCase();
+  });
 
   const timePart = d.toLocaleTimeString("en-US",{
     hour:"numeric",
@@ -337,15 +230,9 @@ function formatDate(d){
   return `${datePart} · ${timePart}`;
 }
 
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
-logoutBtn.onclick=()=>auth.signOut();
-
 auth.onAuthStateChanged(user=>{
   isAdmin=!!user;
   table.classList.toggle("locked-content",!isAdmin);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
-  loginBtn.style.display=user?"none":"inline-block";
-  logoutBtn.style.display=user?"inline-block":"none";
 });
 
 db.ref("log").once("value").then(snap=>{
@@ -367,12 +254,6 @@ function saveData(){
   });
   lastUpdatedEl.innerText="Last updated: "+updated;
 }
-
-["input","keyup","paste","blur"].forEach(e=>{
-  titleEl.addEventListener(e,saveData);
-  descEl.addEventListener(e,saveData);
-  tbody.addEventListener(e,saveData);
-});
 </script>
 
 <script>
@@ -391,7 +272,6 @@ function updateTimer(){
   const m=Math.floor(diff/60000)%60;
   timerEl.textContent=`${d}d ${h}h ${m}m`;
 }
-
 updateTimer();
 setInterval(updateTimer,60000);
 </script>
