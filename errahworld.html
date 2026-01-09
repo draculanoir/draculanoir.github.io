@@ -6,47 +6,87 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root{
-  --bg-main:#0b0d12;
-  --bg-panel:#151822;
-  --bg-header:#1e2230;
-  --border:#2a2f3f;
-  --text:#e2e4ea;
-  --muted:#9aa0b2;
+  --bg-main:#0a0c13;
+  --bg-panel:rgba(22,26,42,.82);
+  --bg-header:rgba(32,38,64,.95);
+  --border:rgba(255,255,255,.08);
+  --text:#eef0f6;
+  --muted:#9aa1b3;
   --accent:#cfd6ff;
+
+  --shadow-float:
+    0 18px 40px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.05);
 }
 
+/* BASE */
+*{ box-sizing:border-box; }
+
 body{
-  font-family:"Inter","Segoe UI",Arial,sans-serif;
+  margin:0;
+  padding:28px;
+  font-family:"Inter",system-ui,sans-serif;
   background:
-    radial-gradient(1000px 500px at top,#1a2036,transparent 60%),
-    radial-gradient(800px 400px at bottom,#0d1020,transparent 60%),
+    radial-gradient(1200px 600px at top,#1c2340,transparent 60%),
+    radial-gradient(900px 500px at bottom,#0b0f22,transparent 60%),
     var(--bg-main);
   color:var(--text);
-  padding:24px;
+}
+
+/* FLOAT ANIMATION */
+@keyframes floatIdle{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-6px); }
 }
 
 /* 🔒 HARD READ-ONLY LOCK */
 .locked-content,
 .locked-content *{
-  pointer-events:none !important;
-  user-select:none !important;
-  -webkit-user-select:none !important;
-  touch-action:none !important;
-  caret-color:transparent !important;
+  pointer-events:none!important;
+  user-select:none!important;
+  caret-color:transparent!important;
 }
 
 /* HEADER */
 h1{
+  font-size:2.1rem;
+  font-weight:700;
   margin:0 0 6px;
-  font-size:1.9rem;
-  font-weight:600;
 }
 
 p{
-  margin:0 0 18px;
+  margin:0 0 20px;
   color:var(--muted);
-  max-width:720px;
+  max-width:760px;
+  line-height:1.5;
+}
+
+/* COUNTDOWN */
+.countdown{
+  max-width:1020px;
+  margin:18px 0 28px;
+  padding:18px 22px;
+  background:linear-gradient(135deg,#2b3160,#1b1f3d);
+  border-radius:18px;
+  box-shadow:var(--shadow-float);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  animation:floatIdle 7s ease-in-out infinite;
+}
+
+.countdown strong{
+  font-weight:600;
+  letter-spacing:.3px;
+}
+
+#timer{
+  font-weight:700;
+  color:var(--accent);
+  font-size:1.05rem;
 }
 
 /* TOP BAR */
@@ -55,9 +95,10 @@ p{
   justify-content:space-between;
   align-items:center;
   max-width:1020px;
-  margin-bottom:16px;
+  margin-bottom:18px;
+  gap:12px;
   flex-wrap:wrap;
-  gap:10px;
+  animation:floatIdle 8s ease-in-out infinite;
 }
 
 #authBox{
@@ -68,20 +109,23 @@ p{
 
 #authBox input,
 #authBox button{
-  background:rgba(255,255,255,.03);
+  background:rgba(255,255,255,.05);
   border:1px solid var(--border);
   color:var(--accent);
-  padding:8px 12px;
-  border-radius:10px;
+  padding:10px 14px;
+  border-radius:14px;
+  backdrop-filter:blur(10px);
+  transition:.25s ease;
 }
 
 #authBox button{
   cursor:pointer;
-  transition:.2s;
+  font-weight:500;
 }
+
 #authBox button:hover{
-  transform:translateY(-1px);
-  box-shadow:0 6px 16px rgba(0,0,0,.4);
+  transform:translateY(-2px);
+  box-shadow:0 12px 26px rgba(0,0,0,.45);
 }
 
 /* TABLE */
@@ -90,109 +134,110 @@ table{
   max-width:1020px;
   border-collapse:collapse;
   background:var(--bg-panel);
-  border-radius:16px;
+  border-radius:22px;
   overflow:hidden;
-  box-shadow:0 20px 40px rgba(0,0,0,.45);
+  box-shadow:var(--shadow-float);
+  backdrop-filter:blur(16px);
+  animation:floatIdle 9s ease-in-out infinite;
 }
 
-th, td{
-  border-bottom:1px solid var(--border);
-  padding:14px;
+th,td{
+  padding:16px;
   text-align:center;
+  border-bottom:1px solid var(--border);
 }
 
 th{
   background:var(--bg-header);
-  color:var(--accent);
   font-size:.7rem;
-  letter-spacing:.14em;
+  letter-spacing:.16em;
   text-transform:uppercase;
+  color:var(--accent);
 }
 
 td.left{ text-align:left; }
 
-tr:last-child td{ border-bottom:none; }
-
 tr:hover td{
-  background:rgba(255,255,255,.025);
+  background:rgba(255,255,255,.035);
 }
+
+tr:last-child td{ border-bottom:none; }
 
 .last-updated{
   font-size:.75rem;
   color:var(--muted);
 }
 
-/* 🏋️ CALCULATOR */
+/* CALCULATOR */
 .calculator{
   max-width:1020px;
-  margin-top:40px;
-  padding:20px;
+  margin-top:54px;
+  padding:26px;
   background:var(--bg-panel);
-  border-radius:18px;
+  border-radius:24px;
   border:1px solid var(--border);
-  box-shadow:0 18px 36px rgba(0,0,0,.45);
+  box-shadow:var(--shadow-float);
+  backdrop-filter:blur(16px);
+  animation:floatIdle 10s ease-in-out infinite;
 }
 
 .calculator h3{
-  margin-top:0;
-  font-weight:500;
+  margin:0 0 16px;
+  font-weight:600;
 }
 
 .calculator-controls{
   display:flex;
-  gap:10px;
+  gap:12px;
   flex-wrap:wrap;
 }
 
 .calculator input{
-  background:rgba(255,255,255,.03);
+  background:rgba(255,255,255,.05);
   border:1px solid var(--border);
   color:var(--accent);
-  padding:10px 14px;
-  border-radius:12px;
+  padding:12px 16px;
+  border-radius:14px;
+  transition:.25s ease;
+}
+
+.calculator input:focus{
+  outline:none;
+  transform:translateY(-1px);
 }
 
 .calculator label{
   display:flex;
   align-items:center;
-  gap:6px;
+  gap:8px;
   border:1px solid var(--border);
-  padding:10px 14px;
-  border-radius:12px;
+  padding:12px 16px;
+  border-radius:14px;
   color:var(--accent);
-  background:rgba(255,255,255,.03);
-}
-
-@media (max-width:600px){
-  .calculator-controls{
-    flex-direction:column;
-  }
-  .calculator-controls input,
-  .calculator-controls label{
-    width:100%;
-  }
+  background:rgba(255,255,255,.05);
+  cursor:pointer;
 }
 
 /* BARBELL */
 .barbell{
-  margin-top:24px;
+  margin-top:30px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
 
 .bar{
-  width:280px;
-  height:10px;
-  background:linear-gradient(#aaa,#666);
-  border-radius:6px;
-  box-shadow:inset 0 2px 4px rgba(0,0,0,.5);
+  width:300px;
+  height:12px;
+  background:linear-gradient(#bbb,#666);
+  border-radius:8px;
+  box-shadow:inset 0 3px 6px rgba(0,0,0,.6);
 }
 
-.side{ display:flex; align-items:center; }
+.side{ display:flex; }
 
 .plate{
-  height:62px;
+  height:68px;
   margin:0 2px;
   display:flex;
   align-items:center;
@@ -200,30 +245,26 @@ tr:hover td{
   font-size:.7rem;
   font-weight:700;
   color:#111;
-  border-radius:6px;
-  box-shadow:
-    inset 0 2px 4px rgba(255,255,255,.2),
-    inset 0 -4px 6px rgba(0,0,0,.45),
-    0 6px 14px rgba(0,0,0,.5);
+  border-radius:7px;
+  box-shadow:0 8px 18px rgba(0,0,0,.6);
 }
 
-.p45{ width:28px; background:#c0392b; }
-.p35{ width:26px; background:#d35400; }
-.p25{ width:24px; background:#f1c40f; }
-.p10{ width:20px; background:#3498db; color:#fff; }
-.p5 { width:16px; background:#2ecc71; }
-.p2_5{ width:12px; background:#95a5a6; }
+.p45{ width:30px; background:#c0392b; }
+.p35{ width:28px; background:#d35400; }
+.p25{ width:26px; background:#f1c40f; }
+.p10{ width:22px; background:#3498db; color:#fff; }
+.p5 { width:18px; background:#2ecc71; }
+.p2_5{ width:14px; background:#bdc3c7; }
 
-.note{
-  font-size:.75rem;
-  color:var(--muted);
-  margin-top:10px;
-}
+.note{ font-size:.75rem; color:var(--muted); margin-top:12px; }
+.total{ margin-top:8px; font-weight:500; }
 
-.total{
-  margin-top:6px;
-  font-size:.85rem;
-  color:var(--muted);
+/* MOBILE */
+@media(max-width:600px){
+  body{ padding:16px; }
+  .calculator-controls{ flex-direction:column; }
+  .calculator-controls input,
+  .calculator-controls label{ width:100%; }
 }
 </style>
 </head>
@@ -232,6 +273,11 @@ tr:hover td{
 
 <h1 id="title"></h1>
 <p id="desc"></p>
+
+<div class="countdown">
+  <strong>Road to RM Drop 🏋️</strong>
+  <div id="timer">Loading…</div>
+</div>
 
 <div class="top-bar">
   <div id="authBox">
@@ -273,104 +319,30 @@ tr:hover td{
   <div id="trueLoad" class="total"></div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain: "strenght-a9f37.firebaseapp.com",
-  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId: "strenght-a9f37",
-  storageBucket: "strenght-a9f37.firebasestorage.app",
-  messagingSenderId: "469926449178",
-  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
-});
+/* ⏳ COUNTDOWN TIMER */
+const targetDate = new Date("February 3, 2026 00:00:00").getTime();
+const timerEl = document.getElementById("timer");
 
-const auth=firebase.auth();
-const db=firebase.database();
+function updateTimer(){
+  const now = Date.now();
+  const diff = targetDate - now;
 
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
+  if(diff <= 0){
+    timerEl.textContent = "RM DAY 🔥";
+    return;
+  }
 
-const emailEl=document.getElementById("email");
-const passEl=document.getElementById("password");
-const loginBtn=document.getElementById("loginBtn");
-const logoutBtn=document.getElementById("logoutBtn");
+  const d = Math.floor(diff / (1000*60*60*24));
+  const h = Math.floor((diff / (1000*60*60)) % 24);
+  const m = Math.floor((diff / (1000*60)) % 60);
+  const s = Math.floor((diff / 1000) % 60);
 
-let isAdmin=false;
-
-function formatDate(d){
-  return d.toLocaleString("en-US",{
-    day:"2-digit",
-    month:"long",
-    year:"numeric",
-    hour:"numeric",
-    minute:"2-digit",
-    hour12:true
-  });
+  timerEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
 }
 
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
-logoutBtn.onclick=()=>auth.signOut();
-
-auth.onAuthStateChanged(user=>{
-  isAdmin=!!user;
-  table.classList.toggle("locked-content",!isAdmin);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
-  loginBtn.style.display=user?"none":"inline-block";
-  logoutBtn.style.display=user?"inline-block":"none";
-});
-
-db.ref("log").once("value").then(snap=>{
-  const d=snap.val()||{};
-  titleEl.innerText=d.title||"";
-  descEl.innerHTML=d.desc||"";
-  tbody.innerHTML=d.table||"";
-  lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
-});
-
-function saveData(){
-  if(!isAdmin) return;
-  const updated=formatDate(new Date());
-  db.ref("log").set({
-    title:titleEl.innerText,
-    desc:descEl.innerHTML,
-    table:tbody.innerHTML,
-    updated
-  });
-  lastUpdatedEl.innerText="Last updated: "+updated;
-}
-
-["input","keyup","paste","blur"].forEach(e=>{
-  titleEl.addEventListener(e,saveData);
-  descEl.addEventListener(e,saveData);
-  tbody.addEventListener(e,saveData);
-});
-
-const plates=[45,35,25,10,5,2.5];
-function updateBarbell(){
-  leftSide.innerHTML="";
-  rightSide.innerHTML="";
-  let t=+targetWeight.value;
-  let b=+barWeight.value||0;
-  if(!t) return;
-
-  let r=(includeBar.checked?(t-b):t)/2;
-  let u=[];
-  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
-
-  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-
-  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked ? t : (u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
-}
-
-[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
+updateTimer();
+setInterval(updateTimer,1000);
 </script>
 
 </body>
