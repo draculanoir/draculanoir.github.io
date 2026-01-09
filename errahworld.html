@@ -37,7 +37,7 @@ body{
   50%{ transform:translateY(-6px); }
 }
 
-/* 🔒 HARD READ-ONLY LOCK */
+/* 🔒 READ-ONLY LOCK */
 .locked-content,
 .locked-content *{
   pointer-events:none!important;
@@ -78,10 +78,7 @@ h1{
   animation:float 8s ease-in-out infinite;
 }
 
-#timer{
-  font-weight:700;
-  color:var(--accent);
-}
+#timer{ font-weight:700; color:var(--accent); }
 
 .top-bar{
   display:flex;
@@ -102,7 +99,6 @@ h1{
   border-radius:20px;
   box-shadow:var(--shadow);
   backdrop-filter:blur(16px);
-  animation:float 10s ease-in-out infinite;
 }
 
 #authBox input{
@@ -122,10 +118,9 @@ h1{
   border-radius:14px;
   font-weight:600;
   cursor:pointer;
-  transition:.25s ease;
 }
 
-/* ✨ PREMIUM LAST UPDATED */
+/* ✨ LAST UPDATED */
 .last-updated{
   padding:10px 16px;
   background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
@@ -138,7 +133,6 @@ h1{
   backdrop-filter:blur(12px);
   text-transform:uppercase;
   white-space:nowrap;
-  animation:float 14s ease-in-out infinite;
 }
 
 table{
@@ -164,8 +158,6 @@ th{
   text-transform:uppercase;
   color:var(--accent);
 }
-
-td.left{ text-align:left; }
 
 @media(max-width:600px){
   body{ padding:16px; }
@@ -198,7 +190,7 @@ td.left{ text-align:left; }
 <table id="table" class="locked-content">
 <thead>
 <tr>
-<th class="left">Lift</th>
+<th>Lift</th>
 <th>Current</th>
 <th>1RM</th>
 <th>Strength Level</th>
@@ -207,6 +199,7 @@ td.left{ text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -222,83 +215,106 @@ firebase.initializeApp({
   appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
 });
 
-const auth=firebase.auth();
-const db=firebase.database();
+const auth = firebase.auth();
+const db = firebase.database();
 
-const titleEl=document.getElementById("title");
-const descEl=document.getElementById("desc");
-const tbody=document.getElementById("tbody");
-const table=document.getElementById("table");
-const lastUpdatedEl=document.getElementById("lastUpdated");
+/* DOM */
+const titleEl = document.getElementById("title");
+const descEl = document.getElementById("desc");
+const tbody = document.getElementById("tbody");
+const table = document.getElementById("table");
+const lastUpdatedEl = document.getElementById("lastUpdated");
 
-let isAdmin=false;
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-/* ✅ DATE FORMAT: 25 January 2026 */
+let isAdmin = false;
+
+/* DATE FORMAT */
 function formatDate(d){
-  const datePart=d.toLocaleDateString("en-GB",{
+  const date = d.toLocaleDateString("en-GB",{
     day:"2-digit",
     month:"long",
     year:"numeric"
   });
-  const timePart=d.toLocaleTimeString("en-US",{
+  const time = d.toLocaleTimeString("en-US",{
     hour:"numeric",
     minute:"2-digit",
     hour12:true
   });
-  return `${datePart} · ${timePart}`;
+  return `${date} · ${time}`;
 }
 
+/* LOGIN */
+loginBtn.onclick = () => {
+  if(!emailEl.value || !passEl.value){
+    alert("Enter email and password");
+    return;
+  }
+  auth.signInWithEmailAndPassword(emailEl.value, passEl.value)
+    .catch(e=>alert(e.message));
+};
+
+logoutBtn.onclick = () => auth.signOut();
+
+/* AUTH STATE */
 auth.onAuthStateChanged(user=>{
-  isAdmin=!!user;
-  table.classList.toggle("locked-content",!isAdmin);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
+  isAdmin = !!user;
+  table.classList.toggle("locked-content", !isAdmin);
+  [titleEl, descEl, tbody].forEach(el => el.contentEditable = isAdmin);
+  loginBtn.style.display = user ? "none" : "inline-block";
+  logoutBtn.style.display = user ? "inline-block" : "none";
 });
 
+/* LOAD DATA */
 db.ref("log").once("value").then(snap=>{
-  const d=snap.val()||{};
-  titleEl.innerText=d.title||"";
-  descEl.innerHTML=d.desc||"";
-  tbody.innerHTML=d.table||"";
-  lastUpdatedEl.innerText=d.updated?`Last updated · ${d.updated}`:"";
+  const d = snap.val() || {};
+  titleEl.innerText = d.title || "";
+  descEl.innerHTML = d.desc || "";
+  tbody.innerHTML = d.table || "";
+  lastUpdatedEl.innerText = d.updated ? `Last updated · ${d.updated}` : "";
 });
 
+/* SAVE DATA */
 function saveData(){
   if(!isAdmin) return;
-  const updated=formatDate(new Date());
+  const updated = formatDate(new Date());
   db.ref("log").set({
     title:titleEl.innerText,
     desc:descEl.innerHTML,
     table:tbody.innerHTML,
     updated
   });
-  lastUpdatedEl.innerText=`Last updated · ${updated}`;
+  lastUpdatedEl.innerText = `Last updated · ${updated}`;
 }
 
 ["input","keyup","paste","blur"].forEach(e=>{
-  titleEl.addEventListener(e,saveData);
-  descEl.addEventListener(e,saveData);
-  tbody.addEventListener(e,saveData);
+  titleEl.addEventListener(e, saveData);
+  descEl.addEventListener(e, saveData);
+  tbody.addEventListener(e, saveData);
 });
 </script>
 
 <script>
-const targetDate=new Date("February 3, 2026 00:00:00").getTime();
-const timerEl=document.getElementById("timer");
+/* COUNTDOWN */
+const targetDate = new Date("February 3, 2026 00:00:00").getTime();
+const timerEl = document.getElementById("timer");
 
 function updateTimer(){
-  const diff=targetDate-Date.now();
-  if(diff<=0){
-    timerEl.textContent="RM DAY 🔥";
+  const diff = targetDate - Date.now();
+  if(diff <= 0){
+    timerEl.textContent = "RM DAY 🔥";
     return;
   }
-  const d=Math.floor(diff/86400000);
-  const h=Math.floor(diff/3600000)%24;
-  const m=Math.floor(diff/60000)%60;
-  timerEl.textContent=`${d}d ${h}h ${m}m`;
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor(diff / 3600000) % 24;
+  const m = Math.floor(diff / 60000) % 60;
+  timerEl.textContent = `${d}d ${h}h ${m}m`;
 }
-
 updateTimer();
-setInterval(updateTimer,60000);
+setInterval(updateTimer, 60000);
 </script>
 
 </body>
