@@ -197,7 +197,8 @@ td.left{ text-align:left; }
   flex-wrap:wrap;
 }
 
-.calculator input{
+.calculator input,
+.calculator label{
   background:rgba(255,255,255,.06);
   border:1px solid var(--border);
   color:var(--accent);
@@ -287,12 +288,13 @@ td.left{ text-align:left; }
 <tbody id="tbody"></tbody>
 </table>
 
-<!-- BARBELL CALCULATOR -->
+<!-- ✅ BARBELL CALCULATOR -->
 <div class="calculator">
-<h3>Barbell Calculator (Lift Only)</h3>
+<h3>Barbell Calculator (lbs)</h3>
 <div class="calculator-controls">
-<input id="targetWeight" type="number" placeholder="Lift weight (no bar)">
+<input id="targetWeight" type="number" placeholder="Loaded weight">
 <input id="barWeight" type="number" value="45">
+<label><input type="checkbox" id="includeBar" checked> Include bar</label>
 </div>
 
 <div class="barbell">
@@ -301,46 +303,82 @@ td.left{ text-align:left; }
 <div id="rightSide" class="side"></div>
 </div>
 
+<div id="roundNote" class="note"></div>
 <div id="trueLoad" class="total"></div>
 </div>
 
-<script>
-/* BARBELL LOGIC — CORRECT */
-const plates=[45,35,25,10,5,2.5];
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain:"strenght-a9f37.firebaseapp.com",
+  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId:"strenght-a9f37",
+  storageBucket:"strenght-a9f37.firebasestorage.app",
+  messagingSenderId:"469926449178",
+  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
+});
+
+const auth=firebase.auth();
+const db=firebase.database();
+
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value).catch(e=>alert(e.message));
+logoutBtn.onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  table.classList.toggle("locked-content",!user);
+  [title,desc,tbody].forEach(el=>el.contentEditable=!!user);
+  loginBtn.style.display=user?"none":"inline-block";
+  logoutBtn.style.display=user?"inline-block":"none";
+});
+
+db.ref("log").on("value",snap=>{
+  const d=snap.val()||{};
+  title.innerText=d.title||"";
+  desc.innerHTML=d.desc||"";
+  tbody.innerHTML=d.table||"";
+  lastUpdated.innerText=d.updated?"Last updated: "+d.updated:"";
+});
+
+function saveData(){
+  if(!auth.currentUser) return;
+  const updated=new Date().toLocaleString("en-US",{
+    day:"2-digit",month:"long",year:"numeric",
+    hour:"numeric",minute:"2-digit",hour12:true
+  });
+  db.ref("log").set({
+    title:title.innerText,
+    desc:desc.innerHTML,
+    table:tbody.innerHTML,
+    updated
+  });
+}
+
+["input","keyup","blur"].forEach(e=>{
+  title.addEventListener(e,saveData);
+  desc.addEventListener(e,saveData);
+  tbody.addEventListener(e,saveData);
+});
+
+/* BARBELL LOGIC */
+const plates=[45,35,25,10,5,2.5];
 function updateBarbell(){
   leftSide.innerHTML="";
   rightSide.innerHTML="";
-  trueLoad.innerText="";
-
-  const lift = +targetWeight.value;
-  const bar  = +barWeight.value || 0;
-  if(!lift) return;
-
-  const trueTotal = lift + bar;
-  let perSide = (trueTotal - bar) / 2;
-
-  let used=[];
-  plates.forEach(p=>{
-    while(perSide >= p){
-      perSide -= p;
-      used.push(p);
-    }
-  });
-
-  used.forEach(p=>{
-    rightSide.innerHTML += `<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`;
-  });
-  [...used].reverse().forEach(p=>{
-    leftSide.innerHTML += `<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`;
-  });
-
-  trueLoad.innerText = `Lift: ${lift} lbs · True load (with bar): ${trueTotal} lbs`;
+  let t=+targetWeight.value;
+  let b=+barWeight.value||0;
+  if(!t) return;
+  let r=(includeBar.checked?(t-b):t)/2;
+  let u=[];
+  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
+  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  trueLoad.innerText=`Loaded: ${t} lbs`;
 }
-
-[targetWeight,barWeight].forEach(el=>{
-  el.addEventListener("input",updateBarbell);
-});
+[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
 
 document.getElementById("updatesBtn").onclick=()=>{
   window.location.href="updates.html";
