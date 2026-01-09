@@ -7,30 +7,28 @@
 
 <style>
 :root{
-  --bg-main:#0b0d12;
-  --bg-panel:rgba(20,22,28,.75);
-  --bg-header:rgba(30,34,44,.9);
-  --border:rgba(255,255,255,.08);
-  --text:#e7e9ef;
-  --muted:#a5a9b6;
+  --bg-main:#0c0e12;
+  --bg-panel:#14161c;
+  --bg-header:#1b1e26;
+  --border:#2a2d36;
+  --text:#e4e6eb;
+  --muted:#9da1ac;
   --accent:#cfd6ff;
-  --glow:0 20px 40px rgba(0,0,0,.6);
 }
 
 *{ box-sizing:border-box; }
 
 body{
   margin:0;
-  font-family:"Inter","Segoe UI",system-ui,sans-serif;
+  padding:24px;
+  font-family:Inter,"Segoe UI",system-ui,sans-serif;
   background:
-    radial-gradient(1200px 600px at top,#1a1f33,transparent 60%),
-    radial-gradient(800px 400px at bottom,#0f1320,transparent 60%),
+    radial-gradient(900px 500px at top,#1a1f33,transparent 60%),
     var(--bg-main);
   color:var(--text);
-  padding:28px;
 }
 
-/* 🔒 HARD READ-ONLY LOCK */
+/* 🔒 READ ONLY LOCK */
 .locked-content,
 .locked-content *{
   pointer-events:none!important;
@@ -39,15 +37,8 @@ body{
 }
 
 /* HEADER */
-h1{
-  font-size:1.9rem;
-  letter-spacing:.5px;
-  margin-bottom:4px;
-}
-p{
-  color:var(--muted);
-  max-width:720px;
-}
+h1{ margin:0 0 6px; font-size:1.8rem; }
+p{ margin:0 0 18px; color:var(--muted); }
 
 /* TOP BAR */
 .top-bar{
@@ -56,7 +47,7 @@ p{
   align-items:center;
   gap:12px;
   max-width:1100px;
-  margin:20px auto;
+  margin-bottom:16px;
   flex-wrap:wrap;
 }
 
@@ -68,34 +59,26 @@ p{
 
 #authBox input,
 #authBox button{
-  background:rgba(255,255,255,.03);
+  background:#0f1118;
   border:1px solid var(--border);
   color:var(--accent);
   padding:8px 12px;
-  border-radius:10px;
-  backdrop-filter:blur(12px);
+  border-radius:8px;
 }
 
 #authBox button{
   cursor:pointer;
-  transition:.25s;
-}
-#authBox button:hover{
-  transform:translateY(-1px);
-  box-shadow:0 6px 16px rgba(0,0,0,.4);
 }
 
 /* TABLE */
 table{
   width:100%;
   max-width:1100px;
-  margin:auto;
   border-collapse:collapse;
   background:var(--bg-panel);
-  backdrop-filter:blur(18px);
-  border-radius:16px;
+  border-radius:14px;
   overflow:hidden;
-  box-shadow:var(--glow);
+  box-shadow:0 20px 40px rgba(0,0,0,.5);
 }
 
 th,td{
@@ -114,31 +97,21 @@ th{
 
 td.left{ text-align:left; }
 
-tr:hover td{
-  background:rgba(255,255,255,.02);
-}
+tr:last-child td{ border-bottom:none; }
 
 .last-updated{
   font-size:.75rem;
   color:var(--muted);
 }
 
-/* 🏋️ CALCULATOR */
+/* CALCULATOR */
 .calculator{
   max-width:1100px;
-  margin:48px auto 0;
-  padding:22px;
+  margin-top:40px;
+  padding:20px;
   background:var(--bg-panel);
-  backdrop-filter:blur(18px);
-  border-radius:18px;
+  border-radius:16px;
   border:1px solid var(--border);
-  box-shadow:var(--glow);
-}
-
-.calculator h3{
-  margin-top:0;
-  font-weight:500;
-  letter-spacing:.4px;
 }
 
 .calculator-controls{
@@ -148,11 +121,11 @@ tr:hover td{
 }
 
 .calculator input{
-  background:rgba(255,255,255,.03);
+  background:#0f1118;
   border:1px solid var(--border);
   color:var(--accent);
   padding:10px 14px;
-  border-radius:12px;
+  border-radius:10px;
 }
 
 .calculator label{
@@ -160,43 +133,37 @@ tr:hover td{
   align-items:center;
   gap:6px;
   padding:10px 14px;
-  border-radius:12px;
+  border-radius:10px;
   border:1px solid var(--border);
-  background:rgba(255,255,255,.03);
 }
 
 /* BARBELL */
 .barbell{
-  margin-top:26px;
+  margin-top:22px;
   display:flex;
-  align-items:center;
   justify-content:center;
-  gap:8px;
+  align-items:center;
 }
 
 .bar{
-  width:300px;
+  width:280px;
   height:10px;
   background:linear-gradient(#aaa,#666);
-  border-radius:6px;
-  box-shadow:inset 0 2px 3px rgba(0,0,0,.6);
+  border-radius:5px;
 }
 
-.side{ display:flex; align-items:center; }
+.side{ display:flex; }
 
 .plate{
-  height:64px;
+  height:62px;
   margin:0 2px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:.7rem;
   font-weight:700;
-  border-radius:6px;
-  box-shadow:
-    inset 0 2px 4px rgba(255,255,255,.2),
-    inset 0 -4px 6px rgba(0,0,0,.4),
-    0 6px 14px rgba(0,0,0,.5);
+  border-radius:5px;
+  box-shadow:inset 0 -3px 6px rgba(0,0,0,.4);
 }
 
 .p45{ width:28px; background:#c0392b; }
@@ -206,19 +173,9 @@ tr:hover td{
 .p5 { width:16px; background:#2ecc71; }
 .p2_5{ width:12px; background:#bdc3c7; }
 
-.note{
-  margin-top:10px;
-  font-size:.75rem;
-  color:var(--muted);
-}
-.total{
-  margin-top:6px;
-  font-size:.85rem;
-}
+.total{ margin-top:8px; font-size:.85rem; color:var(--muted); }
 
-/* MOBILE */
 @media(max-width:600px){
-  body{ padding:16px; }
   .calculator-controls{ flex-direction:column; }
 }
 </style>
@@ -254,25 +211,133 @@ tr:hover td{
 <div class="calculator">
 <h3>Barbell Calculator (lbs)</h3>
 <div class="calculator-controls">
-<input id="targetWeight" type="number" placeholder="Loaded weight">
-<input id="barWeight" type="number" value="45">
-<label><input type="checkbox" id="includeBar" checked> Include bar</label>
+  <input id="targetWeight" type="number" placeholder="Loaded weight">
+  <input id="barWeight" type="number" value="45">
+  <label><input type="checkbox" id="includeBar" checked> Include bar</label>
 </div>
 
 <div class="barbell">
-<div id="leftSide" class="side"></div>
-<div class="bar"></div>
-<div id="rightSide" class="side"></div>
+  <div id="leftSide" class="side"></div>
+  <div class="bar"></div>
+  <div id="rightSide" class="side"></div>
 </div>
 
 <div id="trueLoad" class="total"></div>
 </div>
 
-<!-- 🔥 YOUR EXISTING FIREBASE + JS LOGIC STAYS EXACTLY THE SAME -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-<!-- keep your JS exactly as before -->
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain:"strenght-a9f37.firebaseapp.com",
+  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId:"strenght-a9f37",
+  storageBucket:"strenght-a9f37.firebasestorage.app",
+  messagingSenderId:"469926449178",
+  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
+});
+
+const auth=firebase.auth();
+const db=firebase.database();
+
+/* DOM refs */
+const titleEl=document.getElementById("title");
+const descEl=document.getElementById("desc");
+const tbody=document.getElementById("tbody");
+const table=document.getElementById("table");
+const lastUpdatedEl=document.getElementById("lastUpdated");
+
+const emailEl=document.getElementById("email");
+const passEl=document.getElementById("password");
+const loginBtn=document.getElementById("loginBtn");
+const logoutBtn=document.getElementById("logoutBtn");
+
+/* calculator refs */
+const targetWeight=document.getElementById("targetWeight");
+const barWeight=document.getElementById("barWeight");
+const includeBar=document.getElementById("includeBar");
+const leftSide=document.getElementById("leftSide");
+const rightSide=document.getElementById("rightSide");
+const trueLoad=document.getElementById("trueLoad");
+
+let isAdmin=false;
+
+/* DATE */
+function formatDate(d){
+  return d.toLocaleString("en-US",{
+    month:"long",day:"2-digit",year:"numeric",
+    hour:"numeric",minute:"2-digit",hour12:true
+  });
+}
+
+/* AUTH */
+loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
+logoutBtn.onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  isAdmin=!!user;
+  table.classList.toggle("locked-content",!isAdmin);
+  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
+  loginBtn.style.display=user?"none":"inline-block";
+  logoutBtn.style.display=user?"inline-block":"none";
+});
+
+/* LOAD DATA */
+db.ref("log").once("value").then(snap=>{
+  const d=snap.val()||{};
+  titleEl.innerText=d.title||"";
+  descEl.innerHTML=d.desc||"";
+  tbody.innerHTML=d.table||"";
+  lastUpdatedEl.innerText=d.updated?`Last updated: ${d.updated}`:"";
+});
+
+/* SAVE */
+function saveData(){
+  if(!isAdmin) return;
+  const updated=formatDate(new Date());
+  db.ref("log").set({
+    title:titleEl.innerText,
+    desc:descEl.innerHTML,
+    table:tbody.innerHTML,
+    updated
+  });
+  lastUpdatedEl.innerText=`Last updated: ${updated}`;
+}
+
+["input","keyup","paste","blur"].forEach(e=>{
+  titleEl.addEventListener(e,saveData);
+  descEl.addEventListener(e,saveData);
+  tbody.addEventListener(e,saveData);
+});
+
+/* BARBELL */
+const plates=[45,35,25,10,5,2.5];
+
+function updateBarbell(){
+  leftSide.innerHTML="";
+  rightSide.innerHTML="";
+  const t=+targetWeight.value;
+  const b=+barWeight.value||0;
+  if(!t) return;
+
+  let r=(includeBar.checked?(t-b):t)/2;
+  let used=[];
+  plates.forEach(p=>{
+    while(r>=p){ r-=p; used.push(p); }
+  });
+
+  used.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  [...used].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+
+  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked?t:(used.reduce((s,p)=>s+p*2,0)+b)} lbs`;
+}
+
+[targetWeight,barWeight,includeBar].forEach(el=>el.addEventListener("input",updateBarbell));
+</script>
+
 </body>
 </html>
