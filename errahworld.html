@@ -2,156 +2,183 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>ErrahWorld | Neural Strength Link</title>
+    <title>ErrahWorld | AI Strength Log</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         
         :root {
-            --bg-main: #040508;
-            --bg-panel: rgba(13, 17, 33, 0.8);
+            --bg-main: #06080f;
+            --bg-panel: rgba(10, 14, 28, 0.75);
             --accent: #7c89ff;
-            --accent-glow: rgba(124, 137, 255, 0.5);
+            --accent-glow: rgba(124, 137, 255, 0.4);
             --text-main: #ffffff;
             --text-muted: #8a91ad;
-            --border-glass: rgba(255, 255, 255, 0.1);
-            --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
 
+        /* Entrance Animations */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from { opacity: 0; transform: translateY(20px); filter: blur(10px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
-        * { box-sizing: border-box; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s, box-shadow 0.3s; cursor: crosshair; }
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         
         body {
             margin: 0; padding: 20px; font-family: "Plus Jakarta Sans", sans-serif;
-            background-color: var(--bg-main); color: var(--text-main);
-            min-height: 100vh; overflow-x: hidden;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
             display: flex; flex-direction: column; align-items: center;
         }
 
-        #bg-canvas, #interaction-canvas {
+        /* Animated Background */
+        #bg-canvas {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none;
+            z-index: -1; opacity: 0.4; pointer-events: none;
         }
-        #interaction-canvas { z-index: 9999; }
 
-        .container { width: 100%; max-width: 900px; animation: fadeInUp 0.8s ease-out; }
+        .container {
+            width: 100%; max-width: 850px; margin: 0 auto;
+            animation: fadeInUp 1s ease-out forwards;
+        }
 
-        /* Nav */
+        /* Premium Nav */
         .nav-bar { 
-            display: flex; gap: 10px; margin-bottom: 40px; 
-            background: rgba(255,255,255,0.03); padding: 8px; 
-            border-radius: 20px; border: 1px solid var(--border-glass);
-            width: fit-content; margin-inline: auto; backdrop-filter: blur(10px);
+            display: flex; gap: 8px; margin-bottom: 30px; 
+            background: rgba(255,255,255,0.03); padding: 6px; 
+            border-radius: 18px; border: 1px solid var(--border-glass);
+            width: fit-content; margin-inline: auto;
+            backdrop-filter: blur(15px);
         }
-        .nav-btn { padding: 12px 28px; border-radius: 14px; text-decoration: none; font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
-        .active-nav { background: var(--accent); color: #000; box-shadow: 0 0 25px var(--accent-glow); }
+        .nav-btn { 
+            padding: 10px 24px; border-radius: 14px; 
+            text-decoration: none; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-muted);
+        }
+        .active-nav { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
 
-        /* Header */
+        /* Typography & Header */
+        .last-updated-banner { 
+            font-size: 0.6rem; color: var(--accent); text-align: center; 
+            margin-bottom: 10px; font-weight: 800; letter-spacing: 3px;
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
         h1 { 
-            margin: 0 0 30px; font-size: clamp(2.5rem, 12vw, 4.5rem); text-align: center; font-weight: 800; 
-            background: linear-gradient(180deg, #fff 40%, var(--accent));
+            margin: 0 0 10px; font-size: clamp(2.5rem, 10vw, 3.8rem); text-align: center; font-weight: 800; 
+            background: linear-gradient(180deg, #fff 30%, var(--accent));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -3px; filter: drop-shadow(0 0 15px rgba(124,137,255,0.3));
+            letter-spacing: -2px;
+        }
+        #desc { 
+            padding: 25px; margin-bottom: 35px; border-radius: 28px; 
+            background: var(--bg-panel); border: 1px solid var(--border-glass);
+            color: var(--text-muted); text-align: center; backdrop-filter: blur(20px);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.02);
         }
 
-        /* Tactical Cards Grid */
-        .desc-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px; margin-bottom: 40px;
-        }
-        .info-card {
-            background: var(--bg-panel); border: 1px solid var(--border-glass);
-            padding: 25px; border-radius: 24px; backdrop-filter: blur(15px);
+        /* Countdown Card */
+        .countdown {
+            margin-bottom: 35px; padding: 25px; 
+            background: linear-gradient(145deg, rgba(30,40,80,0.3), rgba(10,12,20,0.5));
+            border-radius: 32px; border: 1px solid rgba(124,137,255,0.2);
+            box-shadow: var(--card-shadow); display: flex; flex-direction: column; align-items: center;
             position: relative; overflow: hidden;
         }
-        .info-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            border-color: var(--accent);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(124,137,255,0.1);
+        .countdown::after {
+            content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(transparent, rgba(124,137,255,0.05), transparent);
+            animation: scanline 4s linear infinite;
         }
-        .info-card h3 { margin: 0 0 10px; font-size: 0.7rem; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
-        .info-card p { margin: 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
+        #timer { font-size: 2.5rem; font-weight: 800; text-shadow: 0 0 25px var(--accent-glow); }
 
-        /* Countdown */
-        .countdown {
-            margin-bottom: 40px; padding: 40px; 
-            background: radial-gradient(circle at center, rgba(124,137,255,0.1), transparent), var(--bg-panel);
-            border-radius: 35px; border: 1px solid var(--border-glass);
-            text-align: center; box-shadow: var(--card-shadow);
+        /* Table Loading State */
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
         }
-        #timer { font-size: 3rem; font-weight: 800; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-        /* Table */
+        /* Modern Table */
         .table-container { 
-            border-radius: 35px; border: 1px solid var(--border-glass); 
-            box-shadow: var(--card-shadow); background: var(--bg-panel); overflow: hidden;
-            backdrop-filter: blur(20px);
+            overflow-x: auto; border-radius: 32px; border: 1px solid var(--border-glass); 
+            box-shadow: var(--card-shadow); background: var(--bg-panel); backdrop-filter: blur(20px);
         }
         table { width: 100%; border-collapse: collapse; }
-        th { background: rgba(255,255,255,0.03); color: var(--accent); padding: 25px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; }
-        td { padding: 25px; text-align: center; border-bottom: 1px solid var(--border-glass); font-size: 1.1rem; }
-        tr:hover td { background: rgba(124, 137, 255, 0.1); color: #fff; }
+        th { 
+            background: rgba(255,255,255,0.02); color: var(--accent); 
+            padding: 22px; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
+        }
+        td { padding: 22px; text-align: center; border-bottom: 1px solid var(--border-glass); font-size: 1rem; }
+        tr:hover td { background: rgba(124, 137, 255, 0.08); color: #fff; transform: scale(1.01); }
 
-        /* Admin UI */
-        #authBox { display: flex; gap: 10px; margin-bottom: 40px; justify-content: center; }
-        input { background: #000; border: 1px solid var(--border-glass); color: #fff; padding: 15px; border-radius: 15px; outline: none; }
-        button { background: #fff; color: #000; padding: 15px 30px; border-radius: 15px; font-weight: 800; border: none; }
-        button:active { transform: scale(0.9); }
+        /* Input Fields */
+        #authBox { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
+        input { 
+            background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); 
+            color: #fff; padding: 14px 20px; border-radius: 16px; outline: none;
+        }
+        button { 
+            background: #fff; border: none; padding: 14px 28px; border-radius: 16px; 
+            font-weight: 800; cursor: pointer;
+        }
+        button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
 
-        .locked-content { filter: blur(0px); }
     </style>
 </head>
-<body onclick="createExplosion(event)">
+<body>
 
     <canvas id="bg-canvas"></canvas>
-    <canvas id="interaction-canvas"></canvas>
 
     <div class="container">
         <div class="nav-bar">
-            <a href="#" class="nav-btn active-nav">PROJECT ATLAS</a>
-            <a href="#" class="nav-btn">CORE UPDATES</a>
+            <a href="errahworld.html" class="nav-btn active-nav">Project Atlas</a>
+            <a href="updates.html" class="nav-btn">Updates</a>
         </div>
 
-        <h1 id="title">Neural Link</h1>
+        <div id="lastUpdateBanner" class="last-updated-banner">ESTABLISHING NEURAL LINK...</div>
 
-        <div class="desc-grid">
-            <div class="info-card" id="card1">
-                <h3>System Status</h3>
-                <p id="desc1" contenteditable="false">Core stability at 98.4%. Neural pathways clear for high-load tracking.</p>
-            </div>
-            <div class="info-card" id="card2">
-                <h3>Objective</h3>
-                <p id="desc2" contenteditable="false">Monitor muscular output and calculate 1RM projections for the next cycle.</p>
-            </div>
-            <div class="info-card" id="card3">
-                <h3>Sync Logs</h3>
-                <p id="lastUpdateBanner">Establishing connection...</p>
-            </div>
-        </div>
+        <h1 id="title">Syncing</h1>
+        <div id="desc">Decrypting strength data from secure servers...</div>
 
         <div class="countdown">
-            <strong style="color: var(--accent); letter-spacing: 5px;">LIMIT BREAKER COUNTDOWN</strong>
+            <strong>NEXT RM CYCLE</strong>
             <div id="timer">00D 00H 00M 00S</div>
         </div>
 
         <div id="authBox">
             <input id="email" placeholder="Admin ID">
             <input id="password" type="password" placeholder="Keyphrase">
-            <button id="loginBtn">Initialize</button>
-            <button id="logoutBtn" style="display:none">Terminate</button>
+            <button id="loginBtn">Login</button>
+            <button id="logoutBtn" style="display:none">Logout</button>
         </div>
 
         <div class="table-container">
             <table id="table" class="locked-content">
                 <thead>
-                    <tr><th>Exercise</th><th>Load</th><th>Max</th><th>Status</th></tr>
+                    <tr>
+                        <th style="text-align:left">Exercise</th>
+                        <th>Current</th>
+                        <th>1RM</th>
+                        <th>Status</th>
+                    </tr>
                 </thead>
                 <tbody id="tbody">
-                    <tr><td colspan="4">Synchronizing Database...</td></tr>
+                    <tr class="loading-shimmer"><td colspan="4" style="height: 60px; opacity: 0.3;">INITIALIZING DATABASE...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -162,68 +189,31 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // --- EXPLOSION ENGINE ---
-        const iCanvas = document.getElementById('interaction-canvas');
-        const iCtx = iCanvas.getContext('2d');
-        let particles = [];
-
-        function resizeICanvas() {
-            iCanvas.width = window.innerWidth;
-            iCanvas.height = window.innerHeight;
+        // BACKGROUND ANIMATION (Neural Grid)
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let dots = [];
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            dots = [];
+            for(let i=0; i<60; i++) dots.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: Math.random()-0.5, vy: Math.random()-0.5});
         }
-        window.addEventListener('resize', resizeICanvas);
-        resizeICanvas();
-
-        class Particle {
-            constructor(x, y) {
-                this.x = x; this.y = y;
-                this.size = Math.random() * 4 + 2;
-                this.speedX = (Math.random() - 0.5) * 10;
-                this.speedY = (Math.random() - 0.5) * 10;
-                this.color = `hsla(${230 + Math.random() * 20}, 100%, 70%, 1)`;
-                this.life = 1;
-            }
-            update() {
-                this.x += this.speedX; this.y += this.speedY;
-                this.life -= 0.02; this.size *= 0.95;
-            }
-            draw() {
-                iCtx.fillStyle = this.color;
-                iCtx.globalAlpha = this.life;
-                iCtx.beginPath();
-                iCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                iCtx.fill();
-            }
-        }
-
-        function createExplosion(e) {
-            for(let i=0; i<15; i++) particles.push(new Particle(e.clientX, e.clientY));
-        }
-
-        function animateParticles() {
-            iCtx.clearRect(0,0, iCanvas.width, iCanvas.height);
-            particles.forEach((p, i) => {
-                p.update(); p.draw();
-                if(p.life <= 0) particles.splice(i, 1);
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(124, 137, 255, 0.5)";
+            dots.forEach(d => {
+                d.x += d.vx; d.y += d.vy;
+                if(d.x<0 || d.x>canvas.width) d.vx *= -1;
+                if(d.y<0 || d.y>canvas.height) d.vy *= -1;
+                ctx.beginPath(); ctx.arc(d.x, d.y, 1.5, 0, Math.PI*2); ctx.fill();
             });
-            requestAnimationFrame(animateParticles);
+            requestAnimationFrame(draw);
         }
-        animateParticles();
+        window.onresize = initCanvas;
+        initCanvas(); draw();
 
-        // --- BACKGROUND GRID ---
-        const bgCanvas = document.getElementById('bg-canvas');
-        const bgCtx = bgCanvas.getContext('2d');
-        function drawGrid() {
-            bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight;
-            bgCtx.strokeStyle = "rgba(124, 137, 255, 0.05)";
-            bgCtx.lineWidth = 1;
-            for(let x=0; x<bgCanvas.width; x+=50) { bgCtx.beginPath(); bgCtx.moveTo(x,0); bgCtx.lineTo(x, bgCanvas.height); bgCtx.stroke(); }
-            for(let y=0; y<bgCanvas.height; y+=50) { bgCtx.beginPath(); bgCtx.moveTo(0,y); bgCtx.lineTo(bgCanvas.width, y); bgCtx.stroke(); }
-        }
-        window.addEventListener('resize', drawGrid);
-        drawGrid();
-
-        // --- FIREBASE & LOGIC ---
+        // FIREBASE SETUP
         firebase.initializeApp({
             apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain:"strenght-a9f37.firebaseapp.com",
@@ -236,38 +226,39 @@
 
         const auth = firebase.auth();
         const db = firebase.database();
-        const titleEl = document.getElementById("title"),
+        const titleEl = document.getElementById("title"), 
+              descEl = document.getElementById("desc"),
               tbody = document.getElementById("tbody"),
-              desc1 = document.getElementById("desc1"),
-              desc2 = document.getElementById("desc2"),
               updateBanner = document.getElementById("lastUpdateBanner");
 
+        // DATA SYNC WITH FADE-IN
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
-            titleEl.innerText = d.title || "Neural Link";
-            tbody.innerHTML = d.table || "";
-            // Parsing descriptions into separate cards if they exist
-            if(d.desc) {
-                const parts = d.desc.split('|');
-                desc1.innerHTML = parts[0] || "System Active";
-                desc2.innerHTML = parts[1] || "Ready for input";
-            }
+            tbody.style.opacity = 0;
+            setTimeout(() => {
+                titleEl.innerText = d.title || "Strength Log";
+                descEl.innerHTML = d.desc || "Neural link active...";
+                tbody.innerHTML = d.table || "<tr><td colspan='4'>No data available</td></tr>";
+                tbody.style.opacity = 1;
+            }, 300);
         });
 
         db.ref("meta/lastUpdate").on("value", snap => {
-            updateBanner.innerText = snap.val() || "Awaiting Sync";
+            updateBanner.innerText = "SYSTEM ACTIVE // LAST SYNC: " + (snap.val() || "UNKNOWN");
         });
 
-        // Auth Logic
+        // AUTH & TIMER LOGIC (Existing from your code)
         const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
         const emailEl = document.getElementById("email"), passEl = document.getElementById("password");
+        let isAdmin = false;
 
         loginBtn.onclick = () => auth.signInWithEmailAndPassword(emailEl.value, passEl.value).catch(e => alert(e.message));
         logoutBtn.onclick = () => auth.signOut();
 
         auth.onAuthStateChanged(user => {
-            const isAdmin = !!user;
-            [titleEl, desc1, desc2, tbody].forEach(el => el.contentEditable = isAdmin);
+            isAdmin = !!user;
+            document.getElementById("table").classList.toggle("locked-content", !isAdmin);
+            [titleEl, descEl, tbody].forEach(el => el.contentEditable = isAdmin);
             loginBtn.style.display = user ? "none" : "inline-block";
             emailEl.style.display = user ? "none" : "inline-block";
             passEl.style.display = user ? "none" : "inline-block";
@@ -275,14 +266,14 @@
         });
 
         function saveData() {
-            if(!auth.currentUser) return;
-            const fullDesc = desc1.innerHTML + "|" + desc2.innerHTML;
-            db.ref("log").set({ title: titleEl.innerText, desc: fullDesc, table: tbody.innerHTML });
-            db.ref("meta/lastUpdate").set(new Date().toLocaleDateString());
+            if(!isAdmin) return;
+            const now = new Date();
+            const dateStr = `${now.getDate()} ${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`;
+            db.ref("log").set({ title: titleEl.innerText, desc: descEl.innerHTML, table: tbody.innerHTML });
+            db.ref("meta/lastUpdate").set(dateStr);
         }
-        [titleEl, desc1, desc2, tbody].forEach(el => el.addEventListener("blur", saveData));
+        [titleEl, descEl, tbody].forEach(el => el.addEventListener("blur", saveData));
 
-        // Timer
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
