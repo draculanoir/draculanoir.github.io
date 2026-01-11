@@ -38,20 +38,9 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        @keyframes scanline {
-            0% { transform: translateY(-100%); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(200%); opacity: 0; }
-        }
-
         @keyframes pulseGlow {
             0%, 100% { opacity: 0.6; transform: scale(1); }
             50% { opacity: 1; transform: scale(1.02); }
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
         }
 
         @keyframes float {
@@ -87,12 +76,6 @@
             z-index: -1; opacity: 0.25; pointer-events: none; filter: blur(1px);
         }
 
-        body::before {
-            content: ""; position: fixed; top: -50%; right: -50%; width: 100%; height: 100%;
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-            opacity: 0.15; animation: float 20s ease-in-out infinite; z-index: -1;
-        }
-
         .container {
             width: 100%; max-width: 920px; margin: 0 auto;
             animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -109,7 +92,7 @@
 
         .nav-btn { 
             padding: 12px 28px; border-radius: 16px; text-decoration: none; font-size: 0.875rem; 
-            font-weight: 600; color: var(--text-secondary); position: relative; transition: all 0.3s;
+            font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: all 0.3s;
         }
 
         .active-nav { color: #ffffff; font-weight: 700; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); }
@@ -119,7 +102,6 @@
             font-size: 0.7rem; font-weight: 800; color: var(--accent-primary); 
             text-align: center; margin-bottom: 16px; letter-spacing: 2px;
             text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
-            text-shadow: 0 0 20px var(--accent-glow);
         }
 
         h1 { 
@@ -129,10 +111,10 @@
             letter-spacing: -0.04em; animation: gradientShift 8s ease infinite; background-size: 200% auto;
         }
 
-        #desc { 
+        .desc-box { 
             padding: 32px 40px; margin-bottom: 48px; border-radius: 28px; background: var(--bg-panel);
             border: 1px solid var(--border-glass); text-align: center; backdrop-filter: blur(32px);
-            box-shadow: var(--shadow-lg); font-size: 1.05rem; position: relative; overflow: hidden;
+            box-shadow: var(--shadow-lg); font-size: 1.05rem;
         }
 
         /* Countdown */
@@ -162,7 +144,7 @@
             cursor: pointer; transition: 0.3s;
         }
 
-        /* Table - VISIBLE TO EVERYONE */
+        /* Tables & Containers */
         .table-container { 
             overflow: hidden; border-radius: 32px; border: 1px solid var(--border-glass);
             box-shadow: var(--shadow-xl); background: var(--bg-panel); backdrop-filter: blur(32px);
@@ -176,18 +158,16 @@
         td { padding: 24px 28px; text-align: center; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); }
         td:first-child { text-align: left; color: var(--text-primary); font-weight: 600; }
 
-        /* Interaction Control */
-        .locked-content {
-            filter: none !important; /* Forces visibility */
-            pointer-events: none;    /* Prevents clicking/editing by guests */
-            user-select: text;       /* Allows copying text */
+        .updates-list {
+            padding: 40px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 2;
         }
 
-        .admin-editable {
-            outline: 1px dashed var(--accent-primary);
-            cursor: text !important;
-            pointer-events: auto !important;
-        }
+        /* Interaction Control */
+        .locked-content { pointer-events: none; user-select: text; }
+        .admin-editable { outline: 1px dashed var(--accent-primary); cursor: text !important; pointer-events: auto !important; }
 
         @media (max-width: 768px) {
             .nav-bar { padding: 6px; }
@@ -202,41 +182,52 @@
 
     <div class="container">
         <nav class="nav-bar">
-            <a href="#" class="nav-btn active-nav"><span>Project Atlas</span></a>
-            <a href="#" class="nav-btn"><span>Updates</span></a>
+            <div id="nav-atlas" class="nav-btn active-nav">Project Atlas</div>
+            <div id="nav-updates" class="nav-btn">Updates</div>
         </nav>
 
         <div id="lastUpdateBanner" class="last-updated-banner">ESTABLISHING NEURAL LINK...</div>
 
-        <h1 id="title">Syncing</h1>
-        <div id="desc">Decrypting strength data from secure servers...</div>
+        <div id="main-view">
+            <h1 id="title">Syncing</h1>
+            <div id="desc" class="desc-box">Decrypting strength data from secure servers...</div>
 
-        <div class="countdown">
-            <strong>NEXT RM CYCLE</strong>
-            <div id="timer">00D 00H 00M 00S</div>
+            <div class="countdown">
+                <strong>NEXT RM CYCLE</strong>
+                <div id="timer">00D 00H 00M 00S</div>
+            </div>
+
+            <div class="table-container">
+                <table id="table" class="locked-content">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left">Exercise</th>
+                            <th>Current</th>
+                            <th>1RM</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                        <tr><td colspan="4" style="height: 80px; opacity: 0.5;">INITIALIZING DATABASE...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div id="authBox">
+        <div id="updates-view" style="display: none;">
+            <h1>System Logs</h1>
+            <div class="table-container">
+                <div id="updates-content" class="updates-list locked-content">
+                    • Loading system logs...
+                </div>
+            </div>
+        </div>
+
+        <div id="authBox" style="margin-top: 50px;">
             <input id="email" placeholder="Admin ID" type="email">
             <input id="password" type="password" placeholder="Keyphrase">
             <button id="loginBtn">Login</button>
             <button id="logoutBtn" style="display:none; background: #ef4444;">Logout</button>
-        </div>
-
-        <div class="table-container">
-            <table id="table" class="locked-content">
-                <thead>
-                    <tr>
-                        <th style="text-align:left">Exercise</th>
-                        <th>Current</th>
-                        <th>1RM</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody">
-                    <tr><td colspan="4" style="height: 80px; opacity: 0.5;">INITIALIZING DATABASE...</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -258,7 +249,7 @@
         }
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            dots.forEach((dot, i) => {
+            dots.forEach((dot) => {
                 dot.x += dot.vx; dot.y += dot.vy;
                 if(dot.x < 0 || dot.x > canvas.width) dot.vx *= -1;
                 if(dot.y < 0 || dot.y > canvas.height) dot.vy *= -1;
@@ -270,7 +261,7 @@
         window.addEventListener('resize', initCanvas);
         initCanvas(); draw();
 
-        // FIREBASE
+        // FIREBASE CONFIG
         firebase.initializeApp({
             apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain: "strenght-a9f37.firebaseapp.com",
@@ -286,7 +277,28 @@
         const titleEl = document.getElementById("title");
         const descEl = document.getElementById("desc");
         const tbody = document.getElementById("tbody");
+        const updatesContent = document.getElementById("updates-content");
         const updateBanner = document.getElementById("lastUpdateBanner");
+
+        // NAVIGATION LOGIC
+        const navAtlas = document.getElementById('nav-atlas');
+        const navUpdates = document.getElementById('nav-updates');
+        const mainView = document.getElementById('main-view');
+        const updatesView = document.getElementById('updates-view');
+
+        navAtlas.onclick = () => {
+            mainView.style.display = 'block';
+            updatesView.style.display = 'none';
+            navAtlas.classList.add('active-nav');
+            navUpdates.classList.remove('active-nav');
+        };
+
+        navUpdates.onclick = () => {
+            mainView.style.display = 'none';
+            updatesView.style.display = 'block';
+            navUpdates.classList.add('active-nav');
+            navAtlas.classList.remove('active-nav');
+        };
 
         // DATA SYNC
         db.ref("log").on("value", snap => {
@@ -294,6 +306,7 @@
             titleEl.innerText = d.title || "Strength Log";
             descEl.innerHTML = d.desc || "Neural link active...";
             tbody.innerHTML = d.table || "<tr><td colspan='4'>No data available</td></tr>";
+            updatesContent.innerHTML = d.updates || "• No logs recorded.";
         });
 
         db.ref("meta/lastUpdate").on("value", snap => {
@@ -304,14 +317,17 @@
         let isAdmin = false;
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
-            const tableEl = document.getElementById("table");
             
-            // Toggle interaction classes
-            tableEl.classList.toggle("locked-content", !isAdmin);
-            [titleEl, descEl, tbody].forEach(el => {
+            // Toggle admin capabilities
+            [titleEl, descEl, tbody, updatesContent].forEach(el => {
                 el.contentEditable = isAdmin;
-                if(isAdmin) el.classList.add("admin-editable");
-                else el.classList.remove("admin-editable");
+                if(isAdmin) {
+                    el.classList.add("admin-editable");
+                    el.classList.remove("locked-content");
+                } else {
+                    el.classList.remove("admin-editable");
+                    el.classList.add("locked-content");
+                }
             });
 
             document.getElementById("email").style.display = user ? "none" : "inline-block";
@@ -326,12 +342,10 @@
         };
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
-        // SAVE DATA WITH FULL TIME FORMAT
+        // SAVE DATA
         function saveData() {
             if(!isAdmin) return;
             const now = new Date();
-            
-            // Format: 11 January 2026 @ 9:10 AM
             const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
             const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             const fullStamp = `${dateStr} @ ${timeStr}`;
@@ -339,12 +353,13 @@
             db.ref("log").set({ 
                 title: titleEl.innerText, 
                 desc: descEl.innerHTML, 
-                table: tbody.innerHTML 
+                table: tbody.innerHTML,
+                updates: updatesContent.innerHTML
             });
             db.ref("meta/lastUpdate").set(fullStamp);
         }
 
-        [titleEl, descEl, tbody].forEach(el => {
+        [titleEl, descEl, tbody, updatesContent].forEach(el => {
             el.addEventListener("blur", saveData);
         });
 
