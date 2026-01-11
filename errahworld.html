@@ -1,173 +1,270 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<title>Strength Log</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-:root{
-  --bg-main:#0a0c13; --bg-panel:rgba(22,26,42,.88); --bg-header:rgba(32,38,64,.95);
-  --border:rgba(255,255,255,.08); --text:#eef0f6; --muted:#9aa1b3; --accent:#cfd6ff;
-}
-*{ box-sizing:border-box; }
-body{
-  margin:0; padding:20px; font-family:"Inter",sans-serif;
-  background: radial-gradient(1200px 600px at top,#1c2340,transparent 60%), var(--bg-main);
-  color:var(--text);
-}
+    <meta charset="UTF-8" />
+    <title>ErrahWorld | Strength Log & JARVIS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-main: #0a0c13;
+            --bg-panel: rgba(22, 26, 42, 0.88);
+            --bg-header: rgba(32, 38, 64, 0.95);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #eef0f6;
+            --muted: #9aa1b3;
+            --accent: #cfd6ff;
+            --shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
 
-/* Nav */
-.nav-bar { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
-.nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; flex: 1; text-align: center; }
-.active-nav { background: var(--accent); color: #000; }
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0; padding: 20px; font-family: "Inter", sans-serif;
+            background: radial-gradient(1200px 600px at top, #1c2340, transparent 60%), var(--bg-main);
+            color: var(--text);
+            padding-bottom: 100px; /* Espace pour l'orbite Jarvis */
+        }
 
-/* Last Updated Banner - Fixed Color */
-.last-updated-banner { font-size: 0.75rem; color: var(--accent); text-align: center; margin-bottom: 15px; opacity: 0.9; font-weight: 600; }
+        /* Navigation */
+        .nav-bar { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
+        .nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; flex: 1; text-align: center; transition: 0.3s; }
+        .active-nav { background: var(--accent); color: #000; font-weight: 700; }
 
-.locked-content, .locked-content *{ pointer-events:none!important; user-select:none!important; }
-h1{ margin:0 0 10px; font-size:2rem; text-align: center; font-weight: 700; }
-#desc{ padding:18px; margin-bottom:20px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:18px; color:var(--muted); line-height: 1.6; outline: none; }
+        /* Banner & Info */
+        .last-updated-banner { font-size: 0.75rem; color: var(--accent); text-align: center; margin-bottom: 15px; font-weight: 600; letter-spacing: 0.5px; }
+        h1 { margin: 0 0 10px; font-size: 2.2rem; text-align: center; font-weight: 800; }
+        #desc { padding: 18px; margin-bottom: 20px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 18px; color: var(--muted); line-height: 1.6; outline: none; }
 
-.countdown{
-  margin: 10px 0 20px; padding:15px; background:linear-gradient(135deg,#2b3160,#1b1f3d);
-  border-radius:15px; display:flex; justify-content:space-between; align-items:center; font-size: 0.85rem;
-}
-#timer{ font-weight:700; color:var(--accent); }
+        /* Countdown */
+        .countdown {
+            margin: 10px 0 20px; padding: 15px; background: linear-gradient(135deg, #2b3160, #1b1f3d);
+            border-radius: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; border: 1px solid var(--border);
+        }
+        #timer { font-weight: 700; color: var(--accent); }
 
-.top-bar{ display:flex; flex-direction: column; gap: 15px; margin-bottom:18px; }
-#authBox{ display:flex; gap:10px; padding:12px; background:rgba(255,255,255,.05); border-radius:15px; border: 1px solid var(--border); }
-#authBox input{ background:rgba(0,0,0,.25); border:1px solid var(--border); color:var(--accent); padding:10px; border-radius:10px; width: 100%; outline: none; }
-#authBox button{ background:#3a43a0; border:none; color:#fff; padding:10px 15px; border-radius:10px; cursor:pointer; font-weight: 600; }
+        /* Auth */
+        .top-bar { display: flex; flex-direction: column; gap: 15px; margin-bottom: 18px; }
+        #authBox { display: flex; gap: 10px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 15px; border: 1px solid var(--border); }
+        #authBox input { background: rgba(0,0,0,0.25); border: 1px solid var(--border); color: var(--accent); padding: 10px; border-radius: 10px; width: 100%; outline: none; }
+        #authBox button { background: #3a43a0; border: none; color: #fff; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: 600; }
 
-table{ width:100%; border-collapse:collapse; background:var(--bg-panel); border-radius:18px; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-th,td{ padding:12px; text-align:center; border-bottom:1px solid var(--border); outline: none; }
-th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; font-size: 0.65rem; letter-spacing: 0.1em; }
-</style>
+        /* Table */
+        table { width: 100%; border-collapse: collapse; background: var(--bg-panel); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); }
+        th, td { padding: 14px; text-align: center; border-bottom: 1px solid var(--border); outline: none; }
+        th { background: var(--bg-header); color: var(--accent); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.1em; }
+        .locked-content { pointer-events: none; opacity: 0.9; }
+
+        /* JARVIS UI */
+        #jarvis-container { position: fixed; bottom: 25px; right: 25px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; }
+        #jarvis-bubble { display: none; background: rgba(10, 12, 19, 0.95); border: 1px solid var(--accent); padding: 18px; border-radius: 20px; width: 280px; margin-bottom: 20px; backdrop-filter: blur(15px); box-shadow: 0 10px 40px rgba(0,0,0,0.8); color: var(--text); border-bottom-right-radius: 5px; animation: slideUp 0.3s ease; }
+        #jarvis-status { font-size: 0.6rem; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        #jarvis-text { font-size: 0.9rem; line-height: 1.5; }
+        #jarvis-orb { width: 65px; height: 65px; background: black; border: 2px solid var(--accent); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: 0.4s; box-shadow: 0 0 15px var(--accent); }
+        #inner-glow { position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 15px var(--accent); opacity: 0.5; }
+        .voice-bars { display: flex; gap: 3px; align-items: center; }
+        .voice-bars div { width: 3px; height: 12px; background: var(--accent); border-radius: 3px; }
+        
+        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 25px; } }
+        .listening-active #v-bars div { animation: wave 0.5s infinite ease-in-out; }
+        .listening-active #v-bars div:nth-child(2) { animation-delay: 0.1s; }
+        .listening-active #v-bars div:nth-child(3) { animation-delay: 0.2s; }
+    </style>
 </head>
 <body>
 
-<div class="nav-bar">
-  <a href="errahworld.html" class="nav-btn active-nav">🏋️ Log</a>
-  <a href="updates.html" class="nav-btn">📢 Updates</a>
-</div>
+    <div class="nav-bar">
+        <a href="errahworld.html" class="nav-btn active-nav">🏋️ Log</a>
+        <a href="updates.html" class="nav-btn">📢 Updates</a>
+    </div>
 
-<div id="lastUpdateBanner" class="last-updated-banner">Syncing...</div>
+    <div id="lastUpdateBanner" class="last-updated-banner">SYNCHRONISATION...</div>
 
-<h1 id="title">Strength Log</h1>
-<p id="desc">Loading...</p>
+    <h1 id="title">Strength Log</h1>
+    <div id="desc">Chargement des données...</div>
 
-<div class="countdown">
-  <strong>Road to RM Drop 🏋️</strong>
-  <div id="timer">Loading…</div>
-</div>
+    <div class="countdown">
+        <strong>Road to RM Drop 🏋️</strong>
+        <div id="timer">--d --h --m --s</div>
+    </div>
 
-<div class="top-bar">
-  <div id="authBox">
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button id="loginBtn">Login</button>
-    <button id="logoutBtn" style="display:none">Logout</button>
-  </div>
-</div>
+    <div class="top-bar">
+        <div id="authBox">
+            <input id="email" placeholder="Email Admin">
+            <input id="password" type="password" placeholder="Password">
+            <button id="loginBtn">Login</button>
+            <button id="logoutBtn" style="display:none">Logout</button>
+        </div>
+    </div>
 
-<table id="table" class="locked-content">
-  <thead><tr><th style="text-align:left">Lift</th><th>Current</th><th>1RM</th><th>Level</th></tr></thead>
-  <tbody id="tbody"></tbody>
-</table>
+    <table id="table" class="locked-content">
+        <thead>
+            <tr><th style="text-align:left">Lift</th><th>Actuel</th><th>1RM</th><th>Niveau</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <div id="jarvis-container">
+        <div id="jarvis-bubble">
+            <div id="jarvis-status">Système Prêt</div>
+            <div id="jarvis-text">En attente d'instructions...</div>
+        </div>
+        <div id="jarvis-orb">
+            <div id="inner-glow"></div>
+            <div class="voice-bars" id="v-bars">
+                <div></div><div></div><div></div>
+            </div>
+        </div>
+    </div>
 
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain:"strenght-a9f37.firebaseapp.com",
-  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId:"strenght-a9f37",
-  storageBucket:"strenght-a9f37.firebasestorage.app",
-  messagingSenderId:"469926449178",
-  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
-});
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-const auth=firebase.auth();
-const db=firebase.database();
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    <script>
+        // FIREBASE CONFIG
+        firebase.initializeApp({
+            apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+            authDomain:"strenght-a9f37.firebaseapp.com",
+            databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
+            projectId:"strenght-a9f37",
+            storageBucket:"strenght-a9f37.firebasestorage.app",
+            messagingSenderId:"469926449178",
+            appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
+        });
 
-const emailEl=document.getElementById("email"), passEl=document.getElementById("password"),
-      loginBtn=document.getElementById("loginBtn"), logoutBtn=document.getElementById("logoutBtn"),
-      titleEl=document.getElementById("title"), descEl=document.getElementById("desc"),
-      tbody=document.getElementById("tbody"), table=document.getElementById("table"),
-      updateBanner=document.getElementById("lastUpdateBanner");
+        const auth = firebase.auth();
+        const db = firebase.database();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-let isAdmin=false;
+        const emailEl = document.getElementById("email"), passEl = document.getElementById("password"),
+              loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn"),
+              titleEl = document.getElementById("title"), descEl = document.getElementById("desc"),
+              tbody = document.getElementById("tbody"), table = document.getElementById("table"),
+              updateBanner = document.getElementById("lastUpdateBanner");
 
-function getFormattedDate() {
-  const now = new Date();
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const day = now.getDate();
-  const month = months[now.getMonth()];
-  const year = now.getFullYear();
-  let hours = now.getHours();
-  let minutes = now.getMinutes();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  minutes = minutes < 10 ? '0'+minutes : minutes;
-  return `${day} ${month} ${year} ${hours}:${minutes} ${ampm}`;
-}
+        let isAdmin = false;
 
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value).catch(e=>alert(e.message));
-logoutBtn.onclick=()=>auth.signOut();
+        // DATE FORMATTER
+        function getFormattedDate() {
+            const now = new Date();
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const day = now.getDate();
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            return `${day} ${month} ${year} ${hours}:${minutes} ${ampm}`;
+        }
 
-auth.onAuthStateChanged(user=>{
-  isAdmin=!!user;
-  table.classList.toggle("locked-content",!isAdmin);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
-  loginBtn.style.display=user?"none":"inline-block";
-  emailEl.style.display=user?"none":"inline-block";
-  passEl.style.display=user?"none":"inline-block";
-  logoutBtn.style.display=user?"inline-block":"none";
-});
+        // AUTH
+        loginBtn.onclick = () => auth.signInWithEmailAndPassword(emailEl.value, passEl.value).catch(e => alert(e.message));
+        logoutBtn.onclick = () => { if(confirm("Déconnexion ?")) auth.signOut(); };
 
-// LOAD DATA ONCE (to prevent the cursor jump)
-db.ref("log").once("value", snap=>{
-  const d=snap.val()||{};
-  titleEl.innerText=d.title||"Strength Log";
-  descEl.innerHTML=d.desc||"";
-  tbody.innerHTML=d.table||"";
-});
+        auth.onAuthStateChanged(user => {
+            isAdmin = !!user;
+            table.classList.toggle("locked-content", !isAdmin);
+            [titleEl, descEl, tbody].forEach(el => el.contentEditable = isAdmin);
+            loginBtn.style.display = user ? "none" : "inline-block";
+            emailEl.style.display = user ? "none" : "inline-block";
+            passEl.style.display = user ? "none" : "inline-block";
+            logoutBtn.style.display = user ? "inline-block" : "none";
+        });
 
-// Banner stays synced live
-db.ref("meta/lastUpdate").on("value", snap => {
-  updateBanner.innerText = "Website Last Updated: " + (snap.val() || "Unknown");
-});
+        // DATA LOADING
+        db.ref("log").once("value", snap => {
+            const d = snap.val() || {};
+            titleEl.innerText = d.title || "Strength Log";
+            descEl.innerHTML = d.desc || "Cliquez pour éditer la description...";
+            tbody.innerHTML = d.table || "";
+        });
 
-function saveData(){
-  if(!isAdmin) return;
-  const dateStr = getFormattedDate();
-  db.ref("log").set({
-    title:titleEl.innerText, 
-    desc:descEl.innerHTML,
-    table:tbody.innerHTML
-  });
-  db.ref("meta/lastUpdate").set(dateStr);
-}
+        db.ref("meta/lastUpdate").on("value", snap => {
+            updateBanner.innerText = "DERNIÈRE MISE À JOUR : " + (snap.val() || "Inconnue");
+        });
 
-// FIX: We only use "blur" (when you stop clicking the text) to save.
-// This stops the cursor from jumping backwards.
-[titleEl, descEl, tbody].forEach(el => {
-  el.addEventListener("blur", saveData);
-});
+        function saveData() {
+            if(!isAdmin) return;
+            const dateStr = getFormattedDate();
+            db.ref("log").set({ title: titleEl.innerText, desc: descEl.innerHTML, table: tbody.innerHTML });
+            db.ref("meta/lastUpdate").set(dateStr);
+        }
 
-// TIMER
-const targetDate=new Date("February 3, 2026 00:00:00").getTime();
-setInterval(()=>{
-  const diff=targetDate-Date.now();
-  if(diff<=0){ document.getElementById("timer").textContent="RM DAY 🔥"; return; }
-  const d=Math.floor(diff/86400000), h=Math.floor(diff/3600000)%24, m=Math.floor(diff/60000)%60, s=Math.floor(diff/1000)%60;
-  document.getElementById("timer").textContent=`${d}d ${h}h ${m}m ${s}s`;
-},1000);
-</script>
+        [titleEl, descEl, tbody].forEach(el => el.addEventListener("blur", saveData));
+
+        // TIMER
+        const targetDate = new Date("February 3, 2026 00:00:00").getTime();
+        setInterval(() => {
+            const diff = targetDate - Date.now();
+            if(diff <= 0) { document.getElementById("timer").textContent = "RM DAY 🔥"; return; }
+            const d = Math.floor(diff/86400000), h = Math.floor(diff/3600000)%24, m = Math.floor(diff/60000)%60, s = Math.floor(diff/1000)%60;
+            document.getElementById("timer").textContent = `${d}d ${h}h ${m}m ${s}s`;
+        }, 1000);
+
+        // JARVIS LOGIC
+        const orb = document.getElementById('jarvis-orb');
+        const bubble = document.getElementById('jarvis-bubble');
+        const jText = document.getElementById('jarvis-text');
+        const jStatus = document.getElementById('jarvis-status');
+        const synth = window.speechSynthesis;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+        function jarvisSay(msg) {
+            synth.cancel();
+            const utter = new SpeechSynthesisUtterance(msg);
+            utter.pitch = 0.85; utter.rate = 1.05; utter.lang = 'fr-FR';
+            jText.innerText = msg;
+            synth.speak(utter);
+        }
+
+        function getRecord(liftName) {
+            const rows = document.querySelectorAll("#tbody tr");
+            let found = "Je n'ai pas de données sur ce mouvement.";
+            rows.forEach(row => {
+                if(row.innerText.toLowerCase().includes(liftName.toLowerCase())) {
+                    found = `Pour le ${row.cells[0].innerText}, vous êtes à ${row.cells[1].innerText}. Votre max estimé est ${row.cells[2].innerText}. Niveau : ${row.cells[3].innerText}.`;
+                }
+            });
+            return found;
+        }
+
+        orb.onclick = () => {
+            bubble.style.display = bubble.style.display === 'none' ? 'block' : 'none';
+            if(bubble.style.display === 'block') {
+                if(isAdmin) {
+                    jarvisSay("Système synchronisé. Bonjour Monsieur. Prêt pour l'entraînement ?");
+                    jStatus.innerText = "Liaison Coach Établie";
+                } else {
+                    jarvisSay("Mode invité. Je peux analyser les performances d'Errah pour vous.");
+                    jStatus.innerText = "Mode Analyseur";
+                }
+            }
+        };
+
+        if(recognition) {
+            recognition.lang = 'fr-FR';
+            orb.onmousedown = () => { recognition.start(); orb.classList.add('listening-active'); jStatus.innerText = "Analyse vocale..."; };
+            orb.onmouseup = () => { recognition.stop(); orb.classList.remove('listening-active'); };
+
+            recognition.onresult = (event) => {
+                const speech = event.results[0][0].transcript.toLowerCase();
+                if(isAdmin) {
+                    if(speech.includes("niveau")) jarvisSay("Votre progression est exponentielle. Le mode Elite est proche.");
+                    else if(speech.includes("record au") || speech.includes("stats")) jarvisSay(getRecord(speech.split("au")[1] || ""));
+                    else if(speech.includes("fatigué")) jarvisSay("Monsieur, la douleur est une information, pas un obstacle. On continue.");
+                    else jarvisSay("Instruction reçue, mais je n'ai pas encore cette fonction.");
+                } else {
+                    if(speech.includes("record") || speech.includes("stats")) jarvisSay(getRecord(speech.split("au")[1] || ""));
+                    else jarvisSay("Je ne réponds qu'aux questions sur les performances physiques.");
+                }
+            };
+        }
+    </script>
 </body>
 </html>
