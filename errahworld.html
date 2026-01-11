@@ -9,7 +9,7 @@
         
         :root {
             --bg-main: #06080f;
-            --bg-panel: rgba(15, 18, 35, 0.7);
+            --bg-panel: rgba(10, 14, 28, 0.75);
             --accent: #7c89ff;
             --accent-glow: rgba(124, 137, 255, 0.4);
             --text-main: #ffffff;
@@ -18,125 +18,131 @@
             --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
 
-        * { box-sizing: border-box; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* Entrance Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); filter: blur(10px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         
         body {
             margin: 0; padding: 20px; font-family: "Plus Jakarta Sans", sans-serif;
-            background: 
-                radial-gradient(circle at 50% -20%, #1e264d 0%, transparent 50%),
-                radial-gradient(circle at 0% 100%, #0d1121 0%, transparent 40%),
-                var(--bg-main);
+            background-color: var(--bg-main);
             color: var(--text-main);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            overflow-x: hidden;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* Animated Background */
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; opacity: 0.4; pointer-events: none;
         }
 
         .container {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
+            width: 100%; max-width: 850px; margin: 0 auto;
+            animation: fadeInUp 1s ease-out forwards;
         }
 
-        /* Navigation - Floating Pill Style */
+        /* Premium Nav */
         .nav-bar { 
             display: flex; gap: 8px; margin-bottom: 30px; 
             background: rgba(255,255,255,0.03); padding: 6px; 
             border-radius: 18px; border: 1px solid var(--border-glass);
             width: fit-content; margin-inline: auto;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
         }
         .nav-btn { 
             padding: 10px 24px; border-radius: 14px; 
             text-decoration: none; font-size: 0.85rem; font-weight: 600;
-            color: var(--text-muted); text-align: center;
+            color: var(--text-muted);
         }
-        .active-nav { 
-            background: var(--accent); color: #000; 
-            box-shadow: 0 4px 15px var(--accent-glow);
-        }
+        .active-nav { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
 
-        /* Header Section */
+        /* Typography & Header */
         .last-updated-banner { 
-            font-size: 0.65rem; color: var(--accent); text-align: center; 
-            margin-bottom: 8px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-            opacity: 0.8;
+            font-size: 0.6rem; color: var(--accent); text-align: center; 
+            margin-bottom: 10px; font-weight: 800; letter-spacing: 3px;
+            animation: pulseGlow 2s infinite ease-in-out;
         }
         h1 { 
-            margin: 0 0 15px; font-size: clamp(2rem, 8vw, 3rem); text-align: center; font-weight: 800; 
-            background: linear-gradient(to bottom, #fff 50%, var(--accent));
+            margin: 0 0 10px; font-size: clamp(2.5rem, 10vw, 3.8rem); text-align: center; font-weight: 800; 
+            background: linear-gradient(180deg, #fff 30%, var(--accent));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -1.5px;
+            letter-spacing: -2px;
         }
         #desc { 
-            padding: 24px; margin-bottom: 30px; border-radius: 24px; 
+            padding: 25px; margin-bottom: 35px; border-radius: 28px; 
             background: var(--bg-panel); border: 1px solid var(--border-glass);
-            color: var(--text-muted); text-align: center; font-size: 1rem;
-            backdrop-filter: blur(15px); line-height: 1.6;
-            outline: none;
+            color: var(--text-muted); text-align: center; backdrop-filter: blur(20px);
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.02);
         }
 
         /* Countdown Card */
         .countdown {
-            margin-bottom: 30px; padding: 24px; 
-            background: linear-gradient(145deg, rgba(30,38,77,0.4), rgba(10,12,20,0.4));
-            border-radius: 28px; border: 1px solid rgba(124,137,255,0.15);
-            box-shadow: var(--card-shadow); display: flex; flex-direction: column; align-items: center; gap: 8px;
+            margin-bottom: 35px; padding: 25px; 
+            background: linear-gradient(145deg, rgba(30,40,80,0.3), rgba(10,12,20,0.5));
+            border-radius: 32px; border: 1px solid rgba(124,137,255,0.2);
+            box-shadow: var(--card-shadow); display: flex; flex-direction: column; align-items: center;
+            position: relative; overflow: hidden;
         }
-        .countdown strong { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 4px; color: var(--accent); }
-        #timer { 
-            font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 30px var(--accent-glow); color: #fff;
+        .countdown::after {
+            content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(transparent, rgba(124,137,255,0.05), transparent);
+            animation: scanline 4s linear infinite;
         }
+        #timer { font-size: 2.5rem; font-weight: 800; text-shadow: 0 0 25px var(--accent-glow); }
 
-        /* Auth/Login UI */
-        #authBox { 
-            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; 
-            justify-content: center;
+        /* Table Loading State */
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
         }
-        #authBox input { 
-            background: rgba(0,0,0,0.4); 
-            border: 1px solid var(--border-glass); color: #fff; padding: 14px 18px; 
-            border-radius: 16px; outline: none; font-size: 0.9rem; min-width: 200px;
-        }
-        #authBox input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(124,137,255,0.1); }
-        #authBox button { 
-            background: #fff; border: none; color: #000; padding: 14px 28px; 
-            border-radius: 16px; cursor: pointer; font-weight: 700; font-size: 0.9rem;
-        }
-        #authBox button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255,255,255,0.15); }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-        /* The Data Table */
+        /* Modern Table */
         .table-container { 
-            overflow-x: auto; border-radius: 28px; border: 1px solid var(--border-glass); 
-            box-shadow: var(--card-shadow); background: var(--bg-panel);
-            backdrop-filter: blur(20px);
+            overflow-x: auto; border-radius: 32px; border: 1px solid var(--border-glass); 
+            box-shadow: var(--card-shadow); background: var(--bg-panel); backdrop-filter: blur(20px);
         }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        table { width: 100%; border-collapse: collapse; }
         th { 
-            background: rgba(255,255,255,0.03); color: var(--text-muted); 
-            padding: 20px; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px;
-            text-transform: uppercase; border-bottom: 1px solid var(--border-glass);
+            background: rgba(255,255,255,0.02); color: var(--accent); 
+            padding: 22px; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
         }
-        td { padding: 22px 15px; text-align: center; border-bottom: 1px solid var(--border-glass); font-weight: 500; font-size: 1rem; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: rgba(124, 137, 255, 0.05); color: var(--accent); }
+        td { padding: 22px; text-align: center; border-bottom: 1px solid var(--border-glass); font-size: 1rem; }
+        tr:hover td { background: rgba(124, 137, 255, 0.08); color: #fff; transform: scale(1.01); }
 
-        /* Editable State */
-        [contenteditable="true"] { cursor: cell; }
-        [contenteditable="true"]:focus { background: rgba(124, 137, 255, 0.1) !important; outline: 2px solid var(--accent); border-radius: 8px; }
-        .locked-content { opacity: 0.95; }
-
-        @media (max-width: 600px) {
-            body { padding: 15px; }
-            h1 { font-size: 2.2rem; }
-            #timer { font-size: 1.6rem; }
-            #authBox input { width: 100%; }
+        /* Input Fields */
+        #authBox { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
+        input { 
+            background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); 
+            color: #fff; padding: 14px 20px; border-radius: 16px; outline: none;
         }
+        button { 
+            background: #fff; border: none; padding: 14px 28px; border-radius: 16px; 
+            font-weight: 800; cursor: pointer;
+        }
+        button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+
     </style>
 </head>
 <body>
+
+    <canvas id="bg-canvas"></canvas>
 
     <div class="container">
         <div class="nav-bar">
@@ -144,18 +150,18 @@
             <a href="updates.html" class="nav-btn">Updates</a>
         </div>
 
-        <div id="lastUpdateBanner" class="last-updated-banner">NEURAL SYNCING...</div>
+        <div id="lastUpdateBanner" class="last-updated-banner">ESTABLISHING NEURAL LINK...</div>
 
-        <h1 id="title">Syncing...</h1>
-        <div id="desc">Accessing secure server...</div>
+        <h1 id="title">Syncing</h1>
+        <div id="desc">Decrypting strength data from secure servers...</div>
 
         <div class="countdown">
-            <strong>RMs drop</strong>
-            <div id="timer">--D --H --M --S</div>
+            <strong>NEXT RM CYCLE</strong>
+            <div id="timer">00D 00H 00M 00S</div>
         </div>
 
         <div id="authBox">
-            <input id="email" placeholder="Admin Identification">
+            <input id="email" placeholder="Admin ID">
             <input id="password" type="password" placeholder="Keyphrase">
             <button id="loginBtn">Login</button>
             <button id="logoutBtn" style="display:none">Logout</button>
@@ -165,13 +171,15 @@
             <table id="table" class="locked-content">
                 <thead>
                     <tr>
-                        <th style="text-align:left; padding-left: 30px;">Exercise</th>
+                        <th style="text-align:left">Exercise</th>
                         <th>Current</th>
                         <th>1RM</th>
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody id="tbody"></tbody>
+                <tbody id="tbody">
+                    <tr class="loading-shimmer"><td colspan="4" style="height: 60px; opacity: 0.3;">INITIALIZING DATABASE...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -181,6 +189,31 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
+        // BACKGROUND ANIMATION (Neural Grid)
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let dots = [];
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            dots = [];
+            for(let i=0; i<60; i++) dots.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: Math.random()-0.5, vy: Math.random()-0.5});
+        }
+        function draw() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(124, 137, 255, 0.5)";
+            dots.forEach(d => {
+                d.x += d.vx; d.y += d.vy;
+                if(d.x<0 || d.x>canvas.width) d.vx *= -1;
+                if(d.y<0 || d.y>canvas.height) d.vy *= -1;
+                ctx.beginPath(); ctx.arc(d.x, d.y, 1.5, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        window.onresize = initCanvas;
+        initCanvas(); draw();
+
+        // FIREBASE SETUP
         firebase.initializeApp({
             apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain:"strenght-a9f37.firebaseapp.com",
@@ -193,32 +226,38 @@
 
         const auth = firebase.auth();
         const db = firebase.database();
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-        const emailEl = document.getElementById("email"), 
-              passEl = document.getElementById("password"),
-              loginBtn = document.getElementById("loginBtn"), 
-              logoutBtn = document.getElementById("logoutBtn"),
-              titleEl = document.getElementById("title"), 
+        const titleEl = document.getElementById("title"), 
               descEl = document.getElementById("desc"),
-              tbody = document.getElementById("tbody"), 
-              table = document.getElementById("table"),
+              tbody = document.getElementById("tbody"),
               updateBanner = document.getElementById("lastUpdateBanner");
 
+        // DATA SYNC WITH FADE-IN
+        db.ref("log").on("value", snap => {
+            const d = snap.val() || {};
+            tbody.style.opacity = 0;
+            setTimeout(() => {
+                titleEl.innerText = d.title || "Strength Log";
+                descEl.innerHTML = d.desc || "Neural link active...";
+                tbody.innerHTML = d.table || "<tr><td colspan='4'>No data available</td></tr>";
+                tbody.style.opacity = 1;
+            }, 300);
+        });
+
+        db.ref("meta/lastUpdate").on("value", snap => {
+            updateBanner.innerText = "SYSTEM ACTIVE // LAST SYNC: " + (snap.val() || "UNKNOWN");
+        });
+
+        // AUTH & TIMER LOGIC (Existing from your code)
+        const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
+        const emailEl = document.getElementById("email"), passEl = document.getElementById("password");
         let isAdmin = false;
 
-        function getFormattedDate() {
-            const now = new Date();
-            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} ${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
-        }
-
         loginBtn.onclick = () => auth.signInWithEmailAndPassword(emailEl.value, passEl.value).catch(e => alert(e.message));
-        logoutBtn.onclick = () => { if(confirm("Terminate session?")) auth.signOut(); };
+        logoutBtn.onclick = () => auth.signOut();
 
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
-            table.classList.toggle("locked-content", !isAdmin);
+            document.getElementById("table").classList.toggle("locked-content", !isAdmin);
             [titleEl, descEl, tbody].forEach(el => el.contentEditable = isAdmin);
             loginBtn.style.display = user ? "none" : "inline-block";
             emailEl.style.display = user ? "none" : "inline-block";
@@ -226,20 +265,10 @@
             logoutBtn.style.display = user ? "inline-block" : "none";
         });
 
-        db.ref("log").once("value", snap => {
-            const d = snap.val() || {};
-            titleEl.innerText = d.title || "Strength Log";
-            descEl.innerHTML = d.desc || "Neural link active. Edit description...";
-            tbody.innerHTML = d.table || "";
-        });
-
-        db.ref("meta/lastUpdate").on("value", snap => {
-            updateBanner.innerText = "SYSTEM LAST UPDATED: " + (snap.val() || "UNKNOWN");
-        });
-
         function saveData() {
             if(!isAdmin) return;
-            const dateStr = getFormattedDate();
+            const now = new Date();
+            const dateStr = `${now.getDate()} ${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`;
             db.ref("log").set({ title: titleEl.innerText, desc: descEl.innerHTML, table: tbody.innerHTML });
             db.ref("meta/lastUpdate").set(dateStr);
         }
@@ -248,11 +277,8 @@
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
-            if(diff <= 0) { document.getElementById("timer").textContent = "LIMIT BREAKER DAY 🔥"; return; }
-            const d = Math.floor(diff/86400000), 
-                  h = Math.floor(diff/3600000)%24, 
-                  m = Math.floor(diff/60000)%60, 
-                  s = Math.floor(diff/1000)%60;
+            if(diff <= 0) { document.getElementById("timer").textContent = "LIMIT BREAKER 🔥"; return; }
+            const d = Math.floor(diff/86400000), h = Math.floor(diff/3600000)%24, m = Math.floor(diff/60000)%60, s = Math.floor(diff/1000)%60;
             document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
         }, 1000);
     </script>
