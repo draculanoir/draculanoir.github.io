@@ -2,183 +2,142 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>ErrahWorld | AI Strength Log</title>
+    <title>ErrahWorld | Project Atlas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         
         :root {
-            --bg-main: #06080f;
-            --bg-panel: rgba(10, 14, 28, 0.75);
+            --bg-main: #040508;
+            --bg-panel: rgba(10, 14, 28, 0.7);
             --accent: #7c89ff;
-            --accent-glow: rgba(124, 137, 255, 0.4);
+            --accent-glow: rgba(124, 137, 255, 0.5);
             --text-main: #ffffff;
             --text-muted: #8a91ad;
             --border-glass: rgba(255, 255, 255, 0.08);
-            --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
 
-        /* Entrance Animations */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); filter: blur(10px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        /* --- INTRO OVERLAY --- */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s cubic-bezier(0.8, 0, 0.2, 1), visibility 1s;
+        }
+        .terminal-text { font-family: monospace; color: var(--accent); font-size: 0.8rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        .intro-title { 
+            font-size: 3rem; font-weight: 800; color: #fff; letter-spacing: 15px; 
+            position: relative; animation: titlePulse 2s infinite;
+        }
+        @keyframes titlePulse { 0%, 100% { opacity: 1; filter: brightness(1); } 50% { opacity: 0.7; filter: brightness(1.5); } }
+        .load-bar { width: 200px; height: 1px; background: rgba(255,255,255,0.1); margin-top: 20px; position: relative; }
+        .load-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 2.5s ease-in-out; }
+        .overlay-hide { opacity: 0; visibility: hidden; }
+
+        /* --- MAIN ANIMATIONS --- */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes glitch {
+            0% { text-shadow: 2px 0 red, -2px 0 blue; }
+            20% { text-shadow: -2px 0 red, 2px 0 blue; }
+            100% { text-shadow: 2px 0 red, -2px 0 blue; }
         }
 
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
-        }
-
-        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        
         body {
             margin: 0; padding: 20px; font-family: "Plus Jakarta Sans", sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
+            background-color: var(--bg-main); color: var(--text-main);
+            min-height: 100vh; overflow-x: hidden;
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* Animated Background */
-        #bg-canvas {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; opacity: 0.4; pointer-events: none;
-        }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.5; }
 
-        .container {
-            width: 100%; max-width: 850px; margin: 0 auto;
-            animation: fadeInUp 1s ease-out forwards;
-        }
+        .container { width: 100%; max-width: 900px; animation: fadeInUp 1.2s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Premium Nav */
-        .nav-bar { 
-            display: flex; gap: 8px; margin-bottom: 30px; 
-            background: rgba(255,255,255,0.03); padding: 6px; 
-            border-radius: 18px; border: 1px solid var(--border-glass);
-            width: fit-content; margin-inline: auto;
-            backdrop-filter: blur(15px);
-        }
-        .nav-btn { 
-            padding: 10px 24px; border-radius: 14px; 
-            text-decoration: none; font-size: 0.85rem; font-weight: 600;
-            color: var(--text-muted);
-        }
-        .active-nav { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
-
-        /* Typography & Header */
-        .last-updated-banner { 
-            font-size: 0.6rem; color: var(--accent); text-align: center; 
-            margin-bottom: 10px; font-weight: 800; letter-spacing: 3px;
-            animation: pulseGlow 2s infinite ease-in-out;
-        }
-        h1 { 
-            margin: 0 0 10px; font-size: clamp(2.5rem, 10vw, 3.8rem); text-align: center; font-weight: 800; 
-            background: linear-gradient(180deg, #fff 30%, var(--accent));
+        /* --- ALIVE TITLE --- */
+        .title-wrapper { text-align: center; margin-bottom: 40px; }
+        h1#title {
+            font-size: clamp(3rem, 10vw, 5rem); font-weight: 800; margin: 0;
+            background: linear-gradient(180deg, #fff 40%, var(--accent));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -2px;
+            animation: glitch 3s infinite linear alternate-reverse;
+            letter-spacing: -3px;
         }
-        #desc { 
-            padding: 25px; margin-bottom: 35px; border-radius: 28px; 
+
+        /* --- THE BOARD (Glassmorphism) --- */
+        .countdown, .table-container, #desc {
             background: var(--bg-panel); border: 1px solid var(--border-glass);
-            color: var(--text-muted); text-align: center; backdrop-filter: blur(20px);
-            box-shadow: inset 0 0 20px rgba(255,255,255,0.02);
+            backdrop-filter: blur(20px); border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, border-color 0.3s ease;
         }
+        .table-container:hover { border-color: var(--accent); transform: translateY(-5px); }
 
-        /* Countdown Card */
-        .countdown {
-            margin-bottom: 35px; padding: 25px; 
-            background: linear-gradient(145deg, rgba(30,40,80,0.3), rgba(10,12,20,0.5));
-            border-radius: 32px; border: 1px solid rgba(124,137,255,0.2);
-            box-shadow: var(--card-shadow); display: flex; flex-direction: column; align-items: center;
-            position: relative; overflow: hidden;
-        }
-        .countdown::after {
-            content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(transparent, rgba(124,137,255,0.05), transparent);
-            animation: scanline 4s linear infinite;
-        }
-        #timer { font-size: 2.5rem; font-weight: 800; text-shadow: 0 0 25px var(--accent-glow); }
+        /* --- TABLE STYLING --- */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { padding: 20px; text-align: left; color: var(--accent); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; }
+        td { padding: 20px; border-top: 1px solid var(--border-glass); font-weight: 500; transition: all 0.2s; }
+        tr:hover td { background: rgba(124, 137, 255, 0.05); color: var(--accent); }
 
-        /* Table Loading State */
-        .loading-shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        /* --- UI ELEMENTS --- */
+        .nav-bar { display: flex; gap: 10px; margin-bottom: 40px; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 20px; width: fit-content; margin-inline: auto; border: 1px solid var(--border-glass); }
+        .nav-btn { padding: 12px 24px; border-radius: 15px; text-decoration: none; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
+        .active-nav { background: var(--accent); color: #000; box-shadow: 0 10px 20px var(--accent-glow); }
 
-        /* Modern Table */
-        .table-container { 
-            overflow-x: auto; border-radius: 32px; border: 1px solid var(--border-glass); 
-            box-shadow: var(--card-shadow); background: var(--bg-panel); backdrop-filter: blur(20px);
-        }
-        table { width: 100%; border-collapse: collapse; }
-        th { 
-            background: rgba(255,255,255,0.02); color: var(--accent); 
-            padding: 22px; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
-        }
-        td { padding: 22px; text-align: center; border-bottom: 1px solid var(--border-glass); font-size: 1rem; }
-        tr:hover td { background: rgba(124, 137, 255, 0.08); color: #fff; transform: scale(1.01); }
-
-        /* Input Fields */
-        #authBox { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
-        input { 
-            background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); 
-            color: #fff; padding: 14px 20px; border-radius: 16px; outline: none;
-        }
-        button { 
-            background: #fff; border: none; padding: 14px 28px; border-radius: 16px; 
-            font-weight: 800; cursor: pointer;
-        }
-        button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-
+        #timer { font-size: 3rem; font-weight: 800; color: #fff; text-shadow: 0 0 30px var(--accent-glow); margin: 10px 0; }
+        .locked-content { filter: blur(4px); pointer-events: none; opacity: 0.5; }
+        
+        button { background: #fff; color: #000; border: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+        button:hover { transform: scale(1.05); box-shadow: 0 0 20px #fff; }
+        input { background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); color: #fff; padding: 14px; border-radius: 12px; outline: none; }
     </style>
 </head>
 <body>
+
+    <div id="intro-overlay">
+        <div class="terminal-text" id="terminal">INITIALIZING...</div>
+        <div class="intro-title">ATLAS</div>
+        <div class="load-bar"><div class="load-fill" id="load-fill"></div></div>
+    </div>
 
     <canvas id="bg-canvas"></canvas>
 
     <div class="container">
         <div class="nav-bar">
-            <a href="errahworld.html" class="nav-btn active-nav">Project Atlas</a>
-            <a href="updates.html" class="nav-btn">Updates</a>
+            <a href="#" class="nav-btn active-nav">PROJECT ATLAS</a>
+            <a href="#" class="nav-btn">UPDATES</a>
         </div>
 
-        <div id="lastUpdateBanner" class="last-updated-banner">ESTABLISHING NEURAL LINK...</div>
+        <div class="title-wrapper">
+            <div id="lastUpdateBanner" style="font-size: 0.6rem; letter-spacing: 4px; color: var(--accent); font-weight: 800; margin-bottom: 10px;">NEURAL LINK ACTIVE</div>
+            <h1 id="title">SYNCING</h1>
+            <div id="desc" style="padding: 20px; margin-top: 20px; font-size: 0.9rem; color: var(--text-muted);">Decrypting biometric strength data...</div>
+        </div>
 
-        <h1 id="title">Syncing</h1>
-        <div id="desc">Decrypting strength data from secure servers...</div>
-
-        <div class="countdown">
-            <strong>NEXT RM CYCLE</strong>
+        <div class="countdown" style="text-align: center; padding: 30px; margin-bottom: 30px;">
+            <span style="letter-spacing: 5px; font-size: 0.7rem; font-weight: 800; color: var(--accent);">NEXT LIMIT BREAK</span>
             <div id="timer">00D 00H 00M 00S</div>
         </div>
 
-        <div id="authBox">
+        <div id="authBox" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px;">
             <input id="email" placeholder="Admin ID">
             <input id="password" type="password" placeholder="Keyphrase">
-            <button id="loginBtn">Login</button>
-            <button id="logoutBtn" style="display:none">Logout</button>
+            <button id="loginBtn">ACCESS</button>
+            <button id="logoutBtn" style="display:none">DISCONNECT</button>
         </div>
 
         <div class="table-container">
             <table id="table" class="locked-content">
                 <thead>
                     <tr>
-                        <th style="text-align:left">Exercise</th>
-                        <th>Current</th>
-                        <th>1RM</th>
+                        <th>Exercise</th>
                         <th>Status</th>
+                        <th>Target</th>
+                        <th>1RM</th>
                     </tr>
                 </thead>
                 <tbody id="tbody">
-                    <tr class="loading-shimmer"><td colspan="4" style="height: 60px; opacity: 0.3;">INITIALIZING DATABASE...</td></tr>
+                    <tr><td colspan="4" style="text-align: center; opacity: 0.3;">LOADING DATABASE...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -189,31 +148,65 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // BACKGROUND ANIMATION (Neural Grid)
+        // 1. Intro Animation Logic
+        const lines = ["CONNECTING...", "BYPASSING ENCRYPTION...", "EXTRACTING LOGS...", "NEURAL LINK STABLE."];
+        let lineIdx = 0;
+        const terminal = document.getElementById('terminal');
+        const fill = document.getElementById('load-fill');
+
+        function type() {
+            if (lineIdx < lines.length) {
+                terminal.innerText = lines[lineIdx++];
+                setTimeout(type, 600);
+            }
+        }
+
+        window.onload = () => {
+            type();
+            fill.style.width = '100%';
+            setTimeout(() => {
+                document.getElementById('intro-overlay').classList.add('overlay-hide');
+            }, 3000);
+        };
+
+        // 2. Interactive Background
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         let dots = [];
-        function initCanvas() {
+        let mouse = { x: null, y: null };
+
+        function init() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             dots = [];
-            for(let i=0; i<60; i++) dots.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: Math.random()-0.5, vy: Math.random()-0.5});
+            for(let i=0; i<80; i++) dots.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: Math.random()-0.5, vy: Math.random()-0.5 });
         }
-        function draw() {
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            ctx.fillStyle = "rgba(124, 137, 255, 0.5)";
+
+        window.onmousemove = (e) => { mouse.x = e.x; mouse.y = e.y; };
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             dots.forEach(d => {
                 d.x += d.vx; d.y += d.vy;
-                if(d.x<0 || d.x>canvas.width) d.vx *= -1;
-                if(d.y<0 || d.y>canvas.height) d.vy *= -1;
-                ctx.beginPath(); ctx.arc(d.x, d.y, 1.5, 0, Math.PI*2); ctx.fill();
-            });
-            requestAnimationFrame(draw);
-        }
-        window.onresize = initCanvas;
-        initCanvas(); draw();
+                if(d.x<0 || d.x>canvas.width) d.vx*=-1;
+                if(d.y<0 || d.y>canvas.height) d.vy*=-1;
+                
+                // Interaction
+                let dx = mouse.x - d.x; let dy = mouse.y - d.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < 150) {
+                    ctx.beginPath(); ctx.strokeStyle = `rgba(124, 137, 255, ${1 - dist/150})`;
+                    ctx.moveTo(d.x, d.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
+                }
 
-        // FIREBASE SETUP
+                ctx.fillStyle = "rgba(124, 137, 255, 0.8)";
+                ctx.beginPath(); ctx.arc(d.x, d.y, 1, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+        init(); animate();
+
+        // 3. Firebase & Data (Replace your config if needed)
         firebase.initializeApp({
             apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain:"strenght-a9f37.firebaseapp.com",
@@ -226,61 +219,45 @@
 
         const auth = firebase.auth();
         const db = firebase.database();
-        const titleEl = document.getElementById("title"), 
-              descEl = document.getElementById("desc"),
-              tbody = document.getElementById("tbody"),
-              updateBanner = document.getElementById("lastUpdateBanner");
+        const titleEl = document.getElementById("title"), descEl = document.getElementById("desc"), tbody = document.getElementById("tbody");
 
-        // DATA SYNC WITH FADE-IN
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
-            tbody.style.opacity = 0;
-            setTimeout(() => {
-                titleEl.innerText = d.title || "Strength Log";
-                descEl.innerHTML = d.desc || "Neural link active...";
-                tbody.innerHTML = d.table || "<tr><td colspan='4'>No data available</td></tr>";
-                tbody.style.opacity = 1;
-            }, 300);
+            titleEl.innerText = d.title || "PROJECT ATLAS";
+            descEl.innerHTML = d.desc || "Ready for synchronization.";
+            tbody.innerHTML = d.table || "<tr><td colspan='4'>No data link...</td></tr>";
         });
 
-        db.ref("meta/lastUpdate").on("value", snap => {
-            updateBanner.innerText = "SYSTEM ACTIVE // LAST SYNC: " + (snap.val() || "UNKNOWN");
-        });
-
-        // AUTH & TIMER LOGIC (Existing from your code)
-        const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
-        const emailEl = document.getElementById("email"), passEl = document.getElementById("password");
-        let isAdmin = false;
-
-        loginBtn.onclick = () => auth.signInWithEmailAndPassword(emailEl.value, passEl.value).catch(e => alert(e.message));
-        logoutBtn.onclick = () => auth.signOut();
-
-        auth.onAuthStateChanged(user => {
-            isAdmin = !!user;
-            document.getElementById("table").classList.toggle("locked-content", !isAdmin);
-            [titleEl, descEl, tbody].forEach(el => el.contentEditable = isAdmin);
-            loginBtn.style.display = user ? "none" : "inline-block";
-            emailEl.style.display = user ? "none" : "inline-block";
-            passEl.style.display = user ? "none" : "inline-block";
-            logoutBtn.style.display = user ? "inline-block" : "none";
-        });
-
-        function saveData() {
-            if(!isAdmin) return;
-            const now = new Date();
-            const dateStr = `${now.getDate()} ${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`;
-            db.ref("log").set({ title: titleEl.innerText, desc: descEl.innerHTML, table: tbody.innerHTML });
-            db.ref("meta/lastUpdate").set(dateStr);
-        }
-        [titleEl, descEl, tbody].forEach(el => el.addEventListener("blur", saveData));
-
+        // 4. Timer Logic
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
-            if(diff <= 0) { document.getElementById("timer").textContent = "LIMIT BREAKER 🔥"; return; }
+            if(diff <= 0) { document.getElementById("timer").innerText = "SYSTEM OVERLOAD"; return; }
             const d = Math.floor(diff/86400000), h = Math.floor(diff/3600000)%24, m = Math.floor(diff/60000)%60, s = Math.floor(diff/1000)%60;
-            document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
+            document.getElementById("timer").innerText = `${d}D ${h}H ${m}M ${s}S`;
         }, 1000);
+
+        // 5. Auth Logic
+        const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
+        loginBtn.onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(alert);
+        logoutBtn.onclick = () => auth.signOut();
+
+        auth.onAuthStateChanged(user => {
+            const isAdmin = !!user;
+            document.getElementById("table").classList.toggle("locked-content", !isAdmin);
+            [titleEl, descEl, tbody].forEach(el => el.contentEditable = isAdmin);
+            loginBtn.style.display = user ? "none" : "inline-block";
+            logoutBtn.style.display = user ? "inline-block" : "none";
+            document.getElementById("email").style.display = user ? "none" : "inline-block";
+            document.getElementById("password").style.display = user ? "none" : "inline-block";
+        });
+
+        function saveData() {
+            if(auth.currentUser) {
+                db.ref("log").set({ title: titleEl.innerText, desc: descEl.innerHTML, table: tbody.innerHTML });
+            }
+        }
+        [titleEl, descEl, tbody].forEach(el => el.addEventListener("blur", saveData));
     </script>
 </body>
 </html>
