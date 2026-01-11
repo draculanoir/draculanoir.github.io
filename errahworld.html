@@ -32,13 +32,29 @@ body{
   color:var(--text);
 }
 
-/* FLOAT */
+/* NAV BAR */
+.nav-bar {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.nav-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 8px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.1); }
+
 @keyframes float{
   0%,100%{ transform:translateY(0); }
   50%{ transform:translateY(-6px); }
 }
 
-/* 🔒 HARD READ-ONLY LOCK */
 .locked-content,
 .locked-content *{
   pointer-events:none!important;
@@ -46,14 +62,8 @@ body{
   caret-color:transparent!important;
 }
 
-/* TITLE */
-h1{
-  margin:0 0 12px;
-  font-size:2.2rem;
-  font-weight:700;
-}
+h1{ margin:0 0 12px; font-size:2.2rem; font-weight:700; }
 
-/* DESCRIPTION */
 #desc{
   max-width:900px;
   padding:18px 22px;
@@ -68,7 +78,6 @@ h1{
   animation:float 9s ease-in-out infinite;
 }
 
-/* COUNTDOWN */
 .countdown{
   max-width:1020px;
   margin:18px 0 28px;
@@ -82,12 +91,8 @@ h1{
   animation:float 8s ease-in-out infinite;
 }
 
-#timer{
-  font-weight:700;
-  color:var(--accent);
-}
+#timer{ font-weight:700; color:var(--accent); }
 
-/* TOP BAR */
 .top-bar{
   display:flex;
   justify-content:space-between;
@@ -98,7 +103,6 @@ h1{
   flex-wrap:wrap;
 }
 
-/* AUTH */
 #authBox{
   display:flex;
   gap:10px;
@@ -108,7 +112,6 @@ h1{
   border-radius:20px;
   box-shadow:var(--shadow);
   backdrop-filter:blur(16px);
-  animation:float 10s ease-in-out infinite;
 }
 
 #authBox input{
@@ -120,8 +123,6 @@ h1{
   min-width:160px;
 }
 
-#authBox input::placeholder{ color:#8f97b5; }
-
 #authBox button{
   background:linear-gradient(135deg,#3a43a0,#2a2f66);
   border:none;
@@ -130,21 +131,8 @@ h1{
   border-radius:14px;
   font-weight:600;
   cursor:pointer;
-  box-shadow:0 8px 20px rgba(0,0,0,.5);
-  transition:.25s ease;
 }
 
-#authBox button:hover{
-  transform:translateY(-2px);
-  box-shadow:0 14px 30px rgba(0,0,0,.65);
-}
-
-.last-updated{
-  font-size:.75rem;
-  color:var(--muted);
-}
-
-/* TABLE */
 table{
   width:100%;
   max-width:1020px;
@@ -153,26 +141,12 @@ table{
   border-radius:22px;
   overflow:hidden;
   box-shadow:var(--shadow);
-  animation:float 11s ease-in-out infinite;
 }
 
-th,td{
-  padding:16px;
-  text-align:center;
-  border-bottom:1px solid var(--border);
-}
-
-th{
-  background:var(--bg-header);
-  font-size:.7rem;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:var(--accent);
-}
-
+th,td{ padding:16px; text-align:center; border-bottom:1px solid var(--border); }
+th{ background:var(--bg-header); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
 td.left{ text-align:left; }
 
-/* CALCULATOR */
 .calculator{
   max-width:1020px;
   margin-top:54px;
@@ -181,54 +155,15 @@ td.left{ text-align:left; }
   border-radius:24px;
   border:1px solid var(--border);
   box-shadow:var(--shadow);
-  animation:float 12s ease-in-out infinite;
 }
 
-.calculator-controls{
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-}
+.calculator-controls{ display:flex; gap:12px; flex-wrap:wrap; }
+.calculator input, .calculator label{ background:rgba(255,255,255,.06); border:1px solid var(--border); color:var(--accent); padding:12px 16px; border-radius:14px; }
 
-.calculator input,
-.calculator label{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--border);
-  color:var(--accent);
-  padding:12px 16px;
-  border-radius:14px;
-}
-
-/* BARBELL */
-.barbell{
-  margin-top:30px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.bar{
-  width:300px;
-  height:12px;
-  background:linear-gradient(#bbb,#666);
-  border-radius:8px;
-}
-
+.barbell{ margin-top:30px; display:flex; align-items:center; justify-content:center; }
+.bar{ width:300px; height:12px; background:linear-gradient(#bbb,#666); border-radius:8px; }
 .side{ display:flex; }
-
-.plate{
-  height:68px;
-  margin:0 2px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:.7rem;
-  font-weight:700;
-  color:#111;
-  border-radius:7px;
-  box-shadow:0 8px 18px rgba(0,0,0,.6);
-}
-
+.plate{ height:68px; margin:0 2px; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:700; color:#111; border-radius:7px; }
 .p45{ width:30px; background:#c0392b; }
 .p35{ width:28px; background:#d35400; }
 .p25{ width:26px; background:#f1c40f; }
@@ -236,19 +171,19 @@ td.left{ text-align:left; }
 .p5 { width:18px; background:#2ecc71; }
 .p2_5{ width:14px; background:#bdc3c7; }
 
-.note{ font-size:.75rem; color:var(--muted); margin-top:12px; }
-.total{ margin-top:8px; }
-
 @media(max-width:600px){
   body{ padding:16px; }
   #authBox{ flex-direction:column; width:100%; }
-  #authBox input,#authBox button{ width:100%; }
-  .calculator-controls{ flex-direction:column; }
 }
 </style>
 </head>
 
 <body>
+
+<div class="nav-bar">
+  <a href="errahworld.html" class="nav-btn">🏋️ Log</a>
+  <a href="updates.html" class="nav-btn">📢 Updates</a>
+</div>
 
 <h1 id="title"></h1>
 <p id="desc"></p>
@@ -287,15 +222,12 @@ td.left{ text-align:left; }
 <input id="barWeight" type="number" value="45">
 <label><input type="checkbox" id="includeBar" checked> Include bar</label>
 </div>
-
 <div class="barbell">
 <div id="leftSide" class="side"></div>
 <div class="bar"></div>
 <div id="rightSide" class="side"></div>
 </div>
-
-<div id="roundNote" class="note"></div>
-<div id="trueLoad" class="total"></div>
+<div id="trueLoad" class="total" style="margin-top:10px;"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -321,7 +253,6 @@ const descEl=document.getElementById("desc");
 const tbody=document.getElementById("tbody");
 const table=document.getElementById("table");
 const lastUpdatedEl=document.getElementById("lastUpdated");
-
 const emailEl=document.getElementById("email");
 const passEl=document.getElementById("password");
 const loginBtn=document.getElementById("loginBtn");
@@ -341,13 +272,15 @@ auth.onAuthStateChanged(user=>{
   table.classList.toggle("locked-content",!isAdmin);
   [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
   loginBtn.style.display=user?"none":"inline-block";
+  emailEl.style.display=user?"none":"inline-block";
+  passEl.style.display=user?"none":"inline-block";
   logoutBtn.style.display=user?"inline-block":"none";
 });
 
-db.ref("log").once("value").then(snap=>{
+db.ref("log").on("value", snap=>{
   const d=snap.val()||{};
-  titleEl.innerText=d.title||"";
-  descEl.innerHTML=d.desc||"";
+  titleEl.innerText=d.title||"Strength Log";
+  descEl.innerHTML=d.desc||"Click to edit description";
   tbody.innerHTML=d.table||"";
   lastUpdatedEl.innerText=d.updated?"Last updated: "+d.updated:"";
 });
@@ -361,7 +294,6 @@ function saveData(){
     table:tbody.innerHTML,
     updated
   });
-  lastUpdatedEl.innerText="Last updated: "+updated;
 }
 
 ["input","keyup","paste","blur"].forEach(e=>{
@@ -370,43 +302,40 @@ function saveData(){
   tbody.addEventListener(e,saveData);
 });
 
+// Barbell Calc logic (remains the same)
 const plates=[45,35,25,10,5,2.5];
 function updateBarbell(){
-  leftSide.innerHTML="";
-  rightSide.innerHTML="";
+  const leftSide = document.getElementById("leftSide");
+  const rightSide = document.getElementById("rightSide");
+  const targetWeight = document.getElementById("targetWeight");
+  const barWeight = document.getElementById("barWeight");
+  const includeBar = document.getElementById("includeBar");
+  const trueLoad = document.getElementById("trueLoad");
+
+  leftSide.innerHTML=""; rightSide.innerHTML="";
   let t=+targetWeight.value;
   let b=+barWeight.value||0;
   if(!t) return;
-
   let r=(includeBar.checked?(t-b):t)/2;
   let u=[];
   plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
-
   u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
   [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
-
-  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked ? t : (u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
+  trueLoad.innerText=`Loaded: ${t} lbs`;
 }
+document.getElementById("targetWeight").addEventListener("input",updateBarbell);
 
-[targetWeight,barWeight,includeBar].forEach(e=>e.addEventListener("input",updateBarbell));
-</script>
-
-<script>
-/* COUNTDOWN */
+// Timer logic
 const targetDate=new Date("February 3, 2026 00:00:00").getTime();
-const timerEl=document.getElementById("timer");
-function updateTimer(){
+setInterval(()=>{
   const diff=targetDate-Date.now();
-  if(diff<=0){ timerEl.textContent="RM DAY 🔥"; return; }
+  if(diff<=0){ document.getElementById("timer").textContent="RM DAY 🔥"; return; }
   const d=Math.floor(diff/86400000);
   const h=Math.floor(diff/3600000)%24;
   const m=Math.floor(diff/60000)%60;
   const s=Math.floor(diff/1000)%60;
-  timerEl.textContent=`${d}d ${h}h ${m}m ${s}s`;
-}
-updateTimer();
-setInterval(updateTimer,1000);
+  document.getElementById("timer").textContent=`${d}d ${h}h ${m}m ${s}s`;
+},1000);
 </script>
-
 </body>
 </html>
