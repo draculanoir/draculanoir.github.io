@@ -22,12 +22,12 @@ body{
 .nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; flex: 1; text-align: center; }
 .active-nav { background: var(--accent); color: #000; }
 
-/* Last Updated Banner */
-.last-updated-banner { font-size: 0.75rem; color: var(--muted); text-align: center; margin-bottom: 15px; opacity: 0.8; }
+/* Last Updated Banner - Fixed Color */
+.last-updated-banner { font-size: 0.75rem; color: var(--accent); text-align: center; margin-bottom: 15px; opacity: 0.9; font-weight: 600; }
 
 .locked-content, .locked-content *{ pointer-events:none!important; user-select:none!important; }
 h1{ margin:0 0 10px; font-size:2rem; text-align: center; font-weight: 700; }
-#desc{ padding:18px; margin-bottom:20px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:18px; color:var(--muted); line-height: 1.6; }
+#desc{ padding:18px; margin-bottom:20px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:18px; color:var(--muted); line-height: 1.6; outline: none; }
 
 .countdown{
   margin: 10px 0 20px; padding:15px; background:linear-gradient(135deg,#2b3160,#1b1f3d);
@@ -41,7 +41,7 @@ h1{ margin:0 0 10px; font-size:2rem; text-align: center; font-weight: 700; }
 #authBox button{ background:#3a43a0; border:none; color:#fff; padding:10px 15px; border-radius:10px; cursor:pointer; font-weight: 600; }
 
 table{ width:100%; border-collapse:collapse; background:var(--bg-panel); border-radius:18px; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-th,td{ padding:12px; text-align:center; border-bottom:1px solid var(--border); }
+th,td{ padding:12px; text-align:center; border-bottom:1px solid var(--border); outline: none; }
 th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; font-size: 0.65rem; letter-spacing: 0.1em; }
 </style>
 </head>
@@ -103,7 +103,6 @@ const emailEl=document.getElementById("email"), passEl=document.getElementById("
 
 let isAdmin=false;
 
-// Custom Date Formatter
 function getFormattedDate() {
   const now = new Date();
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -131,15 +130,15 @@ auth.onAuthStateChanged(user=>{
   logoutBtn.style.display=user?"inline-block":"none";
 });
 
-// Load table data
-db.ref("log").on("value", snap=>{
+// LOAD DATA ONCE (to prevent the cursor jump)
+db.ref("log").once("value", snap=>{
   const d=snap.val()||{};
   titleEl.innerText=d.title||"Strength Log";
   descEl.innerHTML=d.desc||"";
   tbody.innerHTML=d.table||"";
 });
 
-// Sync "Last Updated" text from database
+// Banner stays synced live
 db.ref("meta/lastUpdate").on("value", snap => {
   updateBanner.innerText = "Website Last Updated: " + (snap.val() || "Unknown");
 });
@@ -148,20 +147,20 @@ function saveData(){
   if(!isAdmin) return;
   const dateStr = getFormattedDate();
   db.ref("log").set({
-    title:titleEl.innerText, desc:descEl.innerHTML,
+    title:titleEl.innerText, 
+    desc:descEl.innerHTML,
     table:tbody.innerHTML
   });
-  // Also update the global time so both pages see it
   db.ref("meta/lastUpdate").set(dateStr);
 }
 
-["input","blur"].forEach(e=>{ 
-  titleEl.addEventListener(e,saveData); 
-  descEl.addEventListener(e,saveData); 
-  tbody.addEventListener(e,saveData); 
+// FIX: We only use "blur" (when you stop clicking the text) to save.
+// This stops the cursor from jumping backwards.
+[titleEl, descEl, tbody].forEach(el => {
+  el.addEventListener("blur", saveData);
 });
 
-// Timer
+// TIMER
 const targetDate=new Date("February 3, 2026 00:00:00").getTime();
 setInterval(()=>{
   const diff=targetDate-Date.now();
