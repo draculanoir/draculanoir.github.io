@@ -22,34 +22,33 @@ body{
 .nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; flex: 1; text-align: center; }
 .active-nav { background: var(--accent); color: #000; }
 
-.last-updated-banner { font-size: 0.75rem; color: var(--accent); text-align: center; margin-bottom: 15px; opacity: 0.9; font-weight: 600; }
-
-.locked-content, .locked-content *{ pointer-events:none!important; user-select:none!important; }
 h1{ margin:0 0 10px; font-size:2rem; text-align: center; font-weight: 700; }
 #desc{ padding:18px; margin-bottom:20px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:18px; color:var(--muted); line-height: 1.6; outline: none; }
 
-.countdown{
-  margin: 10px 0 20px; padding:15px; background:linear-gradient(135deg,#2b3160,#1b1f3d);
-  border-radius:15px; display:flex; justify-content:space-between; align-items:center; font-size: 0.85rem;
-}
+.countdown{ margin: 10px 0 20px; padding:15px; background:linear-gradient(135deg,#2b3160,#1b1f3d); border-radius:15px; display:flex; justify-content:space-between; align-items:center; font-size: 0.85rem; }
 #timer{ font-weight:700; color:var(--accent); }
 
-.top-bar{ display:flex; flex-direction: column; gap: 15px; margin-bottom:18px; }
-#authBox{ display:flex; gap:10px; padding:12px; background:rgba(255,255,255,.05); border-radius:15px; border: 1px solid var(--border); }
+#authBox{ display:flex; gap:10px; padding:12px; background:rgba(255,255,255,.05); border-radius:15px; border: 1px solid var(--border); margin-bottom: 18px; }
 #authBox input{ background:rgba(0,0,0,.25); border:1px solid var(--border); color:var(--accent); padding:10px; border-radius:10px; width: 100%; outline: none; }
 #authBox button{ background:#3a43a0; border:none; color:#fff; padding:10px 15px; border-radius:10px; cursor:pointer; font-weight: 600; }
 
-table{ width:100%; border-collapse:collapse; background:var(--bg-panel); border-radius:18px; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+table{ width:100%; border-collapse:collapse; background:var(--bg-panel); border-radius:18px; overflow:hidden; }
 th,td{ padding:12px; text-align:center; border-bottom:1px solid var(--border); outline: none; }
-th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; font-size: 0.65rem; letter-spacing: 0.1em; }
+th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; font-size: 0.65rem; }
+.locked-content{ pointer-events:none; opacity:0.8; }
 
 /* JARVIS UI */
 #jarvis-container { position: fixed; bottom: 25px; right: 25px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; }
-#jarvis-bubble { display: none; background: var(--bg-panel); border: 1px solid var(--accent); padding: 15px; border-radius: 15px; width: 250px; margin-bottom: 15px; backdrop-filter: blur(10px); color: var(--text); font-size: 0.85rem; }
-#jarvis-orb { width: 60px; height: 60px; background: black; border: 2px solid var(--accent); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent); transition: 0.3s; }
-.listening-active { border-color: #ff6b6b !important; box-shadow: 0 0 20px #ff6b6b !important; }
-.speaking { animation: pulse 1.5s infinite; box-shadow: 0 0 25px #fff; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+#jarvis-bubble { display: none; background: #161a2a; border: 1px solid var(--accent); padding: 15px; border-radius: 15px; width: 250px; margin-bottom: 15px; color: var(--text); font-size: 0.85rem; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+#jarvis-orb { width: 65px; height: 65px; background: black; border: 2px solid var(--accent); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent); transition: 0.3s; position: relative; }
+
+/* Glowing States */
+.thinking { animation: pulse-blue 1.5s infinite; border-color: #5da9ff !important; box-shadow: 0 0 20px #5da9ff !important; }
+.listening-active { border-color: #ff6b6b !important; box-shadow: 0 0 25px #ff6b6b !important; }
+.speaking { border-color: #fff !important; box-shadow: 0 0 25px #fff !important; }
+.error-glow { border-color: #ff4444 !important; box-shadow: 0 0 30px #ff4444 !important; }
+
+@keyframes pulse-blue { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -59,23 +58,19 @@ th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; 
   <a href="updates.html" class="nav-btn">📢 Updates</a>
 </div>
 
-<div id="lastUpdateBanner" class="last-updated-banner">Syncing...</div>
-
 <h1 id="title">Strength Log</h1>
-<p id="desc">Loading...</p>
+<p id="desc" contenteditable="false">Neural link: Ready.</p>
 
 <div class="countdown">
   <strong>Road to RM Drop 🏋️</strong>
-  <div id="timer">Loading…</div>
+  <div id="timer">--d --h --m --s</div>
 </div>
 
-<div class="top-bar">
-  <div id="authBox">
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
+<div id="authBox">
+    <input id="email" placeholder="Admin ID">
+    <input id="password" type="password" placeholder="Passphrase">
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
-  </div>
 </div>
 
 <table id="table" class="locked-content">
@@ -85,7 +80,7 @@ th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; 
 
 <div id="jarvis-container">
     <div id="jarvis-bubble"><div id="jarvis-text">Awaiting orders, Sir.</div></div>
-    <div id="jarvis-orb"><div style="color:var(--accent); font-weight:bold; font-size:10px;">JARVIS</div></div>
+    <div id="jarvis-orb"><span style="color:var(--accent); font-weight:bold; font-size:10px;">JARVIS</span></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -93,6 +88,8 @@ th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+const GEMINI_KEY = "AIzaSyBsRLrUe67LLSPgr_lQaKB-xINgUgSuzmI";
+
 firebase.initializeApp({
   apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain:"strenght-a9f37.firebaseapp.com",
@@ -103,63 +100,34 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.database();
 
-const emailEl=document.getElementById("email"), passEl=document.getElementById("password"),
-      loginBtn=document.getElementById("loginBtn"), logoutBtn=document.getElementById("logoutBtn"),
-      titleEl=document.getElementById("title"), descEl=document.getElementById("desc"),
-      tbody=document.getElementById("tbody"), table=document.getElementById("table"),
-      updateBanner=document.getElementById("lastUpdateBanner");
+// UI Elements
+const orb = document.getElementById('jarvis-orb');
+const jText = document.getElementById('jarvis-text');
+const jBubble = document.getElementById('jarvis-bubble');
+const synth = window.speechSynthesis;
 
-let isAdmin=false;
-
-loginBtn.onclick=()=>auth.signInWithEmailAndPassword(emailEl.value,passEl.value);
-logoutBtn.onclick=()=>auth.signOut();
-
+// 1. DATA SYNC
 auth.onAuthStateChanged(user=>{
-  isAdmin=!!user;
-  table.classList.toggle("locked-content",!isAdmin);
-  [titleEl,descEl,tbody].forEach(el=>el.contentEditable=isAdmin);
-  loginBtn.style.display=user?"none":"inline-block";
-  emailEl.style.display=user?"none":"inline-block";
-  passEl.style.display=user?"none":"inline-block";
-  logoutBtn.style.display=user?"inline-block":"none";
+  const isAdmin = !!user;
+  document.getElementById("table").classList.toggle("locked-content", !isAdmin);
+  document.getElementById("loginBtn").style.display = user ? "none" : "inline-block";
+  document.getElementById("logoutBtn").style.display = user ? "inline-block" : "none";
 });
+
+document.getElementById("loginBtn").onclick=()=>auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value);
+document.getElementById("logoutBtn").onclick=()=>auth.signOut();
 
 db.ref("log").on("value", snap=>{
   const d=snap.val()||{};
-  titleEl.innerText=d.title||"Strength Log";
-  descEl.innerHTML=d.desc||"";
-  tbody.innerHTML=d.table||"";
+  document.getElementById("title").innerText=d.title||"Strength Log";
+  document.getElementById("desc").innerHTML=d.desc||"";
+  document.getElementById("tbody").innerHTML=d.table||"";
 });
 
-// --- GEMINI LOGIC ---
-const orb = document.getElementById('jarvis-orb');
-const jText = document.getElementById('jarvis-text');
-const synth = window.speechSynthesis;
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-const API_KEY = "AIzaSyBsRLrUe67LLSPgr_lQaKB-xINgUgSuzmI";
-
-async function askGemini(input) {
-  jText.innerText = "Thinking...";
-  const data = document.getElementById("tbody").innerText;
-  const prompt = `Context: This is Errah's Strength Log. Table Data: ${data}. Role: You are JARVIS, a modern female AI coach. Call him Sir. Be brief. Question: ${input}`;
-  
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const json = await res.json();
-    const reply = json.candidates[0].content.parts[0].text;
-    jarvisSay(reply);
-  } catch (e) {
-    jarvisSay("Sir, the neural link is failing. Check the console.");
-  }
-}
-
+// 2. JARVIS SPEECH ENGINE
 function jarvisSay(msg) {
   synth.cancel();
+  orb.className = ""; // Reset animations
   const utter = new SpeechSynthesisUtterance(msg);
   const voices = synth.getVoices();
   utter.voice = voices.find(v => v.name.includes("Google") && v.lang.includes("en")) || voices[0];
@@ -170,22 +138,65 @@ function jarvisSay(msg) {
   utter.onend = () => orb.classList.remove('speaking');
 }
 
-orb.onclick = () => {
-  document.getElementById("jarvis-bubble").style.display = "block";
-  jarvisSay("Neural link established, Sir.");
-};
+// 3. GEMINI AI LOGIC
+async function askGemini(userInput) {
+  jBubble.style.display = "block";
+  jText.innerText = "Thinking...";
+  orb.className = "thinking"; // Pulsing blue
 
-if(recognition) {
-  recognition.onresult = (e) => askGemini(e.results[0][0].transcript);
-  orb.onmousedown = () => { recognition.start(); orb.classList.add('listening-active'); };
-  orb.onmouseup = () => { recognition.stop(); orb.classList.remove('listening-active'); };
+  const tableData = document.getElementById("tbody").innerText;
+  const promptBody = {
+    contents: [{
+      parts: [{ text: `You are JARVIS, a robotic female AI. User is Errah (call him Sir). Table: ${tableData}. Question: ${userInput}` }]
+    }]
+  };
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(promptBody)
+    });
+
+    const result = await response.json();
+    
+    // Check if the AI actually replied
+    if (result.candidates && result.candidates[0].content) {
+        const reply = result.candidates[0].content.parts[0].text;
+        jarvisSay(reply);
+    } else {
+        throw new Error("Safety Block or Empty Response");
+    }
+
+  } catch (error) {
+    console.error(error);
+    orb.className = "error-glow";
+    jarvisSay("Sir, the Gemini core is offline or the prompt was blocked. Check your connection.");
+  }
 }
+
+// 4. VOICE RECOGNITION
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(SpeechRecognition) {
+  const recognition = new SpeechRecognition();
+  recognition.onresult = (e) => askGemini(e.results[0][0].transcript);
+  recognition.onerror = () => orb.className = "error-glow";
+  
+  orb.onmousedown = () => { recognition.start(); orb.className = "listening-active"; };
+  orb.onmouseup = () => { recognition.stop(); };
+}
+
+orb.onclick = () => {
+    if(jBubble.style.display === "none") {
+        jBubble.style.display = "block";
+        jarvisSay("Neural link established. Awaiting input, Sir.");
+    }
+};
 
 // TIMER
 const targetDate=new Date("February 3, 2026 00:00:00").getTime();
 setInterval(()=>{
   const diff=targetDate-Date.now();
-  if(diff<=0){ document.getElementById("timer").textContent="RM DAY 🔥"; return; }
   const d=Math.floor(diff/86400000), h=Math.floor(diff/3600000)%24, m=Math.floor(diff/60000)%60, s=Math.floor(diff/1000)%60;
   document.getElementById("timer").textContent=`${d}d ${h}h ${m}m ${s}s`;
 },1000);
