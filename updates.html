@@ -11,39 +11,42 @@
   --text:#eef0f6; --muted:#9aa1b3; --accent:#cfd6ff; --danger:#ff6b6b;
 }
 body{ margin:0; padding:20px; font-family:Inter,sans-serif; background:var(--bg); color:var(--text); }
+
+/* Navigation */
 .nav-bar { display: flex; gap: 8px; margin-bottom: 25px; justify-content: center; }
 .nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; flex: 1; text-align: center; }
 .active-nav { background: var(--accent); color: #000; }
-.banner { font-size: 0.8rem; color: var(--muted); margin-bottom: 20px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; text-align: center; }
 
 /* Admin Controls */
 #adminControls { display: none; margin-bottom: 20px; text-align: right; }
-#logoutBtn { background: rgba(255,107,107,0.1); border: 1px solid var(--danger); color: var(--danger); padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+#logoutBtn { background: rgba(255,107,107,0.1); border: 1px solid var(--danger); color: var(--danger); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; border: 1px solid var(--danger); }
 
-#postBox{ display:none; background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:15px; margin-bottom:20px; }
-#postBox textarea{ width:100%; min-height:80px; background:#0f1324; color:#fff; border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; outline: none; font-family: inherit; }
+/* Posting Area */
+#postBox{ display:none; background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:15px; margin-bottom:25px; }
+#postBox textarea{ width:100%; min-height:80px; background:#0f1324; color:#fff; border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; outline: none; font-family: inherit; resize: vertical; }
 #postBtn { background:var(--accent); color:#000; border:none; padding:12px 20px; border-radius:10px; font-weight:700; cursor:pointer; width: 100%; }
 
-.update{ background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:15px; margin-bottom:12px; }
-.time{ font-size:.75rem; color:var(--muted); margin-bottom:8px; font-weight: 500; }
-.delete{ color:var(--danger); font-size:.75rem; cursor:pointer; background:none; border:none; margin-top:10px; padding: 0; opacity: 0.7; }
-.delete:hover { opacity: 1; }
+/* Update Feed */
+.update{ background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:18px; margin-bottom:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.time{ font-size:0.75rem; color:var(--accent); margin-bottom:8px; font-weight: 600; letter-spacing: 0.02em; }
+.post-content { line-height: 1.5; color: var(--text); }
+.delete{ color:var(--danger); font-size:0.75rem; cursor:pointer; background:none; border:none; margin-top:12px; padding: 0; opacity: 0.6; }
+.delete:hover { opacity: 1; text-decoration: underline; }
 </style>
 </head>
 <body>
+
 <div class="nav-bar">
   <a href="errahworld.html" class="nav-btn">🏋️ Log</a>
   <a href="updates.html" class="nav-btn active-nav">📢 Updates</a>
 </div>
-
-<div id="lastUpdateDisplay" class="banner">Checking for news...</div>
 
 <div id="adminControls">
   <button id="logoutBtn">Logout Admin</button>
 </div>
 
 <div id="postBox">
-  <textarea id="postText" placeholder="What's the latest?"></textarea>
+  <textarea id="postText" placeholder="Write an update..."></textarea>
   <button id="postBtn">Post Update</button>
 </div>
 
@@ -54,6 +57,7 @@ body{ margin:0; padding:20px; font-family:Inter,sans-serif; background:var(--bg)
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+// Firebase Config
 firebase.initializeApp({
   apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
   authDomain:"strenght-a9f37.firebaseapp.com",
@@ -86,6 +90,7 @@ function getFormattedDate() {
   return `${day} ${month} ${year} ${hours}:${minutes} ${ampm}`;
 }
 
+// Auth Listener
 auth.onAuthStateChanged(user => {
   const isUser = !!user;
   document.getElementById("postBox").style.display = isUser ? "block" : "none";
@@ -93,10 +98,12 @@ auth.onAuthStateChanged(user => {
   loadUpdates(isUser);
 });
 
+// Logout logic
 document.getElementById("logoutBtn").onclick = () => {
   if(confirm("Sign out of admin mode?")) auth.signOut();
 };
 
+// Post logic
 document.getElementById("postBtn").onclick = () => {
   const text = document.getElementById("postText").value;
   if(!text.trim()) return;
@@ -109,21 +116,23 @@ document.getElementById("postBtn").onclick = () => {
     ts: Date.now() 
   });
   
-  db.ref("meta/lastUpdate").set(dateStr);
   document.getElementById("postText").value = "";
 };
 
+// Load Feed
 function loadUpdates(isAdmin) {
   db.ref("updates").orderByChild("ts").on("value", snap => {
     const updatesEl = document.getElementById("updates");
     updatesEl.innerHTML = "";
     const data = snap.val() || {};
+    
+    // Sort posts to show newest first
     Object.entries(data).reverse().forEach(([id, post]) => {
       const div = document.createElement("div");
       div.className = "update";
       div.innerHTML = `
         <div class="time">${post.time}</div>
-        <div>${post.text.replace(/\n/g,"<br>")}</div>
+        <div class="post-content">${post.text.replace(/\n/g,"<br>")}</div>
         ${isAdmin ? `<button class="delete" onclick="deleteUpdate('${id}')">Delete Post</button>` : ""}
       `;
       updatesEl.appendChild(div);
@@ -131,10 +140,7 @@ function loadUpdates(isAdmin) {
   });
 }
 
-db.ref("meta/lastUpdate").on("value", snap => {
-  document.getElementById("lastUpdateDisplay").innerText = "Website Last Updated: " + (snap.val() || "No updates yet");
-});
-
+// Delete logic
 window.deleteUpdate = (id) => { if(confirm("Permanently delete this post?")) db.ref("updates/"+id).remove(); };
 </script>
 </body>
