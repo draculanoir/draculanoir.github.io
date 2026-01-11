@@ -7,36 +7,23 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 :root{
-  --bg:#0a0c13;
-  --panel:#161a2a;
-  --border:rgba(255,255,255,.08);
-  --text:#eef0f6;
-  --muted:#9aa1b3;
-  --accent:#cfd6ff;
-  --danger:#ff6b6b;
+  --bg:#0a0c13; --panel:#161a2a; --border:rgba(255,255,255,.08);
+  --text:#eef0f6; --muted:#9aa1b3; --accent:#cfd6ff; --danger:#ff6b6b;
 }
-*{ box-sizing:border-box }
-body{
-  margin:0; padding:28px;
-  font-family:Inter,sans-serif;
-  background:radial-gradient(1000px 500px at top,#1c2340,transparent 60%),var(--bg);
-  color:var(--text);
-}
+body{ margin:0; padding:28px; font-family:Inter,sans-serif; background:var(--bg); color:var(--text); }
 .container{ max-width:800px; margin:auto; }
 .nav-bar { display: flex; gap: 15px; margin-bottom: 25px; }
-.nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 16px; border-radius: 10px; text-decoration: none; font-size: 0.9rem; }
-
+.nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 16px; border-radius: 10px; text-decoration: none; }
+.banner { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; padding: 10px; border-left: 3px solid var(--accent); background: rgba(207,214,255,0.05); }
 #authBox{ display:flex; gap:10px; margin-bottom:20px; }
-#authBox input{ background:#0f1324; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:10px; }
+#authBox input{ background:#0f1324; border:1px solid var(--border); color:#fff; padding:10px; border-radius:10px; }
 #authBox button{ background:#3a43a0; border:none; color:#fff; padding:10px 15px; border-radius:10px; cursor:pointer; }
-
 #postBox{ display:none; background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:18px; margin-bottom:26px; }
 #postBox textarea{ width:100%; min-height:80px; background:#0f1324; color:#fff; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; }
 #postBtn { background:var(--accent); color:#000; border:none; padding:10px 20px; border-radius:10px; font-weight:700; cursor:pointer; }
-
-.update{ background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:16px; margin-bottom:12px; position:relative; }
+.update{ background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:16px; margin-bottom:12px; }
 .time{ font-size:.7rem; color:var(--muted); margin-bottom:5px; }
-.delete{ color:var(--danger); font-size:.75rem; cursor:pointer; background:none; border:none; padding:0; margin-top:10px; display:block;}
+.delete{ color:var(--danger); font-size:.75rem; cursor:pointer; background:none; border:none; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -47,16 +34,17 @@ body{
   </div>
 
   <h1>Updates</h1>
+  <div id="lastUpdateDisplay" class="banner">Checking for updates...</div>
 
   <div id="authBox">
-    <input id="email" placeholder="email">
+    <input id="email" placeholder="admin email">
     <input id="password" type="password" placeholder="password">
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
 
   <div id="postBox">
-    <textarea id="postText" placeholder="What's the latest?"></textarea>
+    <textarea id="postText" placeholder="What's new today?"></textarea>
     <button id="postBtn">Post update</button>
   </div>
 
@@ -80,17 +68,16 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 const db = firebase.database();
-
-let isAdmin = false;
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
 auth.onAuthStateChanged(user => {
-  isAdmin = !!user;
-  document.getElementById("postBox").style.display = isAdmin ? "block" : "none";
-  document.getElementById("loginBtn").style.display = user ? "none" : "inline-block";
-  document.getElementById("email").style.display = user ? "none" : "inline-block";
-  document.getElementById("password").style.display = user ? "none" : "inline-block";
-  document.getElementById("logoutBtn").style.display = user ? "inline-block" : "none";
-  loadUpdates();
+  const isUser = !!user;
+  document.getElementById("postBox").style.display = isUser ? "block" : "none";
+  document.getElementById("loginBtn").style.display = isUser ? "none" : "inline-block";
+  document.getElementById("email").style.display = isUser ? "none" : "inline-block";
+  document.getElementById("password").style.display = isUser ? "none" : "inline-block";
+  document.getElementById("logoutBtn").style.display = isUser ? "inline-block" : "none";
+  loadUpdates(isUser);
 });
 
 document.getElementById("loginBtn").onclick = () => 
@@ -100,15 +87,14 @@ document.getElementById("logoutBtn").onclick = () => auth.signOut();
 document.getElementById("postBtn").onclick = () => {
   const text = document.getElementById("postText").value;
   if(!text.trim()) return;
-  db.ref("updates").push({
-    text: text,
-    time: new Date().toLocaleString(),
-    ts: Date.now()
-  });
+  const now = new Date().toLocaleString();
+
+  db.ref("updates").push({ text: text, time: now, ts: Date.now() });
+  db.ref("meta/lastUpdate").set(now); // Set the global last update time
   document.getElementById("postText").value = "";
 };
 
-function loadUpdates() {
+function loadUpdates(isAdmin) {
   db.ref("updates").orderByChild("ts").on("value", snap => {
     const updatesEl = document.getElementById("updates");
     updatesEl.innerHTML = "";
@@ -125,6 +111,10 @@ function loadUpdates() {
     });
   });
 }
+
+db.ref("meta/lastUpdate").on("value", snap => {
+  document.getElementById("lastUpdateDisplay").innerText = "Website Last Updated: " + (snap.val() || "Never");
+});
 
 window.deleteUpdate = (id) => { if(confirm("Delete this?")) db.ref("updates/"+id).remove(); };
 </script>
