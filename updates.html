@@ -1,140 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>System Logs | Updates</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
-        
-        :root {
-            --bg: #0a0e1a;
-            --panel: rgba(22, 26, 42, 0.8);
-            --border: rgba(99, 102, 241, 0.2);
-            --text: #f8fafc;
-            --muted: #64748b;
-            --accent: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.3);
-            --danger: #ef4444;
-        }
+<meta charset="UTF-8">
+<title>Updates</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#0a0c13; --panel:#161a2a; --border:rgba(255,255,255,.08);
+  --text:#eef0f6; --muted:#9aa1b3; --accent:#cfd6ff; --danger:#ff6b6b;
+}
+body{ margin:0; padding:20px; font-family:Inter,sans-serif; background:var(--bg); color:var(--text); }
 
-        body { 
-            margin: 0; 
-            padding: 40px 20px; 
-            font-family: 'Inter', sans-serif; 
-            background: radial-gradient(circle at top right, #111827, #0a0e1a); 
-            color: var(--text); 
-            min-height: 100vh;
-        }
+/* Navigation */
+.nav-bar { display: flex; gap: 8px; margin-bottom: 25px; justify-content: center; }
+.nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; flex: 1; text-align: center; }
+.active-nav { background: var(--accent); color: #000; }
 
-        /* Navigation */
-        .nav-bar { display: flex; gap: 10px; margin-bottom: 40px; justify-content: center; max-width: 600px; margin-inline: auto; }
-        .nav-btn { 
-            background: rgba(15, 20, 35, 0.5); 
-            border: 1px solid var(--border); 
-            color: var(--muted); 
-            padding: 12px 20px; 
-            border-radius: 12px; 
-            text-decoration: none; 
-            font-size: 0.9rem; 
-            font-weight: 600;
-            transition: 0.3s;
-            flex: 1;
-            text-align: center;
-        }
-        .active-nav { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+/* Admin Controls */
+#adminControls { display: none; margin-bottom: 20px; text-align: right; }
+#logoutBtn { background: rgba(255,107,107,0.1); border: 1px solid var(--danger); color: var(--danger); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; border: 1px solid var(--danger); }
 
-        /* Admin Section */
-        #adminArea { max-width: 600px; margin: 0 auto 30px; display: none; }
-        #postBox { 
-            background: var(--panel); 
-            border: 1px solid var(--border); 
-            border-radius: 20px; 
-            padding: 20px; 
-            backdrop-filter: blur(10px);
-        }
-        textarea { 
-            width: 100%; 
-            min-height: 100px; 
-            background: rgba(0,0,0,0.3); 
-            color: #fff; 
-            border: 1px solid var(--border); 
-            border-radius: 12px; 
-            padding: 15px; 
-            margin-bottom: 15px; 
-            outline: none; 
-            font-family: inherit; 
-            resize: none;
-            box-sizing: border-box;
-        }
-        #postBtn { 
-            background: var(--accent); 
-            color: white; 
-            border: none; 
-            padding: 14px; 
-            border-radius: 12px; 
-            font-weight: 800; 
-            cursor: pointer; 
-            width: 100%; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+/* Posting Area */
+#postBox{ display:none; background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:15px; margin-bottom:25px; }
+#postBox textarea{ width:100%; min-height:80px; background:#0f1324; color:#fff; border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; outline: none; font-family: inherit; resize: vertical; }
+#postBtn { background:var(--accent); color:#000; border:none; padding:12px 20px; border-radius:10px; font-weight:700; cursor:pointer; width: 100%; }
 
-        /* Feed */
-        #updates { max-width: 600px; margin: 0 auto; }
-        .update { 
-            background: var(--panel); 
-            border-left: 4px solid var(--accent);
-            border-top: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            border-radius: 12px; 
-            padding: 20px; 
-            margin-bottom: 16px; 
-            animation: fadeIn 0.5s ease forwards;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .time { 
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem; 
-            color: var(--accent); 
-            margin-bottom: 10px; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .post-content { line-height: 1.6; font-size: 1rem; color: #e2e8f0; }
-        
-        .delete-btn {
-            background: none; border: none; color: var(--danger);
-            font-size: 0.75rem; margin-top: 15px; cursor: pointer;
-            padding: 0; opacity: 0.5; font-weight: 600;
-        }
-        .delete-btn:hover { opacity: 1; }
-
-        #logoutBtn {
-            display: block; margin: 20px auto; background: none; border: none;
-            color: var(--muted); cursor: pointer; font-size: 0.8rem;
-        }
-    </style>
+/* Update Feed */
+.update{ background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:18px; margin-bottom:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.time{ font-size:0.75rem; color:var(--accent); margin-bottom:8px; font-weight: 600; letter-spacing: 0.02em; }
+.post-content { line-height: 1.5; color: var(--text); }
+.delete{ color:var(--danger); font-size:0.75rem; cursor:pointer; background:none; border:none; margin-top:12px; padding: 0; opacity: 0.6; }
+.delete:hover { opacity: 1; text-decoration: underline; }
+</style>
 </head>
 <body>
 
 <div class="nav-bar">
-  <a href="index.html" class="nav-btn">Project Atlas</a>
-  <a href="updates.html" class="nav-btn active-nav">Updates</a>
+  <a href="errahworld.html" class="nav-btn">🏋️ Log</a>
+  <a href="updates.html" class="nav-btn active-nav">📢 Updates</a>
 </div>
 
-<div id="adminArea">
-    <div id="postBox">
-        <textarea id="postText" placeholder="Log a new strength update (e.g., 'Single Leg RDL +5lb')..."></textarea>
-        <button id="postBtn">Broadcast Update</button>
-    </div>
-    <button id="logoutBtn" onclick="auth.signOut()">[ TERMINATE ADMIN SESSION ]</button>
+<div id="adminControls">
+  <button id="logoutBtn">Logout Admin</button>
 </div>
 
-<div id="updates">
-    </div>
+<div id="postBox">
+  <textarea id="postText" placeholder="Write an update..."></textarea>
+  <button id="postBtn">Post Update</button>
+</div>
+
+<div id="updates"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -142,80 +58,90 @@
 
 <script>
 // Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
-  authDomain: "strenght-a9f37.firebaseapp.com",
-  databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
-  projectId: "strenght-a9f37",
-  storageBucket: "strenght-a9f37.firebasestorage.app",
-  messagingSenderId: "469926449178",
-  appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
-};
+firebase.initializeApp({
+  apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
+  authDomain:"strenght-a9f37.firebaseapp.com",
+  databaseURL:"https://strenght-a9f37-default-rtdb.firebaseio.com",
+  projectId:"strenght-a9f37",
+  storageBucket:"strenght-a9f37.firebasestorage.app",
+  messagingSenderId:"469926449178",
+  appId:"1:469926449178:web:b9623947a1c1865b0f81a3"
+});
 
-firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// Date Formatter
+// Custom Date Formatter: "25 January 2026 8:10 PM"
 function getFormattedDate() {
   const now = new Date();
-  const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  return `${dateStr} @ ${timeStr}`;
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const day = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  
+  let hours = now.getHours();
+  let minutes = now.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; 
+  minutes = minutes < 10 ? '0'+minutes : minutes;
+  
+  return `${day} ${month} ${year} ${hours}:${minutes} ${ampm}`;
 }
 
-// Auth State
+// Auth Listener
 auth.onAuthStateChanged(user => {
-  document.getElementById("adminArea").style.display = user ? "block" : "none";
-  loadUpdates(!!user);
+  const isUser = !!user;
+  document.getElementById("postBox").style.display = isUser ? "block" : "none";
+  document.getElementById("adminControls").style.display = isUser ? "block" : "none";
+  loadUpdates(isUser);
 });
 
-// POST UPDATE FUNCTION
-document.getElementById("postBtn").addEventListener("click", function() {
+// Logout logic
+document.getElementById("logoutBtn").onclick = () => {
+  if(confirm("Sign out of admin mode?")) auth.signOut();
+};
+
+// Post logic
+document.getElementById("postBtn").onclick = () => {
   const text = document.getElementById("postText").value;
   if(!text.trim()) return;
-
-  const newPostRef = db.ref("updates").push();
-  newPostRef.set({
-    text: text,
-    time: getFormattedDate(),
-    ts: Date.now()
-  }).then(() => {
-      document.getElementById("postText").value = "";
-  }).catch(err => {
-      alert("Post Failed: Ensure you are logged in as admin.");
+  
+  const dateStr = getFormattedDate();
+  
+  db.ref("updates").push({ 
+    text: text, 
+    time: dateStr, 
+    ts: Date.now() 
   });
-});
+  
+  document.getElementById("postText").value = "";
+};
 
-// LOAD UPDATES
+// Load Feed
 function loadUpdates(isAdmin) {
   db.ref("updates").orderByChild("ts").on("value", snap => {
-    const container = document.getElementById("updates");
-    container.innerHTML = "";
+    const updatesEl = document.getElementById("updates");
+    updatesEl.innerHTML = "";
     const data = snap.val() || {};
     
-    // Sort Newest First
-    const entries = Object.entries(data).sort((a, b) => b[1].ts - a[1].ts);
-    
-    entries.forEach(([id, post]) => {
-      const card = document.createElement("div");
-      card.className = "update";
-      card.innerHTML = `
-        <div class="time">LOGGED: ${post.time}</div>
+    // Sort posts to show newest first
+    Object.entries(data).reverse().forEach(([id, post]) => {
+      const div = document.createElement("div");
+      div.className = "update";
+      div.innerHTML = `
+        <div class="time">${post.time}</div>
         <div class="post-content">${post.text.replace(/\n/g,"<br>")}</div>
-        ${isAdmin ? `<button class="delete-btn" onclick="deletePost('${id}')">DELETE LOG</button>` : ""}
+        ${isAdmin ? `<button class="delete" onclick="deleteUpdate('${id}')">Delete Post</button>` : ""}
       `;
-      container.appendChild(card);
+      updatesEl.appendChild(div);
     });
   });
 }
 
-// DELETE FUNCTION
-window.deletePost = (id) => {
-    if(confirm("Permanently erase this log entry?")) {
-        db.ref("updates/" + id).remove();
-    }
-}
+// Delete logic
+window.deleteUpdate = (id) => { if(confirm("Permanently delete this post?")) db.ref("updates/"+id).remove(); };
 </script>
 </body>
 </html>
