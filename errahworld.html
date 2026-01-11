@@ -24,7 +24,7 @@
             margin: 0; padding: 20px; font-family: "Inter", sans-serif;
             background: radial-gradient(1200px 600px at top, #1c2340, transparent 60%), var(--bg-main);
             color: var(--text);
-            padding-bottom: 120px; 
+            padding-bottom: 40px; 
         }
 
         /* Navigation */
@@ -53,20 +53,6 @@
         th, td { padding: 14px; text-align: center; border-bottom: 1px solid var(--border); outline: none; }
         th { background: var(--bg-header); color: var(--accent); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.1em; }
         .locked-content { pointer-events: none; opacity: 0.9; }
-
-        /* JARVIS UI */
-        #jarvis-container { position: fixed; bottom: 30px; right: 25px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-end; }
-        #jarvis-bubble { display: none; background: rgba(10, 12, 19, 0.96); border: 1px solid var(--accent); padding: 20px; border-radius: 24px; width: 280px; margin-bottom: 20px; backdrop-filter: blur(20px); box-shadow: 0 0 30px rgba(207, 214, 255, 0.2); color: var(--text); border-bottom-right-radius: 4px; transition: 0.3s; }
-        #jarvis-status { font-size: 0.65rem; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1.5px; }
-        #jarvis-text { font-size: 0.95rem; line-height: 1.5; font-weight: 400; }
-        #jarvis-orb { width: 70px; height: 70px; background: #000; border: 2px solid var(--accent); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: 0.5s; box-shadow: 0 0 20px rgba(207, 214, 255, 0.3); }
-        #inner-glow { position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: inset 0 0 20px var(--accent); opacity: 0.4; }
-        .voice-bars { display: flex; gap: 4px; align-items: center; }
-        .voice-bars div { width: 3px; height: 12px; background: var(--accent); border-radius: 3px; transition: 0.2s; }
-        
-        .listening-active #v-bars div { animation: wave 0.4s infinite ease-in-out; background: #ff6b6b; }
-        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 30px; } }
-        #jarvis-orb.speaking { box-shadow: 0 0 40px var(--accent); border-color: #fff; }
     </style>
 </head>
 <body>
@@ -100,24 +86,12 @@
         <tbody id="tbody"></tbody>
     </table>
 
-    <div id="jarvis-container">
-        <div id="jarvis-bubble">
-            <div id="jarvis-status">AI ACTIVE</div>
-            <div id="jarvis-text">Scanning environment...</div>
-        </div>
-        <div id="jarvis-orb">
-            <div id="inner-glow"></div>
-            <div class="voice-bars" id="v-bars">
-                <div></div><div></div><div></div><div></div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
+        // Initialization
         firebase.initializeApp({
             apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain:"strenght-a9f37.firebaseapp.com",
@@ -132,10 +106,14 @@
         const db = firebase.database();
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-        const emailEl = document.getElementById("email"), passEl = document.getElementById("password"),
-              loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn"),
-              titleEl = document.getElementById("title"), descEl = document.getElementById("desc"),
-              tbody = document.getElementById("tbody"), table = document.getElementById("table"),
+        const emailEl = document.getElementById("email"), 
+              passEl = document.getElementById("password"),
+              loginBtn = document.getElementById("loginBtn"), 
+              logoutBtn = document.getElementById("logoutBtn"),
+              titleEl = document.getElementById("title"), 
+              descEl = document.getElementById("desc"),
+              tbody = document.getElementById("tbody"), 
+              table = document.getElementById("table"),
               updateBanner = document.getElementById("lastUpdateBanner");
 
         let isAdmin = false;
@@ -146,6 +124,7 @@
             return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} ${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
         }
 
+        // Auth Actions
         loginBtn.onclick = () => auth.signInWithEmailAndPassword(emailEl.value, passEl.value).catch(e => alert(e.message));
         logoutBtn.onclick = () => { if(confirm("Terminate session?")) auth.signOut(); };
 
@@ -159,6 +138,7 @@
             logoutBtn.style.display = user ? "inline-block" : "none";
         });
 
+        // Data Sync
         db.ref("log").once("value", snap => {
             const d = snap.val() || {};
             titleEl.innerText = d.title || "Strength Log";
@@ -178,100 +158,17 @@
         }
         [titleEl, descEl, tbody].forEach(el => el.addEventListener("blur", saveData));
 
-        // TIMER
+        // Timer Logic
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
             if(diff <= 0) { document.getElementById("timer").textContent = "LIMIT BREAKER DAY 🔥"; return; }
-            const d = Math.floor(diff/86400000), h = Math.floor(diff/3600000)%24, m = Math.floor(diff/60000)%60, s = Math.floor(diff/1000)%60;
+            const d = Math.floor(diff/86400000), 
+                  h = Math.floor(diff/3600000)%24, 
+                  m = Math.floor(diff/60000)%60, 
+                  s = Math.floor(diff/1000)%60;
             document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
         }, 1000);
-
-        // --- MODERN AI JARVIS (FEMALE + ECHO) ---
-        const orb = document.getElementById('jarvis-orb');
-        const bubble = document.getElementById('jarvis-bubble');
-        const jText = document.getElementById('jarvis-text');
-        const jStatus = document.getElementById('jarvis-status');
-        const synth = window.speechSynthesis;
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-
-        function jarvisSay(msg) {
-            synth.cancel();
-            const utter = new SpeechSynthesisUtterance(msg);
-            
-            // Voice selection: prioritize Female AI
-            const voices = synth.getVoices();
-            utter.voice = voices.find(v => (v.name.includes("Google US English") || v.name.includes("Female") || v.name.includes("Zira")) && v.lang.includes("en")) || voices[0];
-            
-            utter.pitch = 1.15; // Slightly higher for that AI feel
-            utter.rate = 1.05;
-            
-            jText.innerText = msg;
-            orb.classList.add('speaking');
-
-            // Simulate "Echo/Futuristic" cadence by splitting sentences if needed, 
-            // but for now, we rely on the clean modern female voice profile.
-            synth.speak(utter);
-            utter.onend = () => orb.classList.remove('speaking');
-        }
-
-        function getRecord(liftName) {
-            const rows = document.querySelectorAll("#tbody tr");
-            let found = "My database has no record for " + liftName;
-            rows.forEach(row => {
-                if(row.innerText.toLowerCase().includes(liftName.toLowerCase())) {
-                    found = `Archive found. For ${row.cells[0].innerText}, your current is ${row.cells[1].innerText}. Estimated max is ${row.cells[2].innerText}. Status: ${row.cells[3].innerText}.`;
-                }
-            });
-            return found;
-        }
-
-        orb.onclick = () => {
-            bubble.style.display = (bubble.style.display === 'none' || !bubble.style.display) ? 'block' : 'none';
-            if(bubble.style.display === 'block') {
-                if(isAdmin) {
-                    jarvisSay("Neural link established. Welcome back, Sir. Analyzing your current strength metrics.");
-                    jStatus.innerText = "CO-PILOT MODE";
-                } else {
-                    jarvisSay("Public access granted. I am ready to provide Errah's performance statistics.");
-                    jStatus.innerText = "ANALYTIC MODE";
-                }
-            }
-        };
-
-        if(recognition) {
-            recognition.lang = 'en-US';
-            orb.onmousedown = () => { 
-                recognition.start(); 
-                orb.classList.add('listening-active'); 
-                jStatus.innerText = "LISTENING..."; 
-            };
-            orb.onmouseup = () => { 
-                recognition.stop(); 
-                orb.classList.remove('listening-active'); 
-            };
-
-            recognition.onresult = (event) => {
-                const speech = event.results[0][0].transcript.toLowerCase();
-                const contains = (words) => words.some(word => speech.includes(word));
-
-                if(isAdmin) {
-                    if(contains(["level", "doing", "progress"])) jarvisSay("My sensors indicate consistent growth. Your neural-muscular efficiency is peaking, Sir.");
-                    else if(contains(["stats", "record", "max", "lift", "much"])) {
-                        let lift = speech.replace(/what is|my|record|for|stats|on|show|me|how/g, "").trim();
-                        jarvisSay(getRecord(lift || "squat"));
-                    }
-                    else if(contains(["tired", "hard", "heavy", "exhausted"])) jarvisSay("Input acknowledged. However, the log requires data. Execute the set, Sir.");
-                    else jarvisSay("Data processed, but I require clearer parameters for that request.");
-                } else {
-                    if(contains(["record", "stats", "lift", "max", "much"])) {
-                        let lift = speech.replace(/what is|his|record|for|stats|on|show|me/g, "").trim();
-                        jarvisSay(getRecord(lift || "squat"));
-                    } else jarvisSay("My core protocols only allow me to share public performance data.");
-                }
-            };
-        }
     </script>
 </body>
 </html>
