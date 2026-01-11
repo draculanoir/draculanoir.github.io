@@ -6,373 +6,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
-        
         :root {
-            --bg-main: #0a0e1a;
-            --bg-secondary: #0f1423;
-            --bg-panel: rgba(15, 20, 35, 0.85);
-            --accent-primary: #6366f1;
-            --accent-secondary: #8b5cf6;
-            --accent-glow: rgba(99, 102, 241, 0.35);
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --text-muted: #64748b;
-            --border-subtle: rgba(148, 163, 184, 0.1);
-            --border-glass: rgba(255, 255, 255, 0.12);
-            --success: #10b981;
-            --warning: #f59e0b;
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.12);
-            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.2);
-            --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.35);
-            --shadow-xl: 0 30px 90px rgba(0, 0, 0, 0.5);
+            --bg-main: #0a0e1a; --bg-secondary: #0f1423; --bg-panel: rgba(15, 20, 35, 0.85);
+            --accent-primary: #6366f1; --accent-secondary: #8b5cf6; --accent-glow: rgba(99, 102, 241, 0.35);
+            --text-primary: #f8fafc; --text-secondary: #cbd5e1; --border-glass: rgba(255, 255, 255, 0.12);
         }
-
-        /* Premium Animations */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); filter: blur(8px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.02); }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        /* Base Styles */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-secondary) 100%);
-            background-attachment: fixed;
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            padding: 40px 20px;
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
+            font-family: 'Inter', sans-serif; background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
         }
-
-        #bg-canvas {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; opacity: 0.25; pointer-events: none; filter: blur(1px);
-        }
-
-        .container {
-            width: 100%; max-width: 920px; margin: 0 auto;
-            animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            position: relative; z-index: 1;
-        }
-
-        /* Navigation */
+        .container { width: 100%; max-width: 920px; animation: fadeInUp 1.2s ease forwards; }
+        
+        /* Nav Fixed */
         .nav-bar { 
-            display: flex; gap: 6px; margin-bottom: 50px; background: var(--bg-panel);
-            padding: 8px; border-radius: 20px; border: 1px solid var(--border-glass);
-            width: fit-content; margin-inline: auto; backdrop-filter: blur(24px) saturate(180%);
-            box-shadow: var(--shadow-lg); animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            display: flex; gap: 6px; margin-bottom: 50px; background: var(--bg-panel); padding: 8px; 
+            border-radius: 20px; border: 1px solid var(--border-glass); width: fit-content; margin-inline: auto;
         }
-
         .nav-btn { 
             padding: 12px 28px; border-radius: 16px; text-decoration: none; font-size: 0.875rem; 
-            font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: all 0.3s;
+            font-weight: 600; color: var(--text-secondary); transition: 0.3s;
         }
+        .active-nav { color: #fff; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); }
 
-        .active-nav { color: #ffffff; font-weight: 700; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); }
-
-        /* Banner */
-        .last-updated-banner { 
-            font-size: 0.7rem; font-weight: 800; color: var(--accent-primary); 
-            text-align: center; margin-bottom: 16px; letter-spacing: 2px;
-            text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
-        }
-
-        h1 { 
-            margin: 0 0 20px; font-size: clamp(3rem, 12vw, 4.5rem); text-align: center; font-weight: 900; 
-            background: linear-gradient(135deg, #ffffff 0%, var(--accent-primary) 50%, var(--accent-secondary) 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -0.04em; animation: gradientShift 8s ease infinite; background-size: 200% auto;
-        }
-
-        .desc-box { 
-            padding: 32px 40px; margin-bottom: 48px; border-radius: 28px; background: var(--bg-panel);
-            border: 1px solid var(--border-glass); text-align: center; backdrop-filter: blur(32px);
-            box-shadow: var(--shadow-lg); font-size: 1.05rem;
-        }
-
-        /* Countdown */
-        .countdown {
-            margin-bottom: 48px; padding: 40px; 
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
-            border-radius: 32px; border: 1px solid var(--border-glass); display: flex; 
-            flex-direction: column; align-items: center; gap: 20px;
-        }
-
-        #timer { 
-            font-size: clamp(2rem, 8vw, 3.5rem); font-weight: 900; 
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Auth Box */
-        #authBox { display: flex; gap: 12px; margin-bottom: 48px; justify-content: center; flex-wrap: wrap; }
-        input { 
-            background: rgba(15, 20, 35, 0.7); border: 1px solid var(--border-subtle);
-            color: var(--text-primary); padding: 16px 24px; border-radius: 16px; outline: none;
-        }
-        button { 
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border: none; color: #ffffff; padding: 16px 32px; border-radius: 16px; font-weight: 700;
-            cursor: pointer; transition: 0.3s;
-        }
-
-        /* Tables & Containers */
-        .table-container { 
-            overflow: hidden; border-radius: 32px; border: 1px solid var(--border-glass);
-            box-shadow: var(--shadow-xl); background: var(--bg-panel); backdrop-filter: blur(32px);
-        }
-
+        .last-updated-banner { font-size: 0.7rem; font-weight: 800; color: var(--accent-primary); text-align: center; margin-bottom: 16px; letter-spacing: 2px; font-family: 'JetBrains Mono'; }
+        h1 { margin: 0 0 20px; font-size: clamp(3rem, 12vw, 4.5rem); text-align: center; font-weight: 900; color: white; }
+        #desc { padding: 32px 40px; margin-bottom: 48px; border-radius: 28px; background: var(--bg-panel); border: 1px solid var(--border-glass); text-align: center; }
+        .countdown { margin-bottom: 48px; padding: 40px; background: rgba(99, 102, 241, 0.1); border-radius: 32px; border: 1px solid var(--border-glass); text-align: center; }
+        #timer { font-size: 2.5rem; font-weight: 900; font-family: 'JetBrains Mono'; color: var(--accent-primary); }
+        .table-container { overflow: hidden; border-radius: 32px; border: 1px solid var(--border-glass); background: var(--bg-panel); }
         table { width: 100%; border-collapse: collapse; }
-        th { 
-            color: var(--accent-primary); padding: 24px 28px; font-size: 0.75rem; 
-            font-weight: 800; text-transform: uppercase; font-family: 'JetBrains Mono', monospace;
-        }
-        td { padding: 24px 28px; text-align: center; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); }
-        td:first-child { text-align: left; color: var(--text-primary); font-weight: 600; }
-
-        .updates-list {
-            padding: 40px;
-            color: var(--text-secondary);
-            font-family: 'JetBrains Mono', monospace;
-            line-height: 2;
-        }
-
-        /* Interaction Control */
-        .locked-content { pointer-events: none; user-select: text; }
-        .admin-editable { outline: 1px dashed var(--accent-primary); cursor: text !important; pointer-events: auto !important; }
-
-        @media (max-width: 768px) {
-            .nav-bar { padding: 6px; }
-            .nav-btn { padding: 10px 20px; font-size: 0.8rem; }
-            .table-container { overflow-x: auto; }
-        }
+        th { color: var(--accent-primary); padding: 20px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; }
+        td { padding: 20px; text-align: center; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        #authBox { display: flex; gap: 10px; margin-top: 40px; justify-content: center; }
+        input { background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; padding: 12px; border-radius: 12px; }
+        button { background: var(--accent-primary); color: white; border: none; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 700; }
+        .admin-editable { outline: 1px dashed var(--accent-primary); }
     </style>
 </head>
 <body>
-
-    <canvas id="bg-canvas"></canvas>
-
     <div class="container">
         <nav class="nav-bar">
-            <div id="nav-atlas" class="nav-btn active-nav">Project Atlas</div>
-            <div id="nav-updates" class="nav-btn">Updates</div>
+            <a href="index.html" class="nav-btn active-nav">Project Atlas</a>
+            <a href="updates.html" class="nav-btn">Updates</a>
         </nav>
-
-        <div id="lastUpdateBanner" class="last-updated-banner">ESTABLISHING NEURAL LINK...</div>
-
-        <div id="main-view">
-            <h1 id="title">Syncing</h1>
-            <div id="desc" class="desc-box">Decrypting strength data from secure servers...</div>
-
-            <div class="countdown">
-                <strong>NEXT RM CYCLE</strong>
-                <div id="timer">00D 00H 00M 00S</div>
-            </div>
-
-            <div class="table-container">
-                <table id="table" class="locked-content">
-                    <thead>
-                        <tr>
-                            <th style="text-align:left">Exercise</th>
-                            <th>Current</th>
-                            <th>1RM</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody">
-                        <tr><td colspan="4" style="height: 80px; opacity: 0.5;">INITIALIZING DATABASE...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <div id="lastUpdateBanner" class="last-updated-banner">NEURAL LINK ACTIVE</div>
+        <h1 id="title">Syncing</h1>
+        <div id="desc">Decrypting strength data...</div>
+        <div class="countdown">
+            <strong>NEXT RM CYCLE</strong>
+            <div id="timer">00D 00H 00M 00S</div>
         </div>
-
-        <div id="updates-view" style="display: none;">
-            <h1>System Logs</h1>
-            <div class="table-container">
-                <div id="updates-content" class="updates-list locked-content">
-                    • Loading system logs...
-                </div>
-            </div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Exercise</th><th>Current</th><th>1RM</th><th>Status</th></tr></thead>
+                <tbody id="tbody"></tbody>
+            </table>
         </div>
-
-        <div id="authBox" style="margin-top: 50px;">
-            <input id="email" placeholder="Admin ID" type="email">
+        <div id="authBox">
+            <input id="email" placeholder="Admin ID">
             <input id="password" type="password" placeholder="Keyphrase">
             <button id="loginBtn">Login</button>
-            <button id="logoutBtn" style="display:none; background: #ef4444;">Logout</button>
+            <button id="logoutBtn" style="display:none; background:#ef4444;">Logout</button>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
     <script>
-        // BACKGROUND ANIMATION
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let dots = [];
-        function initCanvas() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            dots = [];
-            for(let i = 0; i < 60; i++) {
-                dots.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, radius: 1.5 });
-            }
-        }
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            dots.forEach((dot) => {
-                dot.x += dot.vx; dot.y += dot.vy;
-                if(dot.x < 0 || dot.x > canvas.width) dot.vx *= -1;
-                if(dot.y < 0 || dot.y > canvas.height) dot.vy *= -1;
-                ctx.fillStyle = 'rgba(99, 102, 241, 0.5)';
-                ctx.beginPath(); ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2); ctx.fill();
-            });
-            requestAnimationFrame(draw);
-        }
-        window.addEventListener('resize', initCanvas);
-        initCanvas(); draw();
-
-        // FIREBASE CONFIG
         firebase.initializeApp({
             apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain: "strenght-a9f37.firebaseapp.com",
             databaseURL: "https://strenght-a9f37-default-rtdb.firebaseio.com",
-            projectId: "strenght-a9f37",
-            storageBucket: "strenght-a9f37.firebasestorage.app",
-            messagingSenderId: "469926449178",
-            appId: "1:469926449178:web:b9623947a1c1865b0f81a3"
+            projectId: "strenght-a9f37"
         });
-
         const auth = firebase.auth();
         const db = firebase.database();
         const titleEl = document.getElementById("title");
         const descEl = document.getElementById("desc");
         const tbody = document.getElementById("tbody");
-        const updatesContent = document.getElementById("updates-content");
-        const updateBanner = document.getElementById("lastUpdateBanner");
 
-        // NAVIGATION LOGIC
-        const navAtlas = document.getElementById('nav-atlas');
-        const navUpdates = document.getElementById('nav-updates');
-        const mainView = document.getElementById('main-view');
-        const updatesView = document.getElementById('updates-view');
-
-        navAtlas.onclick = () => {
-            mainView.style.display = 'block';
-            updatesView.style.display = 'none';
-            navAtlas.classList.add('active-nav');
-            navUpdates.classList.remove('active-nav');
-        };
-
-        navUpdates.onclick = () => {
-            mainView.style.display = 'none';
-            updatesView.style.display = 'block';
-            navUpdates.classList.add('active-nav');
-            navAtlas.classList.remove('active-nav');
-        };
-
-        // DATA SYNC
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
             titleEl.innerText = d.title || "Strength Log";
             descEl.innerHTML = d.desc || "Neural link active...";
-            tbody.innerHTML = d.table || "<tr><td colspan='4'>No data available</td></tr>";
-            updatesContent.innerHTML = d.updates || "• No logs recorded.";
+            tbody.innerHTML = d.table || "<tr><td colspan='4'>No data</td></tr>";
         });
 
-        db.ref("meta/lastUpdate").on("value", snap => {
-            updateBanner.innerText = "SYSTEM ACTIVE // LAST SYNC: " + (snap.val() || "UNKNOWN");
-        });
-
-        // AUTH & PERMISSIONS
         let isAdmin = false;
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
-            
-            // Toggle admin capabilities
-            [titleEl, descEl, tbody, updatesContent].forEach(el => {
+            [titleEl, descEl, tbody].forEach(el => {
                 el.contentEditable = isAdmin;
-                if(isAdmin) {
-                    el.classList.add("admin-editable");
-                    el.classList.remove("locked-content");
-                } else {
-                    el.classList.remove("admin-editable");
-                    el.classList.add("locked-content");
-                }
+                isAdmin ? el.classList.add("admin-editable") : el.classList.remove("admin-editable");
             });
-
-            document.getElementById("email").style.display = user ? "none" : "inline-block";
-            document.getElementById("password").style.display = user ? "none" : "inline-block";
-            document.getElementById("loginBtn").style.display = user ? "none" : "inline-block";
-            document.getElementById("logoutBtn").style.display = user ? "inline-block" : "none";
+            document.getElementById("loginBtn").style.display = user ? "none" : "block";
+            document.getElementById("logoutBtn").style.display = user ? "block" : "none";
         });
 
-        document.getElementById("loginBtn").onclick = () => {
-            auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value)
-                .catch(e => alert("Access Denied"));
-        };
+        document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value);
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
-        // SAVE DATA
         function saveData() {
             if(!isAdmin) return;
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-            const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            const fullStamp = `${dateStr} @ ${timeStr}`;
-
-            db.ref("log").set({ 
-                title: titleEl.innerText, 
-                desc: descEl.innerHTML, 
-                table: tbody.innerHTML,
-                updates: updatesContent.innerHTML
-            });
-            db.ref("meta/lastUpdate").set(fullStamp);
+            db.ref("log").set({ title: titleEl.innerText, desc: descEl.innerHTML, table: tbody.innerHTML });
         }
+        [titleEl, descEl, tbody].forEach(el => el.addEventListener("blur", saveData));
 
-        [titleEl, descEl, tbody, updatesContent].forEach(el => {
-            el.addEventListener("blur", saveData);
-        });
-
-        // COUNTDOWN
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
-            if(diff <= 0) { document.getElementById("timer").innerText = "LIMIT BREAKER 🔥"; return; }
-            const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), 
-                  m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-            document.getElementById("timer").textContent = `${String(d).padStart(2,'0')}D ${String(h).padStart(2,'0')}H ${String(m).padStart(2,'0')}M ${String(s).padStart(2,'0')}S`;
+            const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+            document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
         }, 1000);
-
     </script>
 </body>
 </html>
