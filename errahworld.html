@@ -2,59 +2,130 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Strength Log</title>
+<title>Strength Log – 1RM Tracking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root{
-  --bg-main:#0a0c13; --bg-panel:rgba(22,26,42,.88); --bg-header:rgba(32,38,64,.95);
-  --border:rgba(255,255,255,.08); --text:#eef0f6; --muted:#9aa1b3; --accent:#cfd6ff;
+  --bg-main:#0a0c13;
+  --bg-panel:rgba(22,26,42,.88);
+  --bg-header:rgba(32,38,64,.95);
+  --border:rgba(255,255,255,.08);
+  --text:#eef0f6;
+  --muted:#9aa1b3;
+  --accent:#cfd6ff;
+  --shadow:0 18px 40px rgba(0,0,0,.55);
 }
+
 *{ box-sizing:border-box; }
+
 body{
-  margin:0; padding:20px; font-family:"Inter",sans-serif;
+  margin:0; padding:28px;
+  font-family:"Inter",system-ui,sans-serif;
   background: radial-gradient(1200px 600px at top,#1c2340,transparent 60%), var(--bg-main);
   color:var(--text);
 }
-.nav-bar { display: flex; gap: 8px; margin-bottom: 25px; justify-content: center; }
-.nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 12px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; flex: 1; text-align: center; }
-.active-nav { background: var(--accent); color: #000; }
+
+/* NAV */
+.nav-bar { display: flex; gap: 15px; margin-bottom: 25px; }
+.nav-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--accent); padding: 8px 16px; border-radius: 10px; text-decoration: none; font-weight: 500; }
+
+@keyframes float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
+
 .locked-content, .locked-content *{ pointer-events:none!important; user-select:none!important; }
-h1{ margin:0 0 12px; font-size:2rem; text-align: center; }
-#desc{ padding:18px; margin-bottom:26px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:18px; color:var(--muted); }
-.top-bar{ display:flex; flex-direction: column; gap: 15px; margin-bottom:18px; }
-#authBox{ display:flex; gap:10px; padding:12px; background:rgba(255,255,255,.05); border-radius:15px; }
-#authBox input{ background:rgba(0,0,0,.25); border:1px solid var(--border); color:var(--accent); padding:10px; border-radius:10px; width: 100%; }
-#authBox button{ background:#3a43a0; border:none; color:#fff; padding:10px 15px; border-radius:10px; cursor:pointer; font-weight: 600; }
-table{ width:100%; border-collapse:collapse; background:var(--bg-panel); border-radius:18px; overflow:hidden; font-size: 0.9rem; }
-th,td{ padding:12px; text-align:center; border-bottom:1px solid var(--border); }
-th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; font-size: 0.7rem; }
+
+h1{ margin:0 0 12px; font-size:2.2rem; font-weight:700; }
+
+#desc{
+  max-width:900px; padding:18px 22px; margin-bottom:26px;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  border:1px solid var(--border); border-radius:18px; color:var(--muted);
+  line-height:1.55; box-shadow:var(--shadow); backdrop-filter:blur(14px);
+  animation:float 9s ease-in-out infinite;
+}
+
+.countdown{
+  max-width:1020px; margin:18px 0 28px; padding:18px 22px;
+  background:linear-gradient(135deg,#2b3160,#1b1f3d);
+  border-radius:18px; box-shadow:var(--shadow);
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+#timer{ font-weight:700; color:var(--accent); }
+
+.top-bar{ display:flex; justify-content:space-between; align-items:center; max-width:1020px; margin-bottom:18px; gap:12px; }
+
+#authBox{ display:flex; gap:10px; padding:14px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:20px; }
+#authBox input{ background:rgba(0,0,0,.25); border:1px solid var(--border); color:var(--accent); padding:10px; border-radius:12px; }
+#authBox button{ background:linear-gradient(135deg,#3a43a0,#2a2f66); border:none; color:#fff; padding:10px 18px; border-radius:14px; font-weight:600; cursor:pointer; }
+
+table{ width:100%; max-width:1020px; border-collapse:collapse; background:var(--bg-panel); border-radius:22px; overflow:hidden; box-shadow:var(--shadow); }
+th,td{ padding:16px; text-align:center; border-bottom:1px solid var(--border); }
+th{ background:var(--bg-header); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); }
+
+/* CALCULATOR STYLES */
+.calculator{ max-width:1020px; margin-top:54px; padding:26px; background:var(--bg-panel); border-radius:24px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.calculator-controls{ display:flex; gap:12px; flex-wrap:wrap; }
+.calculator input, .calculator label{ background:rgba(255,255,255,.06); border:1px solid var(--border); color:var(--accent); padding:12px 16px; border-radius:14px; }
+.barbell{ margin-top:30px; display:flex; align-items:center; justify-content:center; }
+.bar{ width:300px; height:12px; background:linear-gradient(#bbb,#666); border-radius:8px; }
+.side{ display:flex; }
+.plate{ height:68px; margin:0 2px; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:700; color:#111; border-radius:7px; }
+.p45{ width:30px; background:#c0392b; }
+.p35{ width:28px; background:#d35400; }
+.p25{ width:26px; background:#f1c40f; }
+.p10{ width:22px; background:#3498db; color:#fff; }
+.p5 { width:18px; background:#2ecc71; }
+.p2_5{ width:14px; background:#bdc3c7; }
 </style>
 </head>
+
 <body>
 
 <div class="nav-bar">
-  <a href="errahworld.html" class="nav-btn active-nav">🏋️ Log</a>
+  <a href="errahworld.html" class="nav-btn">🏋️ Log</a>
   <a href="updates.html" class="nav-btn">📢 Updates</a>
-  <a href="barbellcalculator.html" class="nav-btn">⚖️ Calc</a>
 </div>
 
-<h1 id="title">Strength Log</h1>
-<p id="desc">Loading...</p>
+<h1 id="title"></h1>
+<p id="desc"></p>
+
+<div class="countdown">
+  <strong>Road to RM Drop 🏋️</strong>
+  <div id="timer">Loading…</div>
+</div>
 
 <div class="top-bar">
   <div id="authBox">
-    <input id="email" placeholder="email">
+    <input id="email" placeholder="admin email">
     <input id="password" type="password" placeholder="password">
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none">Logout</button>
   </div>
+  <div id="lastUpdated" class="last-updated"></div>
 </div>
 
 <table id="table" class="locked-content">
-  <thead><tr><th style="text-align:left">Lift</th><th>Current</th><th>1RM</th><th>Level</th></tr></thead>
-  <tbody id="tbody"></tbody>
+<thead><tr><th style="text-align:left">Lift</th><th>Current</th><th>1RM</th><th>Strength Level</th></tr></thead>
+<tbody id="tbody"></tbody>
 </table>
+
+<div class="calculator">
+  <h3>Barbell Calculator (lbs)</h3>
+  <div class="calculator-controls">
+    <input id="targetWeight" type="number" placeholder="Loaded weight">
+    <input id="barWeight" type="number" value="45">
+    <label><input type="checkbox" id="includeBar" checked> Include bar</label>
+  </div>
+  <div class="barbell">
+    <div id="leftSide" class="side"></div>
+    <div class="bar"></div>
+    <div id="rightSide" class="side"></div>
+  </div>
+  <div id="trueLoad" style="margin-top:15px; font-weight:600; color:var(--accent);"></div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -75,10 +146,10 @@ const auth=firebase.auth();
 const db=firebase.database();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-const emailEl=document.getElementById("email"), passEl=document.getElementById("password"),
-      loginBtn=document.getElementById("loginBtn"), logoutBtn=document.getElementById("logoutBtn"),
-      titleEl=document.getElementById("title"), descEl=document.getElementById("desc"),
-      tbody=document.getElementById("tbody"), table=document.getElementById("table");
+const titleEl=document.getElementById("title"), descEl=document.getElementById("desc"),
+      tbody=document.getElementById("tbody"), table=document.getElementById("table"),
+      emailEl=document.getElementById("email"), passEl=document.getElementById("password"),
+      loginBtn=document.getElementById("loginBtn"), logoutBtn=document.getElementById("logoutBtn");
 
 let isAdmin=false;
 
@@ -98,7 +169,7 @@ auth.onAuthStateChanged(user=>{
 db.ref("log").on("value", snap=>{
   const d=snap.val()||{};
   titleEl.innerText=d.title||"Strength Log";
-  descEl.innerHTML=d.desc||"Edit description...";
+  descEl.innerHTML=d.desc||"";
   tbody.innerHTML=d.table||"";
 });
 
@@ -110,6 +181,36 @@ function saveData(){
   });
 }
 ["input","blur"].forEach(e=>{ titleEl.addEventListener(e,saveData); descEl.addEventListener(e,saveData); tbody.addEventListener(e,saveData); });
+
+/* BARBELL CALC LOGIC */
+const plates=[45,35,25,10,5,2.5];
+function updateBarbell(){
+  const leftSide = document.getElementById("leftSide"), rightSide = document.getElementById("rightSide");
+  const targetWeight = document.getElementById("targetWeight"), barWeight = document.getElementById("barWeight");
+  const includeBar = document.getElementById("includeBar"), trueLoad = document.getElementById("trueLoad");
+
+  leftSide.innerHTML=""; rightSide.innerHTML="";
+  let t=+targetWeight.value, b=+barWeight.value||0;
+  if(!t) return;
+
+  let r=(includeBar.checked?(t-b):t)/2;
+  let u=[];
+  plates.forEach(p=>{ while(r>=p){ r-=p; u.push(p); } });
+
+  u.forEach(p=>rightSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  [...u].reverse().forEach(p=>leftSide.innerHTML+=`<div class="plate ${p===2.5?"p2_5":"p"+p}">${p}</div>`);
+  trueLoad.innerText=`Loaded: ${t} lbs · True load: ${includeBar.checked ? t : (u.reduce((s,p)=>s+p*2,0)+b)} lbs`;
+}
+[document.getElementById("targetWeight"),document.getElementById("barWeight"),document.getElementById("includeBar")].forEach(e=>e.addEventListener("input",updateBarbell));
+
+/* TIMER LOGIC */
+const targetDate=new Date("February 3, 2026 00:00:00").getTime();
+setInterval(()=>{
+  const diff=targetDate-Date.now();
+  if(diff<=0){ document.getElementById("timer").textContent="RM DAY 🔥"; return; }
+  const d=Math.floor(diff/86400000), h=Math.floor(diff/3600000)%24, m=Math.floor(diff/60000)%60, s=Math.floor(diff/1000)%60;
+  document.getElementById("timer").textContent=`${d}d ${h}h ${m}m ${s}s`;
+},1000);
 </script>
 </body>
 </html>
