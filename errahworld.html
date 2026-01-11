@@ -76,7 +76,7 @@ th{ background:var(--bg-header); color:var(--accent); text-transform:uppercase; 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-// UPDATED API KEY
+// YOUR VERIFIED API KEY
 const GEMINI_KEY = "AIzaSyDt1hwb3KRmnS5XURo3m424nKxTinRpyzM";
 
 firebase.initializeApp({
@@ -104,7 +104,6 @@ function jarvisSay(msg) {
   orb.className = ""; 
   const utter = new SpeechSynthesisUtterance(msg);
   utter.pitch = 1.1;
-  utter.rate = 1.0;
   jText.innerText = msg;
   orb.classList.add('speaking');
   window.speechSynthesis.speak(utter);
@@ -113,35 +112,41 @@ function jarvisSay(msg) {
 
 async function askGemini(userInput) {
     jBubble.style.display = "block";
-    jText.innerText = "Analyzing...";
+    jText.innerText = "Syncing Neural Link...";
     orb.className = "thinking";
 
     const tableData = document.getElementById("tbody").innerText;
+    
+    // Structure strictly following your curl command
     const payload = {
-        contents: [{ parts: [{ text: `You are JARVIS, female AI. Sir is Errah. Data: ${tableData}. Briefly answer: ${userInput}` }] }]
+        contents: [{ parts: [{ text: `Role: JARVIS (Female AI). User: Errah. Data: ${tableData}. Briefly answer: ${userInput}` }] }]
     };
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+        // MATCHING YOUR CURL URL: v1beta + gemini-2.0-flash
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
         const result = await response.json();
+
         if (result.error) throw new Error(result.error.message);
 
         if (result.candidates && result.candidates[0].content) {
             jarvisSay(result.candidates[0].content.parts[0].text);
         } else {
-            throw new Error("Neural link empty.");
+            throw new Error("Neural core failed to generate response.");
         }
     } catch (error) {
         orb.className = "error-glow";
         jText.innerHTML = `<span style="color:#ff6b6b">SYSTEM ERROR:</span><br>${error.message}`;
+        console.error("API Error:", error);
     }
 }
 
+// Voice Recognition
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if(SpeechRecognition) {
     const recognition = new SpeechRecognition();
@@ -155,6 +160,7 @@ orb.onclick = () => {
     jarvisSay("Neural link established, Sir.");
 };
 
+// Countdown Timer
 const targetDate=new Date("February 3, 2026 00:00:00").getTime();
 setInterval(()=>{
   const diff=targetDate-Date.now();
