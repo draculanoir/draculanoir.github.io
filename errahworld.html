@@ -2,141 +2,195 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>ErrahWorld | AI Strength Log</title>
+    <title>ErrahWorld | Project Atlas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
         
         :root {
-            --bg-main: #06080f;
-            --bg-panel: rgba(10, 14, 28, 0.75);
-            --accent: #7c89ff;
-            --accent-glow: rgba(124, 137, 255, 0.4);
-            --text-main: #ffffff;
-            --text-muted: #8a91ad;
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            --bg-deep: #03050a;
+            --accent-primary: #7c89ff;
+            --accent-secondary: #ff7eb3;
+            --glass: rgba(15, 18, 35, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-bright: #ffffff;
+            --text-dim: #94a3b8;
+            --glow: 0 0 25px rgba(124, 137, 255, 0.3);
         }
 
-        /* Entrance Animations */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); filter: blur(10px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 0.8; }
-        }
-
-        * { box-sizing: border-box; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        
+        /* Animated Mesh Gradient Background */
         body {
-            margin: 0; padding: 20px; font-family: "Plus Jakarta Sans", sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-bright);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             overflow-x: hidden;
-            display: flex; flex-direction: column; align-items: center;
+            perspective: 1000px;
         }
 
-        /* Animated Background */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(124, 137, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 126, 179, 0.05) 0%, transparent 40%);
+            z-index: -2;
+        }
+
         #bg-canvas {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; opacity: 0.4; pointer-events: none;
+            z-index: -1; opacity: 0.5;
         }
 
         .container {
-            width: 100%; max-width: 850px; margin: 0 auto;
-            animation: fadeInUp 1s ease-out forwards;
+            width: 100%;
+            max-width: 900px;
+            animation: containerEntry 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* Premium Nav */
+        @keyframes containerEntry {
+            from { opacity: 0; transform: translateY(40px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Ultra-Modern Nav */
         .nav-bar { 
-            display: flex; gap: 8px; margin-bottom: 30px; 
-            background: rgba(255,255,255,0.03); padding: 6px; 
-            border-radius: 18px; border: 1px solid var(--border-glass);
-            width: fit-content; margin-inline: auto;
-            backdrop-filter: blur(15px);
+            display: flex; gap: 5px; margin: 20px auto 40px; 
+            background: var(--glass); 
+            padding: 8px; 
+            border-radius: 20px; 
+            border: 1px solid var(--glass-border);
+            width: fit-content;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--card-shadow);
         }
+
         .nav-btn { 
-            padding: 10px 24px; border-radius: 14px; 
-            text-decoration: none; font-size: 0.85rem; font-weight: 600;
-            color: var(--text-muted);
+            padding: 12px 28px; border-radius: 14px; 
+            text-decoration: none; font-size: 0.85rem; font-weight: 700;
+            color: var(--text-dim);
+            transition: 0.3s;
         }
-        .active-nav { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
 
-        /* Typography & Header */
+        .nav-btn:hover { color: var(--text-bright); background: rgba(255,255,255,0.05); }
+
+        .active-nav { 
+            background: var(--accent-primary) !important; 
+            color: #000 !important; 
+            box-shadow: 0 4px 15px rgba(124, 137, 255, 0.4);
+        }
+
+        /* Typography */
         .last-updated-banner { 
-            font-size: 0.6rem; color: var(--accent); text-align: center; 
-            margin-bottom: 10px; font-weight: 800; letter-spacing: 3px;
-            animation: pulseGlow 2s infinite ease-in-out;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem; color: var(--accent-primary); text-align: center; 
+            margin-bottom: 12px; font-weight: 700; letter-spacing: 4px;
+            text-transform: uppercase;
         }
+
         h1 { 
-            margin: 0 0 10px; font-size: clamp(2.5rem, 10vw, 3.8rem); text-align: center; font-weight: 800; 
-            background: linear-gradient(180deg, #fff 30%, var(--accent));
+            margin: 0; font-size: clamp(3rem, 12vw, 4.5rem); text-align: center; font-weight: 800; 
+            letter-spacing: -3px; line-height: 0.9;
+            background: linear-gradient(to bottom, #fff, #a5b4fc);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -2px;
+            filter: drop-shadow(0 0 20px rgba(124, 137, 255, 0.2));
         }
+
         #desc { 
-            padding: 25px; margin-bottom: 35px; border-radius: 28px; 
-            background: var(--bg-panel); border: 1px solid var(--border-glass);
-            color: var(--text-muted); text-align: center; backdrop-filter: blur(20px);
-            box-shadow: inset 0 0 20px rgba(255,255,255,0.02);
+            padding: 20px; margin: 25px 0 40px; border-radius: 24px; 
+            color: var(--text-dim); text-align: center; font-size: 1.1rem;
+            line-height: 1.6;
         }
 
-        /* Countdown Card */
+        /* The Timer Card (The Hero) */
         .countdown {
-            margin-bottom: 35px; padding: 25px; 
-            background: linear-gradient(145deg, rgba(30,40,80,0.3), rgba(10,12,20,0.5));
-            border-radius: 32px; border: 1px solid rgba(124,137,255,0.2);
-            box-shadow: var(--card-shadow); display: flex; flex-direction: column; align-items: center;
+            margin-bottom: 40px; padding: 40px; 
+            background: var(--glass);
+            border-radius: 35px; border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex; flex-direction: column; align-items: center;
             position: relative; overflow: hidden;
+            backdrop-filter: blur(30px);
         }
-        .countdown::after {
-            content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(transparent, rgba(124,137,255,0.05), transparent);
-            animation: scanline 4s linear infinite;
-        }
-        #timer { font-size: 2.5rem; font-weight: 800; text-shadow: 0 0 25px var(--accent-glow); }
 
-        /* Table Loading State */
-        .loading-shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+        .countdown strong {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; letter-spacing: 5px; color: var(--accent-secondary);
+            margin-bottom: 15px;
         }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-        /* Modern Table */
+        #timer { 
+            font-size: 3.5rem; font-weight: 800; 
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(45deg, #fff, var(--accent-primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(124, 137, 255, 0.3);
+        }
+
+        /* Modern HUD Table */
         .table-container { 
-            overflow-x: auto; border-radius: 32px; border: 1px solid var(--border-glass); 
-            box-shadow: var(--card-shadow); background: var(--bg-panel); backdrop-filter: blur(20px);
+            overflow: hidden; border-radius: 30px; 
+            border: 1px solid var(--glass-border); 
+            background: var(--glass); 
+            backdrop-filter: blur(20px);
+            margin-bottom: 50px;
         }
-        table { width: 100%; border-collapse: collapse; }
-        th { 
-            background: rgba(255,255,255,0.02); color: var(--accent); 
-            padding: 22px; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
-        }
-        td { padding: 22px; text-align: center; border-bottom: 1px solid var(--border-glass); font-size: 1rem; }
-        tr:hover td { background: rgba(124, 137, 255, 0.08); color: #fff; transform: scale(1.01); }
 
-        /* Input Fields */
-        #authBox { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
+        table { width: 100%; border-collapse: collapse; }
+        
+        th { 
+            background: rgba(255,255,255,0.03); color: var(--text-dim); 
+            padding: 24px; font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        td { 
+            padding: 24px; text-align: center; 
+            border-bottom: 1px solid rgba(255,255,255,0.03); 
+            font-size: 1.1rem; 
+            font-weight: 500;
+        }
+
+        tr:last-child td { border: none; }
+
+        tr:hover td { 
+            background: rgba(124, 137, 255, 0.05); 
+            color: var(--accent-primary); 
+            cursor: default;
+        }
+
+        /* Inputs & Interaction */
+        #authBox { display: flex; gap: 12px; margin-bottom: 40px; justify-content: center; }
+        
         input { 
-            background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); 
-            color: #fff; padding: 14px 20px; border-radius: 16px; outline: none;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); 
+            color: #fff; padding: 16px 24px; border-radius: 18px; outline: none;
+            font-family: inherit; width: 180px;
         }
+
+        input:focus { border-color: var(--accent-primary); background: rgba(255, 255, 255, 0.08); }
+
         button { 
-            background: #fff; border: none; padding: 14px 28px; border-radius: 16px; 
-            font-weight: 800; cursor: pointer;
+            background: var(--text-bright); border: none; padding: 16px 32px; border-radius: 18px; 
+            font-weight: 800; cursor: pointer; color: #000;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.1);
         }
-        button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,255,255,0.2); }
+
+        /* Mobile Optimization */
+        @media (max-width: 600px) {
+            #timer { font-size: 2rem; }
+            .countdown { padding: 30px 15px; }
+            #authBox { flex-direction: column; align-items: center; }
+            input { width: 100%; }
+        }
 
     </style>
 </head>
@@ -146,14 +200,14 @@
 
     <div class="container">
         <div class="nav-bar">
-            <a href="errahworld.html" class="nav-btn active-nav">Project Atlas</a>
-            <a href="updates.html" class="nav-btn">Updates</a>
+            <a href="#" class="nav-btn active-nav">PROJECT ATLAS</a>
+            <a href="#" class="nav-btn">UPDATES</a>
         </div>
 
         <div id="lastUpdateBanner" class="last-updated-banner">ESTABLISHING NEURAL LINK...</div>
 
         <h1 id="title">Syncing</h1>
-        <div id="desc">Decrypting strength data from secure servers...</div>
+        <div id="desc">Accessing encrypted strength metrics from the Atlas Protocol...</div>
 
         <div class="countdown">
             <strong>NEXT RM CYCLE</strong>
@@ -163,22 +217,22 @@
         <div id="authBox">
             <input id="email" placeholder="Admin ID">
             <input id="password" type="password" placeholder="Keyphrase">
-            <button id="loginBtn">Login</button>
-            <button id="logoutBtn" style="display:none">Logout</button>
+            <button id="loginBtn">AUTHORIZE</button>
+            <button id="logoutBtn" style="display:none">TERMINATE</button>
         </div>
 
         <div class="table-container">
-            <table id="table" class="locked-content">
+            <table id="table">
                 <thead>
                     <tr>
-                        <th style="text-align:left">Exercise</th>
-                        <th>Current</th>
-                        <th>1RM</th>
+                        <th style="text-align:left">Metric / Exercise</th>
+                        <th>Current Load</th>
+                        <th>Projected 1RM</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="tbody">
-                    <tr class="loading-shimmer"><td colspan="4" style="height: 60px; opacity: 0.3;">INITIALIZING DATABASE...</td></tr>
+                    <tr><td colspan="4" style="opacity: 0.3; padding: 60px;">INITIALIZING CORE DATABASE...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -193,27 +247,51 @@
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         let dots = [];
+        
         function initCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             dots = [];
-            for(let i=0; i<60; i++) dots.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: Math.random()-0.5, vy: Math.random()-0.5});
+            for(let i=0; i<80; i++) {
+                dots.push({
+                    x: Math.random()*canvas.width, 
+                    y: Math.random()*canvas.height, 
+                    vx: (Math.random()-0.5) * 0.5, 
+                    vy: (Math.random()-0.5) * 0.5,
+                    r: Math.random() * 2
+                });
+            }
         }
+
         function draw() {
             ctx.clearRect(0,0,canvas.width, canvas.height);
-            ctx.fillStyle = "rgba(124, 137, 255, 0.5)";
-            dots.forEach(d => {
+            ctx.strokeStyle = "rgba(124, 137, 255, 0.05)";
+            ctx.fillStyle = "rgba(124, 137, 255, 0.3)";
+            
+            dots.forEach((d, i) => {
                 d.x += d.vx; d.y += d.vy;
                 if(d.x<0 || d.x>canvas.width) d.vx *= -1;
                 if(d.y<0 || d.y>canvas.height) d.vy *= -1;
-                ctx.beginPath(); ctx.arc(d.x, d.y, 1.5, 0, Math.PI*2); ctx.fill();
+                
+                ctx.beginPath(); 
+                ctx.arc(d.x, d.y, d.r, 0, Math.PI*2); 
+                ctx.fill();
+
+                for(let j=i+1; j<dots.length; j++) {
+                    const d2 = dots[j];
+                    const dist = Math.hypot(d.x-d2.x, d.y-d2.y);
+                    if(dist < 150) {
+                        ctx.lineWidth = 1 - dist/150;
+                        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d2.x, d2.y); ctx.stroke();
+                    }
+                }
             });
             requestAnimationFrame(draw);
         }
         window.onresize = initCanvas;
         initCanvas(); draw();
 
-        // FIREBASE SETUP
+        // Firebase logic remains identical to your working version to ensure functionality
         firebase.initializeApp({
             apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain:"strenght-a9f37.firebaseapp.com",
@@ -231,7 +309,6 @@
               tbody = document.getElementById("tbody"),
               updateBanner = document.getElementById("lastUpdateBanner");
 
-        // DATA SYNC WITH FADE-IN
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
             tbody.style.opacity = 0;
@@ -247,7 +324,6 @@
             updateBanner.innerText = "SYSTEM ACTIVE // LAST SYNC: " + (snap.val() || "UNKNOWN");
         });
 
-        // AUTH & TIMER LOGIC (Existing from your code)
         const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
         const emailEl = document.getElementById("email"), passEl = document.getElementById("password");
         let isAdmin = false;
@@ -257,7 +333,6 @@
 
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
-            document.getElementById("table").classList.toggle("locked-content", !isAdmin);
             [titleEl, descEl, tbody].forEach(el => el.contentEditable = isAdmin);
             loginBtn.style.display = user ? "none" : "inline-block";
             emailEl.style.display = user ? "none" : "inline-block";
@@ -279,7 +354,8 @@
             const diff = targetDate - Date.now();
             if(diff <= 0) { document.getElementById("timer").textContent = "LIMIT BREAKER 🔥"; return; }
             const d = Math.floor(diff/86400000), h = Math.floor(diff/3600000)%24, m = Math.floor(diff/60000)%60, s = Math.floor(diff/1000)%60;
-            document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
+            document.getElementById("timer").textContent = 
+                `${String(d).padStart(2,'0')}D ${String(h).padStart(2,'0')}H ${String(m).padStart(2,'0')}M ${String(s).padStart(2,'0')}S`;
         }, 1000);
     </script>
 </body>
