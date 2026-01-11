@@ -2,140 +2,173 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>ErrahWorld | The Altar of Strength</title>
+    <title>ERRAHWORLD | THE ALTAR OF ATLAS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;700&family=Montserrat:wght@200;400;800&display=swap');
         
         :root {
-            --godly-gold: #e2c275;
-            --ethereal-blue: #a5b4fc;
-            --bg-void: #020308;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border-gold: rgba(226, 194, 117, 0.2);
-            --text-main: #f8fafc;
+            --gold: #f3cf7a;
+            --gold-glow: rgba(243, 207, 122, 0.4);
+            --void: #020205;
+            --celestial: #a5b4fc;
         }
 
-        @keyframes god-rays {
-            0% { text-shadow: 0 0 20px rgba(226, 194, 117, 0); }
-            50% { text-shadow: 0 0 40px rgba(226, 194, 117, 0.4); }
-            100% { text-shadow: 0 0 20px rgba(226, 194, 117, 0); }
-        }
-
-        * { box-sizing: border-box; cursor: crosshair; }
+        * { box-sizing: border-box; cursor: none; } /* Custom cursor logic below */
         
         body {
-            margin: 0; padding: 20px; font-family: "Plus Jakarta Sans", sans-serif;
-            background-color: var(--bg-void); color: var(--text-main);
-            min-height: 100vh; overflow-x: hidden;
+            margin: 0; padding: 0;
+            background-color: var(--void);
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            perspective: 1000px;
+        }
+
+        /* Cinematic Background */
+        #nebula-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+        /* Custom Divine Cursor */
+        #cursor {
+            position: fixed; width: 40px; height: 40px;
+            border: 2px solid var(--gold); border-radius: 50%;
+            pointer-events: none; z-index: 9999;
+            transition: transform 0.1s ease-out;
+            box-shadow: 0 0 15px var(--gold-glow);
+            mix-blend-mode: difference;
+        }
+
+        .main-stage {
             display: flex; flex-direction: column; align-items: center;
+            padding: 80px 20px;
+            transform-style: preserve-3d;
         }
 
-        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-
-        .container { 
-            width: 100%; max-width: 900px; 
-            animation: fadeIn 2s ease-out;
-            z-index: 10;
+        /* The Title: A Monument */
+        .title-wrap {
+            position: relative; margin-bottom: 60px;
+            animation: float 6s infinite ease-in-out;
         }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Divine Header */
-        h1 { 
-            font-family: 'Cinzel', serif;
-            margin: 40px 0 10px; font-size: clamp(3rem, 15vw, 6rem); text-align: center; font-weight: 900; 
-            background: linear-gradient(to bottom, #fff, var(--godly-gold));
+        
+        h1 {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(4rem, 18vw, 10rem);
+            margin: 0; font-weight: 900;
+            background: linear-gradient(180deg, #fff 0%, var(--gold) 50%, #866a2d 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: 8px; text-transform: uppercase;
-            animation: god-rays 4s infinite ease-in-out;
+            filter: drop-shadow(0 0 30px rgba(243, 207, 122, 0.3));
+            letter-spacing: 15px;
         }
 
         .subtitle {
-            text-align: center; font-family: 'Cinzel', serif; color: var(--godly-gold);
-            letter-spacing: 4px; font-size: 0.8rem; margin-bottom: 50px; opacity: 0.8;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 12px; font-size: 0.9rem; color: var(--gold);
+            text-align: center; margin-top: -20px; text-transform: uppercase;
         }
 
-        /* Description: The Tablet of Wisdom */
-        #desc { 
-            padding: 40px; margin-bottom: 50px; border-radius: 2px; 
-            background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(0,0,0,0.4));
-            border: 1px solid var(--border-gold);
-            color: var(--ethereal-blue); text-align: center; font-size: 1.1rem;
-            backdrop-filter: blur(15px); line-height: 1.8;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
-            font-style: italic;
+        /* Perspective Cards */
+        .glass-tablet {
+            width: 100%; max-width: 900px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid rgba(243, 207, 122, 0.2);
+            padding: 50px; border-radius: 4px;
+            backdrop-filter: blur(25px);
+            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+            margin-bottom: 60px;
+            transition: transform 0.2s ease-out;
         }
 
-        /* Countdown: The Eternal Clock */
-        .countdown {
-            margin-bottom: 50px; padding: 40px; border-top: 1px solid var(--border-gold); border-bottom: 1px solid var(--border-gold);
-            display: flex; flex-direction: column; align-items: center; gap: 15px;
-            background: radial-gradient(circle, rgba(226, 194, 117, 0.05), transparent);
+        #desc {
+            font-size: 1.3rem; line-height: 2; color: var(--celestial);
+            text-align: center; font-weight: 200; font-style: italic;
         }
-        .countdown strong { font-family: 'Cinzel'; font-size: 0.9rem; letter-spacing: 5px; color: var(--godly-gold); }
-        #timer { font-size: 3.5rem; font-weight: 300; letter-spacing: 2px; font-family: 'Plus Jakarta Sans'; }
 
-        /* The Altar (Table) */
-        .table-container { 
-            background: var(--glass); border: 1px solid var(--border-gold);
-            box-shadow: 0 0 100px rgba(0,0,0,0.8); backdrop-filter: blur(20px);
+        /* Massive Countdown */
+        .countdown-shrine {
+            text-align: center; margin-bottom: 80px;
         }
-        table { width: 100%; border-collapse: collapse; }
+        .countdown-label { font-family: 'Cinzel'; color: var(--gold); letter-spacing: 6px; font-size: 0.8rem; margin-bottom: 20px; }
+        #timer {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 800; font-family: 'Montserrat';
+            background: linear-gradient(90deg, #fff, var(--gold), #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+        }
+
+        /* The Eternal Table */
+        .table-wrap {
+            width: 100%; max-width: 1000px; overflow-x: auto;
+            border-radius: 8px; border: 1px solid var(--border-gold);
+        }
+        table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); }
         th { 
-            font-family: 'Cinzel'; padding: 25px; color: var(--godly-gold); 
-            border-bottom: 1px solid var(--border-gold); font-size: 0.8rem; letter-spacing: 2px;
+            font-family: 'Cinzel'; color: var(--gold); padding: 30px; 
+            text-transform: uppercase; letter-spacing: 4px; border-bottom: 1px solid var(--gold);
+            font-size: 0.75rem;
         }
-        td { padding: 30px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 1.2rem; }
-        tr:hover td { background: rgba(226, 194, 117, 0.05); text-shadow: 0 0 10px var(--godly-gold); color: #fff; }
+        td { 
+            padding: 35px 20px; text-align: center; 
+            font-size: 1.4rem; font-weight: 200; 
+            border-bottom: 1px solid rgba(243, 207, 122, 0.1);
+        }
+        tr:hover td { background: rgba(243, 207, 122, 0.05); color: var(--gold); }
 
-        /* Auth */
-        #authBox { display: flex; gap: 15px; margin-bottom: 50px; justify-content: center; }
-        input { background: transparent; border: 1px solid var(--border-gold); color: #fff; padding: 12px 20px; outline: none; font-family: 'Cinzel'; }
-        button { background: var(--godly-gold); color: #000; border: none; padding: 12px 30px; font-family: 'Cinzel'; font-weight: 900; }
-        button:hover { filter: brightness(1.2); }
+        /* Auth UI */
+        #authBox { display: flex; gap: 20px; margin-bottom: 50px; }
+        input { 
+            background: transparent; border: 1px solid var(--gold); 
+            color: #fff; padding: 15px 25px; font-family: 'Cinzel'; 
+            outline: none; transition: 0.3s;
+        }
+        input:focus { box-shadow: 0 0 20px var(--gold-glow); }
+        button { 
+            background: var(--gold); color: #000; border: none; 
+            padding: 15px 40px; font-family: 'Cinzel'; font-weight: 900;
+            letter-spacing: 2px;
+        }
 
-        .nav-bar { display: flex; gap: 30px; margin-bottom: 20px; font-family: 'Cinzel'; }
-        .nav-btn { color: #fff; text-decoration: none; letter-spacing: 3px; font-size: 0.7rem; opacity: 0.6; }
-        .active-nav { opacity: 1; border-bottom: 1px solid var(--godly-gold); padding-bottom: 5px; }
+        /* Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes shine { to { background-position: 200% center; } }
 
     </style>
 </head>
-<body onclick="createShockwave(event)">
+<body onmousemove="handleParallax(event)">
 
-    <canvas id="starfield"></canvas>
-    <canvas id="fx-layer"></canvas>
+    <div id="cursor"></div>
+    <canvas id="nebula-canvas"></canvas>
 
-    <div class="container">
-        <div class="nav-bar">
-            <a href="#" class="nav-btn active-nav">PROJECT ATLAS</a>
-            <a href="#" class="nav-btn">CHRONICLES</a>
+    <div class="main-stage" id="stage">
+        <div class="title-wrap">
+            <h1 id="title">ATLAS</h1>
+            <div class="subtitle">Architect of Strength</div>
         </div>
 
-        <h1 id="title">ATLAS</h1>
-        <div class="subtitle">THE ARCHIVE OF STRENGTH</div>
+        <div class="glass-tablet" id="tilt-card">
+            <div id="desc">Mortal, document your burdens here. Only those who record their struggle shall transcend the weight of the heavens.</div>
+        </div>
 
-        <div id="desc">The weight of the world is not meant for the weak. Document your ascent into godhood.</div>
-
-        <div class="countdown">
-            <strong>ASCENSION IN</strong>
-            <div id="timer">00D 00H 00M 00S</div>
+        <div class="countdown-shrine">
+            <div class="countdown-label">NEXT DIVINE ASCENSION</div>
+            <div id="timer">00:00:00:00</div>
         </div>
 
         <div id="authBox">
             <input id="email" placeholder="IDENTITY">
             <input id="password" type="password" placeholder="SIGIL">
-            <button id="loginBtn">ENTER</button>
-            <button id="logoutBtn" style="display:none">LEAVE</button>
+            <button id="loginBtn" onclick="shockwave()">AWAKEN</button>
+            <button id="logoutBtn" style="display:none">DORMANT</button>
         </div>
 
-        <div class="table-container">
-            <table id="table" class="locked-content">
+        <div class="table-wrap">
+            <table id="table">
                 <thead>
-                    <tr><th>CHALLENGE</th><th>BURDEN</th><th>PEAK</th><th>DIVINITY</th></tr>
+                    <tr><th>ORDEAL</th><th>WEIGHT</th><th>LIMIT</th><th>STATUS</th></tr>
                 </thead>
                 <tbody id="tbody">
-                    <tr><td colspan="4" style="color:var(--godly-gold)">Awakening Ancient Records...</td></tr>
+                    <tr><td colspan="4">Summoning Records...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -146,54 +179,61 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // --- CELESTIAL BACKGROUND ---
-        const starCanvas = document.getElementById('starfield');
-        const sCtx = starCanvas.getContext('2d');
-        let stars = [];
+        // --- 3D PARALLAX ENGINE ---
+        const stage = document.getElementById('stage');
+        const tiltCard = document.getElementById('tilt-card');
+        const cursor = document.getElementById('cursor');
 
-        function initStars() {
-            starCanvas.width = window.innerWidth;
-            starCanvas.height = window.innerHeight;
-            stars = [];
-            for(let i=0; i<150; i++) stars.push({x: Math.random()*starCanvas.width, y: Math.random()*starCanvas.height, size: Math.random()*1.5, opacity: Math.random()});
+        function handleParallax(e) {
+            // Cursor move
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+
+            // 3D Tilt
+            const x = (window.innerWidth / 2 - e.clientX) / 25;
+            const y = (window.innerHeight / 2 - e.clientY) / 25;
+            tiltCard.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+            stage.style.transform = `translateX(${x * 0.5}px) translateY(${y * 0.5}px)`;
         }
 
-        function drawStars() {
-            sCtx.clearRect(0,0,starCanvas.width, starCanvas.height);
-            stars.forEach(s => {
-                sCtx.fillStyle = `rgba(255, 255, 255, ${s.opacity})`;
-                sCtx.beginPath(); sCtx.arc(s.x, s.y, s.size, 0, Math.PI*2); sCtx.fill();
-                s.opacity += (Math.random()-0.5)*0.01;
+        // --- CELESTIAL CANVAS ---
+        const canvas = document.getElementById('nebula-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<200; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    z: Math.random() * canvas.width,
+                    o: Math.random()
+                });
+            }
+        }
+
+        function drawCelestial() {
+            ctx.fillStyle = '#020205';
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.z -= 2;
+                if(p.z <= 0) p.z = canvas.width;
+                const sx = (p.x - canvas.width/2) * (canvas.width/p.z) + canvas.width/2;
+                const sy = (p.y - canvas.height/2) * (canvas.width/p.z) + canvas.height/2;
+                const size = (canvas.width/p.z) * 1.5;
+                ctx.fillStyle = `rgba(243, 207, 122, ${1 - p.z/canvas.width})`;
+                ctx.beginPath();
+                ctx.arc(sx, sy, size, 0, Math.PI*2);
+                ctx.fill();
             });
-            requestAnimationFrame(drawStars);
+            requestAnimationFrame(drawCelestial);
         }
-        window.onresize = initStars;
-        initStars(); drawStars();
+        initCanvas(); drawCelestial();
 
-        // --- SHOCKWAVE FX ---
-        const fxCanvas = document.getElementById('fx-layer');
-        const fCtx = fxCanvas.getContext('2d');
-        let shockwaves = [];
-
-        function createShockwave(e) {
-            shockwaves.push({x: e.clientX, y: e.clientY, r: 0, a: 1});
-        }
-
-        function drawFX() {
-            fxCanvas.width = window.innerWidth; fxCanvas.height = window.innerHeight;
-            fCtx.clearRect(0,0,fxCanvas.width, fxCanvas.height);
-            shockwaves.forEach((s, i) => {
-                fCtx.strokeStyle = `rgba(226, 194, 117, ${s.a})`;
-                fCtx.lineWidth = 2;
-                fCtx.beginPath(); fCtx.arc(s.x, s.y, s.r, 0, Math.PI*2); fCtx.stroke();
-                s.r += 10; s.a -= 0.02;
-                if(s.a <= 0) shockwaves.splice(i, 1);
-            });
-            requestAnimationFrame(drawFX);
-        }
-        drawFX();
-
-        // --- FIREBASE INTEGRATION ---
+        // --- FIREBASE LOGIC ---
         firebase.initializeApp({
             apiKey:"AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain:"strenght-a9f37.firebaseapp.com",
@@ -213,26 +253,21 @@
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
             titleEl.innerText = d.title || "ATLAS";
-            descEl.innerHTML = d.desc || "The weight of the world is not meant for the weak.";
+            descEl.innerHTML = d.desc || "Document your ascent into godhood.";
             tbody.innerHTML = d.table || "";
         });
 
-        const loginBtn = document.getElementById("loginBtn"), logoutBtn = document.getElementById("logoutBtn");
+        // Admin Interactions
         auth.onAuthStateChanged(user => {
             const isAdmin = !!user;
             [titleEl, descEl, tbody].forEach(el => el.contentEditable = isAdmin);
-            loginBtn.style.display = user ? "none" : "inline-block";
-            document.querySelectorAll("#authBox input").forEach(i => i.style.display = user ? "none" : "inline-block");
-            logoutBtn.style.display = user ? "inline-block" : "none";
+            document.getElementById("loginBtn").style.display = user ? "none" : "block";
+            document.getElementById("logoutBtn").style.display = user ? "block" : "none";
         });
-
-        loginBtn.onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value);
-        logoutBtn.onclick = () => auth.signOut();
 
         function saveData() {
             if(!auth.currentUser) return;
             db.ref("log").set({ title: titleEl.innerText, desc: descEl.innerHTML, table: tbody.innerHTML });
-            db.ref("meta/lastUpdate").set(new Date().toDateString());
         }
         [titleEl, descEl, tbody].forEach(el => el.addEventListener("blur", saveData));
 
@@ -240,10 +275,13 @@
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
-            if(diff <= 0) { document.getElementById("timer").textContent = "GODHOOD ACHIEVED"; return; }
             const d = Math.floor(diff/86400000), h = Math.floor(diff/3600000)%24, m = Math.floor(diff/60000)%60, s = Math.floor(diff/1000)%60;
             document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
         }, 1000);
+
+        function shockwave() {
+            auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value);
+        }
     </script>
 </body>
 </html>
