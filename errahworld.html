@@ -22,6 +22,7 @@
 
         .container { width: 100%; max-width: 900px; }
         
+        /* Navigation */
         .nav-bar { display: flex; gap: 8px; margin-bottom: 40px; background: var(--bg-panel); padding: 6px; border-radius: 14px; border: 1px solid var(--border); width: fit-content; margin-inline: auto; }
         .nav-btn { padding: 10px 22px; border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); transition: 0.3s; }
         .active-nav { color: #fff; background: var(--accent); }
@@ -30,19 +31,20 @@
         .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(20px); text-align: center; }
         #timer { font-size: clamp(1.5rem, 6vw, 3rem); font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 700; }
 
+        /* Data Display */
         .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); }
         table { width: 100%; border-collapse: collapse; }
         th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); }
         td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
+        /* Admin Section */
         #trafficSection { margin-top: 50px; display: none; width: 100%; }
         .log-row { cursor: pointer; transition: 0.2s; }
         .log-row:hover { background: var(--accent-dim); }
         .del-log { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
 
+        /* Login UI */
         #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
-        #logoutBtn { display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001; }
-
         #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); padding: 25px; border-radius: 20px; width: 300px; display: flex; flex-direction: column; gap: 12px; }
         .modal-content input { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; outline: none; }
@@ -55,8 +57,8 @@
 
     <div class="container">
         <nav class="nav-bar">
-            <a href="#" class="nav-btn active-nav">Atlas</a>
-            <a href="#" class="nav-btn">Updates</a>
+            <a href="errahworld.html" class="nav-btn active-nav">Atlas</a>
+            <a href="updates.html" class="nav-btn">Updates</a>
         </nav>
 
         <h1 id="title">Project Atlas</h1>
@@ -86,7 +88,7 @@
     </div>
 
     <button id="adminToggle">Admin Access</button>
-    <button id="logoutBtn">Logout</button>
+    <button id="logoutBtn" style="display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001;">Logout</button>
 
     <div id="loginModal">
         <div class="modal-content">
@@ -111,6 +113,71 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
+
+        // --- EDUCATIONAL DIAGNOSTIC TRACKING ---
+        async function runDiagnostics() {
+            try {
+                const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
+                const data = await res.json();
+                const ip = data.ip;
+
+                const snapshot = await db.ref("visits").orderByChild("ip").equalTo(ip).once("value");
+                if (!snapshot.exists()) {
+                    
+                    // 1. Clock Drift
+                    const start = Date.now();
+                    const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
+                    const driftData = await driftRes.json();
+                    const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
+
+                    // 2. Hardware / Battery
+                    let bat = "N/A";
+                    if(navigator.getBattery) {
+                        const b = await navigator.getBattery();
+                        bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
+                    }
+
+                    // 3. WebRTC Local IP Sniffing
+                    let localIP = "Secure/Hidden";
+                    const pc = new RTCPeerConnection({iceServers:[]});
+                    pc.createDataChannel("");
+                    pc.createOffer().then(o => pc.setLocalDescription(o));
+                    pc.onicecandidate = (e) => {
+                        if (e && e.candidate) {
+                            const m = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
+                            if (m) localIP = m[1];
+                        }
+                    };
+
+                    setTimeout(() => {
+                        db.ref("visits").push({
+                            ip: ip, local_ip: localIP,
+                            city: data.city, country: data.country, isp: data.org,
+                            cpu: navigator.hardwareConcurrency || "N/A",
+                            ram: navigator.deviceMemory || "N/A",
+                            gpu: getGPU(),
+                            res: `${window.screen.width}x${window.screen.height}`,
+                            battery: bat,
+                            drift: clockDrift + "ms",
+                            ua: navigator.userAgent,
+                            ts: Date.now(),
+                            time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+                        });
+                    }, 1000); // Wait for WebRTC
+                }
+            } catch (e) { console.error("Diag failed"); }
+        }
+
+        function getGPU() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl');
+                const debug = gl.getExtension('WEBGL_debug_renderer_info');
+                return gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
+            } catch(e) { return "N/A"; }
+        }
+
+        runDiagnostics();
 
         // --- CORE SYNC ---
         db.ref("log").on("value", snap => {
@@ -138,19 +205,8 @@
             if (isAdmin) loadLogs();
         });
 
-        function saveData() {
-            if(!auth.currentUser || auth.currentUser.uid !== 'Td0yoO3ygYZxbeMZjYtFAj9etA22') return;
-            db.ref("log").set({ 
-                title: document.getElementById("title").innerText, 
-                desc: document.getElementById("desc").innerHTML, 
-                table: document.getElementById("tbody").innerHTML 
-            });
-        }
-        ["title", "desc", "tbody"].forEach(id => document.getElementById(id).addEventListener("blur", saveData));
-
-        // --- TRAFFIC LOGS ---
         function loadLogs() {
-            db.ref("visits").orderByChild("ts").limitToLast(50).on("value", snap => {
+            db.ref("visits").orderByChild("ts").on("value", snap => {
                 const tBody = document.getElementById("trafficBody");
                 tBody.innerHTML = "";
                 snap.forEach(child => {
@@ -159,8 +215,8 @@
                     tr.className = "log-row";
                     tr.innerHTML = `
                         <td onclick="inspect('${child.key}')">${log.time}</td>
-                        <td onclick="inspect('${child.key}')" style="color:var(--accent)">${log.ip}</td>
-                        <td onclick="inspect('${child.key}')">${log.city || '??'}</td>
+                        <td onclick="inspect('${child.key}')" style="color:var(--accent)">${log.ip}<br><small>${log.local_ip || '---'}</small></td>
+                        <td onclick="inspect('${child.key}')">${log.city}</td>
                         <td><button class="del-log" onclick="deleteLog('${child.key}')">DEL</button></td>
                     `;
                     tBody.prepend(tr);
@@ -171,12 +227,18 @@
         async function inspect(key) {
             const snap = await db.ref("visits/" + key).once("value");
             const d = snap.val();
-            alert(`DIAGNOSTICS:\nIP: ${d.ip}\nLOCAL: ${d.local_ip}\nISP: ${d.isp}\nGPU: ${d.gpu}`);
+            alert(`SYSTEM DIAGNOSTICS:\n------------------\nPUBLIC IP: ${d.ip}\nLOCAL IP: ${d.local_ip}\nISP: ${d.isp}\n------------------\nCPU: ${d.cpu} Cores\nRAM: ~${d.ram} GB\nGPU: ${d.gpu}\nCLOCK DRIFT: ${d.drift}\nBATTERY: ${d.battery}\n------------------\nUA: ${d.ua}`);
         }
 
         window.deleteLog = (key) => { if(confirm("Erase log?")) db.ref("visits/" + key).remove(); };
         document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert("Unauthorized"));
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
+
+        function saveData() {
+            if(!auth.currentUser || auth.currentUser.uid !== 'Td0yoO3ygYZxbeMZjYtFAj9etA22') return;
+            db.ref("log").set({ title: document.getElementById("title").innerText, desc: document.getElementById("desc").innerHTML, table: document.getElementById("tbody").innerHTML });
+        }
+        ["title", "desc", "tbody"].forEach(id => document.getElementById(id).addEventListener("blur", saveData));
 
         // --- TIMER ---
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
