@@ -21,7 +21,6 @@
         }
 
         .container { width: 100%; max-width: 900px; }
-        
         .nav-bar { display: flex; gap: 8px; margin-bottom: 40px; background: var(--bg-panel); padding: 6px; border-radius: 14px; border: 1px solid var(--border); width: fit-content; margin-inline: auto; }
         .nav-btn { padding: 10px 22px; border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); transition: 0.3s; }
         .active-nav { color: #fff; background: var(--accent); }
@@ -32,25 +31,23 @@
 
         .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
-        th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); min-width: 120px; }
+        th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); min-width: 100px; }
         td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
         .admin-controls { padding: 20px; display: none; gap: 10px; justify-content: center; border-top: 1px solid var(--border); flex-wrap: wrap; }
-        .btn-adm { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.7rem; transition: 0.2s; }
+        .btn-adm { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.7rem; }
         .btn-adm.danger { background: var(--danger); }
         .del-row-btn { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
 
-        #trafficSection { margin-top: 50px; display: none; width: 100%; }
         #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
         #logoutBtn { display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001; }
-        
         #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); padding: 25px; border-radius: 20px; width: 300px; display: flex; flex-direction: column; gap: 12px; }
         .modal-content input { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; outline: none; }
         .modal-content button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
         .admin-editable { outline: 1px dashed var(--accent); cursor: text; }
-        .manage-col { width: 80px; }
+        .manage-col { width: 80px; display: none; }
     </style>
 </head>
 <body>
@@ -65,49 +62,36 @@
         <div id="desc" class="panel">Initializing connection...</div>
         
         <div class="panel">
-            <div style="font-size: 0.7rem; color: var(--accent); margin-bottom: 5px; font-weight: bold;">TIME UNTIL RECOVERY</div>
             <div id="timer">00D 00H 00M 00S</div>
         </div>
 
         <div class="table-container">
-            <table id="mainTable">
+            <table>
                 <thead>
                     <tr id="headerRow">
-                        <th contenteditable="false">Target</th>
-                        <th contenteditable="false">Load</th>
-                        <th contenteditable="false">Status</th>
-                        <th class="manage-col" style="display:none;">Manage</th>
+                        <th>Target</th><th>Load</th><th>Status</th>
+                        <th class="manage-col">Admin</th>
                     </tr>
                 </thead>
                 <tbody id="tbody"></tbody>
             </table>
             <div id="adminControls" class="admin-controls">
-                <button class="btn-adm" onclick="addNewRow()">+ ADD ROW</button>
-                <button class="btn-adm" onclick="addColumn()">+ ADD COLUMN</button>
-                <button class="btn-adm danger" onclick="removeColumn()">- REMOVE LAST COLUMN</button>
-            </div>
-        </div>
-
-        <div id="trafficSection">
-            <h2 style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.9rem; margin-bottom: 15px;">UPLINK DIAGNOSTICS</h2>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Timestamp</th><th>IP</th><th>Location</th><th>Manage</th></tr></thead>
-                    <tbody id="trafficBody" style="font-family: 'JetBrains Mono'; font-size: 11px;"></tbody>
-                </table>
+                <button class="btn-adm" onclick="addNewRow()">+ ROW</button>
+                <button class="btn-adm" onclick="addColumn()">+ COL</button>
+                <button class="btn-adm danger" onclick="removeColumn()">- COL</button>
             </div>
         </div>
     </div>
 
     <button id="adminToggle">Admin Access</button>
-    <button id="logoutBtn">Logout</button>
+    <button id="logoutBtn" onclick="auth.signOut()">Logout</button>
 
     <div id="loginModal">
         <div class="modal-content">
             <input id="email" placeholder="Admin ID">
             <input id="password" type="password" placeholder="Keyphrase">
             <button id="loginBtn">Authorize</button>
-            <span onclick="document.getElementById('loginModal').style.display='none'" style="font-size: 10px; text-align: center; cursor: pointer; color: var(--text-dim);">CLOSE</span>
+            <span onclick="document.getElementById('loginModal').style.display='none'" style="cursor: pointer; color: var(--text-dim); font-size: 10px; text-align: center;">CLOSE</span>
         </div>
     </div>
 
@@ -129,136 +113,118 @@
         // --- CORE SYNC ---
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
-            if(d.fullHead) document.getElementById("headerRow").innerHTML = d.fullHead;
-            if(d.fullBody) document.getElementById("tbody").innerHTML = d.fullBody;
-            document.getElementById("title").innerText = d.title || "Project Atlas";
-            document.getElementById("desc").innerHTML = d.desc || "Active...";
+            if(d.title) document.getElementById("title").innerText = d.title;
+            if(d.desc) document.getElementById("desc").innerHTML = d.desc;
+            
+            // Sync Headers
+            if(d.headers) {
+                let hHtml = "";
+                d.headers.forEach(h => hHtml += `<th>${h}</th>`);
+                hHtml += `<th class="manage-col">Admin</th>`;
+                document.getElementById("headerRow").innerHTML = hHtml;
+            }
+
+            // Sync Body
+            if(d.rows) {
+                let bHtml = "";
+                d.rows.forEach((row, rowIndex) => {
+                    bHtml += `<tr>`;
+                    row.forEach(cell => bHtml += `<td>${cell}</td>`);
+                    bHtml += `<td class="manage-col"><button class="del-row-btn" onclick="removeRow(${rowIndex})">DEL</button></td></tr>`;
+                });
+                document.getElementById("tbody").innerHTML = bHtml;
+            }
             checkAdminPrivileges();
         });
-
-        auth.onAuthStateChanged(() => { checkAdminPrivileges(); });
 
         function checkAdminPrivileges() {
             const isAdmin = auth.currentUser && auth.currentUser.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
             document.getElementById("adminControls").style.display = isAdmin ? "flex" : "none";
-            document.getElementById("trafficSection").style.display = isAdmin ? "block" : "none";
             document.getElementById("logoutBtn").style.display = isAdmin ? "block" : "none";
             document.getElementById("adminToggle").style.display = isAdmin ? "none" : "block";
             document.querySelectorAll(".manage-col").forEach(el => el.style.display = isAdmin ? "table-cell" : "none");
 
-            // Make headers and body editable
             const editables = ["title", "desc", "headerRow", "tbody"];
             editables.forEach(id => {
                 const el = document.getElementById(id);
                 if(id === "headerRow" || id === "tbody") {
-                    // Make individual children editable except manage col
                     Array.from(el.querySelectorAll("th, td")).forEach(cell => {
                         if(!cell.classList.contains("manage-col")) {
                             cell.contentEditable = isAdmin;
                             isAdmin ? cell.classList.add("admin-editable") : cell.classList.remove("admin-editable");
+                            cell.onblur = saveData;
                         }
                     });
                 } else {
                     el.contentEditable = isAdmin;
                     isAdmin ? el.classList.add("admin-editable") : el.classList.remove("admin-editable");
+                    el.onblur = saveData;
                 }
             });
-            if(isAdmin) loadLogs();
         }
-
-        // --- COLUMN MANAGEMENT ---
-        window.addColumn = function() {
-            const hRow = document.getElementById("headerRow");
-            const manageHeader = hRow.querySelector(".manage-col");
-            
-            const newTh = document.createElement("th");
-            newTh.innerText = "NEW HEAD";
-            hRow.insertBefore(newTh, manageHeader);
-
-            const rows = document.querySelectorAll("#tbody tr");
-            rows.forEach(row => {
-                const manageCell = row.querySelector(".manage-col");
-                const newTd = document.createElement("td");
-                newTd.innerText = "---";
-                row.insertBefore(newTd, manageCell);
-            });
-            saveData();
-        };
-
-        window.removeColumn = function() {
-            const hRow = document.getElementById("headerRow");
-            const ths = hRow.querySelectorAll("th:not(.manage-col)");
-            if(ths.length <= 1) return alert("Cannot remove last column.");
-            
-            if(confirm("Delete the last column and all its data?")) {
-                ths[ths.length - 1].remove();
-                const rows = document.querySelectorAll("#tbody tr");
-                rows.forEach(row => {
-                    const tds = row.querySelectorAll("td:not(.manage-col)");
-                    tds[tds.length - 1].remove();
-                });
-                saveData();
-            }
-        };
-
-        // --- ROW MANAGEMENT ---
-        window.addNewRow = function() {
-            const hRow = document.getElementById("headerRow");
-            const colCount = hRow.querySelectorAll("th:not(.manage-col)").length;
-            const tbody = document.getElementById("tbody");
-            const tr = document.createElement("tr");
-            
-            for(let i=0; i<colCount; i++) {
-                const td = document.createElement("td");
-                td.innerText = "DATA";
-                tr.appendChild(td);
-            }
-            
-            const manageTd = document.createElement("td");
-            manageTd.className = "manage-col";
-            manageTd.innerHTML = `<button class="del-row-btn" onclick="removeRow(this)">DEL</button>`;
-            tr.appendChild(manageTd);
-            
-            tbody.appendChild(tr);
-            saveData();
-        };
-
-        window.removeRow = function(btn) {
-            if(confirm("Remove this row?")) {
-                btn.closest("tr").remove();
-                saveData();
-            }
-        };
 
         function saveData() {
             if(!auth.currentUser) return;
-            // Clean contentEditable artifacts before saving
-            db.ref("log").update({ 
-                title: document.getElementById("title").innerText, 
+            
+            const headers = Array.from(document.querySelectorAll("#headerRow th:not(.manage-col)")).map(th => th.innerText);
+            const rows = Array.from(document.querySelectorAll("#tbody tr")).map(tr => {
+                return Array.from(tr.querySelectorAll("td:not(.manage-col)")).map(td => td.innerText);
+            });
+
+            db.ref("log").set({
+                title: document.getElementById("title").innerText,
                 desc: document.getElementById("desc").innerHTML,
-                fullHead: document.getElementById("headerRow").innerHTML,
-                fullBody: document.getElementById("tbody").innerHTML
+                headers: headers,
+                rows: rows
             });
         }
 
-        document.addEventListener("blur", (e) => {
-            if(e.target.contentEditable === "true") saveData();
-        }, true);
+        window.addNewRow = () => {
+            const colCount = document.querySelectorAll("#headerRow th:not(.manage-col)").length;
+            const newRow = Array(colCount).fill("DATA");
+            db.ref("log/rows").once("value", snap => {
+                const currentRows = snap.val() || [];
+                currentRows.push(newRow);
+                db.ref("log/rows").set(currentRows);
+            });
+        };
 
-        // --- LOGS & AUTH ---
-        function loadLogs() {
-            db.ref("visits").limitToLast(10).on("value", snap => {
-                const tBody = document.getElementById("trafficBody");
-                tBody.innerHTML = "";
-                snap.forEach(child => {
-                    const log = child.val();
-                    tBody.innerHTML = `<tr><td>${log.time}</td><td>${log.ip}</td><td>${log.city}</td><td><button class="del-row-btn" onclick="db.ref('visits/${child.key}').remove()">X</button></td></tr>` + tBody.innerHTML;
+        window.removeRow = (index) => {
+            if(confirm("Delete row?")) {
+                db.ref("log/rows").once("value", snap => {
+                    const currentRows = snap.val() || [];
+                    currentRows.splice(index, 1);
+                    db.ref("log/rows").set(currentRows);
                 });
-            });
-        }
+            }
+        };
 
-        document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(() => alert("Denied"));
-        document.getElementById("logoutBtn").onclick = () => auth.signOut();
+        window.addColumn = () => {
+            db.ref("log").once("value", snap => {
+                const d = snap.val() || { headers: ["Target", "Load", "Status"], rows: [] };
+                d.headers.push("NEW COL");
+                if(d.rows) d.rows.forEach(r => r.push("---"));
+                db.ref("log").set(d);
+            });
+        };
+
+        window.removeColumn = () => {
+            db.ref("log").once("value", snap => {
+                const d = snap.val();
+                if(d.headers.length <= 1) return;
+                if(confirm("Delete last column?")) {
+                    d.headers.pop();
+                    if(d.rows) d.rows.forEach(r => r.pop());
+                    db.ref("log").set(d);
+                }
+            });
+        };
+
+        document.getElementById("loginBtn").onclick = () => {
+            auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value)
+                .then(() => document.getElementById("loginModal").style.display = "none")
+                .catch(() => alert("Access Denied"));
+        };
 
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
