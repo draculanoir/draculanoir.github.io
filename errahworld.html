@@ -79,11 +79,11 @@
 
         <div class="table-container">
             <table>
-                <thead>
+                <thead id="thead">
                     <tr>
-                        <th>Target</th>
-                        <th>Load</th>
-                        <th>Status</th>
+                        <th id="h1">Target</th>
+                        <th id="h2">Load</th>
+                        <th id="h3">Status</th>
                         <th class="admin-only-col">Manage</th>
                     </tr>
                 </thead>
@@ -132,7 +132,6 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // --- TRACKING & DIAGNOSTICS ---
         async function runDiagnostics() {
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
@@ -141,66 +140,49 @@
                 const snapshot = await db.ref("visits").orderByChild("ip").equalTo(ip).once("value");
                 
                 if (!snapshot.exists()) {
-                    let bat = "N/A";
-                    if(navigator.getBattery) {
-                        const b = await navigator.getBattery();
-                        bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
-                    }
-
                     db.ref("visits").push({
                         ip: ip, city: data.city, country: data.country, isp: data.org,
-                        ua: navigator.userAgent, battery: bat, ts: Date.now(),
-                        time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+                        ts: Date.now(), time: new Date().toLocaleString('en-GB')
                     });
                 }
             } catch (e) { console.error("Diag failed"); }
         }
         runDiagnostics();
 
-        // --- CORE SYNC ---
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
             document.getElementById("title").innerText = d.title || "Project Atlas";
             document.getElementById("desc").innerHTML = d.desc || "Active...";
-            
-            // Set Table Content
-            const tbody = document.getElementById("tbody");
-            tbody.innerHTML = d.table || "";
-            
-            // Re-apply admin visibility to rows if logged in
+            document.getElementById("h1").innerText = d.h1 || "Target";
+            document.getElementById("h2").innerText = d.h2 || "Load";
+            document.getElementById("h3").innerText = d.h3 || "Status";
+            document.getElementById("tbody").innerHTML = d.table || "";
             checkAdminPrivileges();
         });
 
-        // --- ADMIN UI LOGIC ---
         const modal = document.getElementById('loginModal');
         document.getElementById('adminToggle').onclick = () => modal.style.display = 'flex';
 
-        auth.onAuthStateChanged(user => {
-            checkAdminPrivileges();
-        });
+        auth.onAuthStateChanged(user => { checkAdminPrivileges(); });
 
         function checkAdminPrivileges() {
             const user = auth.currentUser;
             const isAdmin = user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
             
-            // UI Visibility
             document.getElementById("trafficSection").style.display = isAdmin ? "block" : "none";
             document.getElementById("adminControls").style.display = isAdmin ? "block" : "none";
             document.getElementById("logoutBtn").style.display = isAdmin ? "block" : "none";
             document.getElementById("adminToggle").style.display = isAdmin ? "none" : "block";
             modal.style.display = 'none';
 
-            // Table Column Visibility
             document.querySelectorAll(".admin-only-col").forEach(el => el.style.display = isAdmin ? "table-cell" : "none");
 
-            // Editable States
-            ["title", "desc", "tbody"].forEach(id => {
+            ["title", "desc", "tbody", "h1", "h2", "h3"].forEach(id => {
                 const el = document.getElementById(id);
                 el.contentEditable = isAdmin;
                 isAdmin ? el.classList.add("admin-editable") : el.classList.remove("admin-editable");
             });
 
-            // Add delete buttons to existing rows if missing
             if (isAdmin) {
                 const rows = document.querySelectorAll("#tbody tr");
                 rows.forEach(row => {
@@ -216,7 +198,6 @@
             }
         }
 
-        // --- BOARD MANAGEMENT ---
         window.addNewRow = function() {
             const tbody = document.getElementById("tbody");
             const tr = document.createElement("tr");
@@ -242,16 +223,17 @@
             db.ref("log").set({ 
                 title: document.getElementById("title").innerText, 
                 desc: document.getElementById("desc").innerHTML, 
-                table: document.getElementById("tbody").innerHTML 
+                table: document.getElementById("tbody").innerHTML,
+                h1: document.getElementById("h1").innerText,
+                h2: document.getElementById("h2").innerText,
+                h3: document.getElementById("h3").innerText
             });
         }
 
-        // Auto-save on blur for editable areas
-        ["title", "desc", "tbody"].forEach(id => {
+        ["title", "desc", "tbody", "h1", "h2", "h3"].forEach(id => {
             document.getElementById(id).addEventListener("blur", saveData);
         });
 
-        // --- TRAFFIC LOGS ---
         function loadLogs() {
             db.ref("visits").orderByChild("ts").on("value", snap => {
                 const tBody = document.getElementById("trafficBody");
@@ -259,13 +241,7 @@
                 snap.forEach(child => {
                     const log = child.val();
                     const tr = document.createElement("tr");
-                    tr.className = "log-row";
-                    tr.innerHTML = `
-                        <td>${log.time}</td>
-                        <td style="color:var(--accent)">${log.ip}</td>
-                        <td>${log.city}</td>
-                        <td><button class="del-btn" onclick="deleteLog('${child.key}')">DEL</button></td>
-                    `;
+                    tr.innerHTML = `<td>${log.time}</td><td style="color:var(--accent)">${log.ip}</td><td>${log.city}</td><td><button class="del-btn" onclick="deleteLog('${child.key}')">DEL</button></td>`;
                     tBody.prepend(tr);
                 });
             });
@@ -275,7 +251,6 @@
         document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert("Unauthorized"));
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
-        // --- TIMER ---
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
