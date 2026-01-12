@@ -32,33 +32,41 @@
         #timer { font-size: clamp(1.5rem, 6vw, 3rem); font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 700; }
 
         /* Data Display */
-        .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); }
+        .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
         th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); }
         td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
-        /* Admin Section */
+        /* Admin Action UI */
+        .admin-controls { padding: 20px; text-align: center; border-top: 1px solid var(--border); display: none; }
+        .btn-add { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .btn-add:hover { opacity: 0.8; transform: translateY(-1px); }
+        .del-btn { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; font-weight: bold; }
+        .del-btn:hover { background: var(--danger); color: white; }
+
+        /* Admin Section & Modal */
         #trafficSection { margin-top: 50px; display: none; width: 100%; }
         .log-row { cursor: pointer; transition: 0.2s; }
         .log-row:hover { background: var(--accent-dim); }
-        .del-log { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
-
-        /* Login UI */
+        
         #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
+        #logoutBtn { display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001; }
+        
         #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); padding: 25px; border-radius: 20px; width: 300px; display: flex; flex-direction: column; gap: 12px; }
         .modal-content input { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; outline: none; }
         .modal-content button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
         .admin-editable { outline: 1px dashed var(--accent); cursor: text; }
+        .admin-only-col { display: none; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <nav class="nav-bar">
-            <a href="errahworld.html" class="nav-btn active-nav">Atlas</a>
-            <a href="updates.html" class="nav-btn">Updates</a>
+            <a href="#" class="nav-btn active-nav">Atlas</a>
+            <a href="#" class="nav-btn">Updates</a>
         </nav>
 
         <h1 id="title">Project Atlas</h1>
@@ -71,9 +79,19 @@
 
         <div class="table-container">
             <table>
-                <thead><tr><th>Target</th><th>Load</th><th>Status</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Target</th>
+                        <th>Load</th>
+                        <th>Status</th>
+                        <th class="admin-only-col">Manage</th>
+                    </tr>
+                </thead>
                 <tbody id="tbody"></tbody>
             </table>
+            <div id="adminControls" class="admin-controls">
+                <button class="btn-add" onclick="addNewRow()">+ ADD NEW TARGET</button>
+            </div>
         </div>
 
         <div id="trafficSection">
@@ -88,7 +106,7 @@
     </div>
 
     <button id="adminToggle">Admin Access</button>
-    <button id="logoutBtn" style="display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001;">Logout</button>
+    <button id="logoutBtn">Logout</button>
 
     <div id="loginModal">
         <div class="modal-content">
@@ -114,69 +132,29 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // --- EDUCATIONAL DIAGNOSTIC TRACKING ---
+        // --- TRACKING & DIAGNOSTICS ---
         async function runDiagnostics() {
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
                 const data = await res.json();
                 const ip = data.ip;
-
                 const snapshot = await db.ref("visits").orderByChild("ip").equalTo(ip).once("value");
+                
                 if (!snapshot.exists()) {
-                    
-                    // 1. Clock Drift
-                    const start = Date.now();
-                    const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
-                    const driftData = await driftRes.json();
-                    const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
-
-                    // 2. Hardware / Battery
                     let bat = "N/A";
                     if(navigator.getBattery) {
                         const b = await navigator.getBattery();
                         bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
                     }
 
-                    // 3. WebRTC Local IP Sniffing
-                    let localIP = "Secure/Hidden";
-                    const pc = new RTCPeerConnection({iceServers:[]});
-                    pc.createDataChannel("");
-                    pc.createOffer().then(o => pc.setLocalDescription(o));
-                    pc.onicecandidate = (e) => {
-                        if (e && e.candidate) {
-                            const m = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
-                            if (m) localIP = m[1];
-                        }
-                    };
-
-                    setTimeout(() => {
-                        db.ref("visits").push({
-                            ip: ip, local_ip: localIP,
-                            city: data.city, country: data.country, isp: data.org,
-                            cpu: navigator.hardwareConcurrency || "N/A",
-                            ram: navigator.deviceMemory || "N/A",
-                            gpu: getGPU(),
-                            res: `${window.screen.width}x${window.screen.height}`,
-                            battery: bat,
-                            drift: clockDrift + "ms",
-                            ua: navigator.userAgent,
-                            ts: Date.now(),
-                            time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
-                        });
-                    }, 1000); // Wait for WebRTC
+                    db.ref("visits").push({
+                        ip: ip, city: data.city, country: data.country, isp: data.org,
+                        ua: navigator.userAgent, battery: bat, ts: Date.now(),
+                        time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+                    });
                 }
             } catch (e) { console.error("Diag failed"); }
         }
-
-        function getGPU() {
-            try {
-                const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl');
-                const debug = gl.getExtension('WEBGL_debug_renderer_info');
-                return gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
-            } catch(e) { return "N/A"; }
-        }
-
         runDiagnostics();
 
         // --- CORE SYNC ---
@@ -184,27 +162,96 @@
             const d = snap.val() || {};
             document.getElementById("title").innerText = d.title || "Project Atlas";
             document.getElementById("desc").innerHTML = d.desc || "Active...";
-            document.getElementById("tbody").innerHTML = d.table || "";
+            
+            // Set Table Content
+            const tbody = document.getElementById("tbody");
+            tbody.innerHTML = d.table || "";
+            
+            // Re-apply admin visibility to rows if logged in
+            checkAdminPrivileges();
         });
 
-        // --- ADMIN UI ---
+        // --- ADMIN UI LOGIC ---
         const modal = document.getElementById('loginModal');
         document.getElementById('adminToggle').onclick = () => modal.style.display = 'flex';
 
         auth.onAuthStateChanged(user => {
+            checkAdminPrivileges();
+        });
+
+        function checkAdminPrivileges() {
+            const user = auth.currentUser;
             const isAdmin = user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
+            
+            // UI Visibility
             document.getElementById("trafficSection").style.display = isAdmin ? "block" : "none";
+            document.getElementById("adminControls").style.display = isAdmin ? "block" : "none";
             document.getElementById("logoutBtn").style.display = isAdmin ? "block" : "none";
             document.getElementById("adminToggle").style.display = isAdmin ? "none" : "block";
             modal.style.display = 'none';
+
+            // Table Column Visibility
+            document.querySelectorAll(".admin-only-col").forEach(el => el.style.display = isAdmin ? "table-cell" : "none");
+
+            // Editable States
             ["title", "desc", "tbody"].forEach(id => {
                 const el = document.getElementById(id);
                 el.contentEditable = isAdmin;
                 isAdmin ? el.classList.add("admin-editable") : el.classList.remove("admin-editable");
             });
-            if (isAdmin) loadLogs();
+
+            // Add delete buttons to existing rows if missing
+            if (isAdmin) {
+                const rows = document.querySelectorAll("#tbody tr");
+                rows.forEach(row => {
+                    if (!row.querySelector(".admin-only-col")) {
+                        const td = document.createElement("td");
+                        td.className = "admin-only-col";
+                        td.style.display = "table-cell";
+                        td.innerHTML = `<button class="del-btn" onclick="removeRow(this)">REMOVE</button>`;
+                        row.appendChild(td);
+                    }
+                });
+                loadLogs();
+            }
+        }
+
+        // --- BOARD MANAGEMENT ---
+        window.addNewRow = function() {
+            const tbody = document.getElementById("tbody");
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td contenteditable="true">NEW TARGET</td>
+                <td contenteditable="true">0%</td>
+                <td contenteditable="true">STABLE</td>
+                <td class="admin-only-col" style="display:table-cell"><button class="del-btn" onclick="removeRow(this)">REMOVE</button></td>
+            `;
+            tbody.appendChild(tr);
+            saveData();
+        };
+
+        window.removeRow = function(btn) {
+            if(confirm("Confirm Deletion?")) {
+                btn.closest("tr").remove();
+                saveData();
+            }
+        };
+
+        function saveData() {
+            if(!auth.currentUser) return;
+            db.ref("log").set({ 
+                title: document.getElementById("title").innerText, 
+                desc: document.getElementById("desc").innerHTML, 
+                table: document.getElementById("tbody").innerHTML 
+            });
+        }
+
+        // Auto-save on blur for editable areas
+        ["title", "desc", "tbody"].forEach(id => {
+            document.getElementById(id).addEventListener("blur", saveData);
         });
 
+        // --- TRAFFIC LOGS ---
         function loadLogs() {
             db.ref("visits").orderByChild("ts").on("value", snap => {
                 const tBody = document.getElementById("trafficBody");
@@ -214,36 +261,25 @@
                     const tr = document.createElement("tr");
                     tr.className = "log-row";
                     tr.innerHTML = `
-                        <td onclick="inspect('${child.key}')">${log.time}</td>
-                        <td onclick="inspect('${child.key}')" style="color:var(--accent)">${log.ip}<br><small>${log.local_ip || '---'}</small></td>
-                        <td onclick="inspect('${child.key}')">${log.city}</td>
-                        <td><button class="del-log" onclick="deleteLog('${child.key}')">DEL</button></td>
+                        <td>${log.time}</td>
+                        <td style="color:var(--accent)">${log.ip}</td>
+                        <td>${log.city}</td>
+                        <td><button class="del-btn" onclick="deleteLog('${child.key}')">DEL</button></td>
                     `;
                     tBody.prepend(tr);
                 });
             });
         }
 
-        async function inspect(key) {
-            const snap = await db.ref("visits/" + key).once("value");
-            const d = snap.val();
-            alert(`SYSTEM DIAGNOSTICS:\n------------------\nPUBLIC IP: ${d.ip}\nLOCAL IP: ${d.local_ip}\nISP: ${d.isp}\n------------------\nCPU: ${d.cpu} Cores\nRAM: ~${d.ram} GB\nGPU: ${d.gpu}\nCLOCK DRIFT: ${d.drift}\nBATTERY: ${d.battery}\n------------------\nUA: ${d.ua}`);
-        }
-
         window.deleteLog = (key) => { if(confirm("Erase log?")) db.ref("visits/" + key).remove(); };
         document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert("Unauthorized"));
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
-
-        function saveData() {
-            if(!auth.currentUser || auth.currentUser.uid !== 'Td0yoO3ygYZxbeMZjYtFAj9etA22') return;
-            db.ref("log").set({ title: document.getElementById("title").innerText, desc: document.getElementById("desc").innerHTML, table: document.getElementById("tbody").innerHTML });
-        }
-        ["title", "desc", "tbody"].forEach(id => document.getElementById(id).addEventListener("blur", saveData));
 
         // --- TIMER ---
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
+            if(diff < 0) return;
             const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
             document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
         }, 1000);
