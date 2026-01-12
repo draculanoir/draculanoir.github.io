@@ -33,7 +33,6 @@
         th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); }
         td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
-        /* Admin Section */
         #trafficSection { margin-top: 50px; display: none; width: 100%; }
         .log-row { cursor: pointer; transition: 0.2s; }
         .log-row:hover { background: var(--accent-dim); }
@@ -44,9 +43,8 @@
         .radar-circle { width: 200px; height: 200px; border: 2px solid var(--accent); border-radius: 50%; position: relative; margin-bottom: 20px; }
         .radar-circle::before { content: ''; position: absolute; top: 50%; left: 50%; width: 50%; height: 2px; background: var(--accent); transform-origin: left; animation: scan 2s linear infinite; }
         @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .tri-text { font-family: 'JetBrains Mono'; color: var(--accent); text-align: center; }
+        .tri-text { font-family: 'JetBrains Mono'; color: var(--accent); text-align: center; padding: 0 20px; }
 
-        /* Login UI */
         #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
         #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); padding: 25px; border-radius: 20px; width: 300px; display: flex; flex-direction: column; gap: 12px; }
@@ -77,7 +75,7 @@
             <h2 style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.9rem; margin-bottom: 15px;">UPLINK DIAGNOSTICS</h2>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Timestamp</th><th>IP / Node</th><th>Location</th><th>Manage</th></tr></thead>
+                    <thead><tr><th>Timestamp</th><th>Network Identity</th><th>Location</th><th>Manage</th></tr></thead>
                     <tbody id="trafficBody" style="font-family: 'JetBrains Mono'; font-size: 11px;"></tbody>
                 </table>
             </div>
@@ -191,7 +189,10 @@
                     const tr = document.createElement("tr");
                     tr.className = "log-row";
                     tr.innerHTML = `<td onclick="inspect('${child.key}')">${log.time}</td>
-                        <td onclick="inspect('${child.key}')" style="color:var(--accent)">${log.ip}</td>
+                        <td onclick="inspect('${child.key}')" style="color:var(--accent); line-height:1.2;">
+                            <b>${log.ip}</b><br>
+                            <span style="color:var(--text-dim); font-size:10px;">${log.local_ip || 'No Local ID'}</span>
+                        </td>
                         <td onclick="inspect('${child.key}')">${log.city}</td>
                         <td><button class="del-log" onclick="db.ref('visits/${child.key}').remove()">DEL</button></td>`;
                     tBody.prepend(tr);
@@ -199,7 +200,6 @@
             });
         }
 
-        // --- THE TRIANGULATION ENGINE ---
         async function inspect(key) {
             const snap = await db.ref("visits/" + key).once("value");
             const d = snap.val();
@@ -208,21 +208,22 @@
             
             triOverlay.style.display = 'flex';
             
-            // Educational Multilateration Simulation
             const driftVal = parseInt(d.drift) || 40;
             const estRadius = (driftVal * 0.45).toFixed(2);
-            const env = d.local_ip.startsWith("192.168") ? "Residential SOHO" : "Enterprise Hub";
+            const env = (d.local_ip && d.local_ip.startsWith("192.168")) ? "Residential Home" : "Corporate/Public";
 
             setTimeout(() => {
-                triStatus.innerHTML = `SIGNAL LOCKED<br>---<br>RADIUS: ${estRadius}km<br>NODE: ${env}<br>OSINT: Tracking BSSID...`;
+                triStatus.innerHTML = `SIGNAL LOCKED<br>---<br>RADIUS: ${estRadius}km<br>ENVIRONMENT: ${env}<br>OSINT: Tracking Node...`;
                 setTimeout(() => {
                     triOverlay.style.display = 'none';
-                    let alertMsg = `TRIANGULATION COMPLETE:\nIP: ${d.ip}\nLOCAL: ${d.local_ip}\nDRIFT: ${d.drift}\nCPU: ${d.cpu} Cores\nISP: ${d.isp}\n----------------\nEST. RADIUS: ${estRadius}km\nOpen OSINT Satellite Map?`;
+                    let alertMsg = `TRIANGULATION COMPLETE:\nIP: ${d.ip}\nLOCAL: ${d.local_ip}\nDRIFT: ${d.drift}\nISP: ${d.isp}\n----------------\nEST. RADIUS: ${estRadius}km\nOpen Satellite OSINT?`;
                     if(confirm(alertMsg)) {
-                        window.open(`https://criminalip.io/en/asset/report/${d.ip}`, '_blank');
+                        // NEW SATELLITE LINK LOGIC
+                        const searchString = encodeURIComponent(`${d.city} ${d.isp} network center`);
+                        window.open(`https://www.google.com/maps/search/${searchString}/@?api=1&maptype=satellite`, '_blank');
                     }
-                }, 2000);
-            }, 2000);
+                }, 1500);
+            }, 1500);
         }
 
         document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert("Unauthorized"));
