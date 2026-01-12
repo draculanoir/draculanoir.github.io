@@ -22,7 +22,6 @@
 
         .container { width: 100%; max-width: 900px; }
         
-        /* Navigation */
         .nav-bar { display: flex; gap: 8px; margin-bottom: 40px; background: var(--bg-panel); padding: 6px; border-radius: 14px; border: 1px solid var(--border); width: fit-content; margin-inline: auto; }
         .nav-btn { padding: 10px 22px; border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); transition: 0.3s; }
         .active-nav { color: #fff; background: var(--accent); }
@@ -31,24 +30,17 @@
         .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(20px); text-align: center; }
         #timer { font-size: clamp(1.5rem, 6vw, 3rem); font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 700; }
 
-        /* Data Display */
         .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
-        th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); }
+        th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); min-width: 120px; }
         td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
-        /* Admin Action UI */
-        .admin-controls { padding: 20px; text-align: center; border-top: 1px solid var(--border); display: none; }
-        .btn-add { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
-        .btn-add:hover { opacity: 0.8; transform: translateY(-1px); }
-        .del-btn { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; font-weight: bold; }
-        .del-btn:hover { background: var(--danger); color: white; }
+        .admin-controls { padding: 20px; display: none; gap: 10px; justify-content: center; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .btn-adm { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.7rem; transition: 0.2s; }
+        .btn-adm.danger { background: var(--danger); }
+        .del-row-btn { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
 
-        /* Admin Section & Modal */
         #trafficSection { margin-top: 50px; display: none; width: 100%; }
-        .log-row { cursor: pointer; transition: 0.2s; }
-        .log-row:hover { background: var(--accent-dim); }
-        
         #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
         #logoutBtn { display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001; }
         
@@ -58,7 +50,7 @@
         .modal-content button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
         .admin-editable { outline: 1px dashed var(--accent); cursor: text; }
-        .admin-only-col { display: none; }
+        .manage-col { width: 80px; }
     </style>
 </head>
 <body>
@@ -78,19 +70,21 @@
         </div>
 
         <div class="table-container">
-            <table>
-                <thead id="thead">
-                    <tr>
-                        <th id="h1">Target</th>
-                        <th id="h2">Load</th>
-                        <th id="h3">Status</th>
-                        <th class="admin-only-col">Manage</th>
+            <table id="mainTable">
+                <thead>
+                    <tr id="headerRow">
+                        <th contenteditable="false">Target</th>
+                        <th contenteditable="false">Load</th>
+                        <th contenteditable="false">Status</th>
+                        <th class="manage-col" style="display:none;">Manage</th>
                     </tr>
                 </thead>
                 <tbody id="tbody"></tbody>
             </table>
             <div id="adminControls" class="admin-controls">
-                <button class="btn-add" onclick="addNewRow()">+ ADD NEW TARGET</button>
+                <button class="btn-adm" onclick="addNewRow()">+ ADD ROW</button>
+                <button class="btn-adm" onclick="addColumn()">+ ADD COLUMN</button>
+                <button class="btn-adm danger" onclick="removeColumn()">- REMOVE LAST COLUMN</button>
             </div>
         </div>
 
@@ -98,7 +92,7 @@
             <h2 style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.9rem; margin-bottom: 15px;">UPLINK DIAGNOSTICS</h2>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Timestamp</th><th>IP / Node</th><th>Location</th><th>Manage</th></tr></thead>
+                    <thead><tr><th>Timestamp</th><th>IP</th><th>Location</th><th>Manage</th></tr></thead>
                     <tbody id="trafficBody" style="font-family: 'JetBrains Mono'; font-size: 11px;"></tbody>
                 </table>
             </div>
@@ -132,87 +126,105 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        async function runDiagnostics() {
-            try {
-                const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
-                const data = await res.json();
-                const ip = data.ip;
-                const snapshot = await db.ref("visits").orderByChild("ip").equalTo(ip).once("value");
-                
-                if (!snapshot.exists()) {
-                    db.ref("visits").push({
-                        ip: ip, city: data.city, country: data.country, isp: data.org,
-                        ts: Date.now(), time: new Date().toLocaleString('en-GB')
-                    });
-                }
-            } catch (e) { console.error("Diag failed"); }
-        }
-        runDiagnostics();
-
+        // --- CORE SYNC ---
         db.ref("log").on("value", snap => {
             const d = snap.val() || {};
+            if(d.fullHead) document.getElementById("headerRow").innerHTML = d.fullHead;
+            if(d.fullBody) document.getElementById("tbody").innerHTML = d.fullBody;
             document.getElementById("title").innerText = d.title || "Project Atlas";
             document.getElementById("desc").innerHTML = d.desc || "Active...";
-            document.getElementById("h1").innerText = d.h1 || "Target";
-            document.getElementById("h2").innerText = d.h2 || "Load";
-            document.getElementById("h3").innerText = d.h3 || "Status";
-            document.getElementById("tbody").innerHTML = d.table || "";
             checkAdminPrivileges();
         });
 
-        const modal = document.getElementById('loginModal');
-        document.getElementById('adminToggle').onclick = () => modal.style.display = 'flex';
-
-        auth.onAuthStateChanged(user => { checkAdminPrivileges(); });
+        auth.onAuthStateChanged(() => { checkAdminPrivileges(); });
 
         function checkAdminPrivileges() {
-            const user = auth.currentUser;
-            const isAdmin = user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
-            
+            const isAdmin = auth.currentUser && auth.currentUser.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
+            document.getElementById("adminControls").style.display = isAdmin ? "flex" : "none";
             document.getElementById("trafficSection").style.display = isAdmin ? "block" : "none";
-            document.getElementById("adminControls").style.display = isAdmin ? "block" : "none";
             document.getElementById("logoutBtn").style.display = isAdmin ? "block" : "none";
             document.getElementById("adminToggle").style.display = isAdmin ? "none" : "block";
-            modal.style.display = 'none';
+            document.querySelectorAll(".manage-col").forEach(el => el.style.display = isAdmin ? "table-cell" : "none");
 
-            document.querySelectorAll(".admin-only-col").forEach(el => el.style.display = isAdmin ? "table-cell" : "none");
-
-            ["title", "desc", "tbody", "h1", "h2", "h3"].forEach(id => {
+            // Make headers and body editable
+            const editables = ["title", "desc", "headerRow", "tbody"];
+            editables.forEach(id => {
                 const el = document.getElementById(id);
-                el.contentEditable = isAdmin;
-                isAdmin ? el.classList.add("admin-editable") : el.classList.remove("admin-editable");
+                if(id === "headerRow" || id === "tbody") {
+                    // Make individual children editable except manage col
+                    Array.from(el.querySelectorAll("th, td")).forEach(cell => {
+                        if(!cell.classList.contains("manage-col")) {
+                            cell.contentEditable = isAdmin;
+                            isAdmin ? cell.classList.add("admin-editable") : cell.classList.remove("admin-editable");
+                        }
+                    });
+                } else {
+                    el.contentEditable = isAdmin;
+                    isAdmin ? el.classList.add("admin-editable") : el.classList.remove("admin-editable");
+                }
             });
-
-            if (isAdmin) {
-                const rows = document.querySelectorAll("#tbody tr");
-                rows.forEach(row => {
-                    if (!row.querySelector(".admin-only-col")) {
-                        const td = document.createElement("td");
-                        td.className = "admin-only-col";
-                        td.style.display = "table-cell";
-                        td.innerHTML = `<button class="del-btn" onclick="removeRow(this)">REMOVE</button>`;
-                        row.appendChild(td);
-                    }
-                });
-                loadLogs();
-            }
+            if(isAdmin) loadLogs();
         }
 
+        // --- COLUMN MANAGEMENT ---
+        window.addColumn = function() {
+            const hRow = document.getElementById("headerRow");
+            const manageHeader = hRow.querySelector(".manage-col");
+            
+            const newTh = document.createElement("th");
+            newTh.innerText = "NEW HEAD";
+            hRow.insertBefore(newTh, manageHeader);
+
+            const rows = document.querySelectorAll("#tbody tr");
+            rows.forEach(row => {
+                const manageCell = row.querySelector(".manage-col");
+                const newTd = document.createElement("td");
+                newTd.innerText = "---";
+                row.insertBefore(newTd, manageCell);
+            });
+            saveData();
+        };
+
+        window.removeColumn = function() {
+            const hRow = document.getElementById("headerRow");
+            const ths = hRow.querySelectorAll("th:not(.manage-col)");
+            if(ths.length <= 1) return alert("Cannot remove last column.");
+            
+            if(confirm("Delete the last column and all its data?")) {
+                ths[ths.length - 1].remove();
+                const rows = document.querySelectorAll("#tbody tr");
+                rows.forEach(row => {
+                    const tds = row.querySelectorAll("td:not(.manage-col)");
+                    tds[tds.length - 1].remove();
+                });
+                saveData();
+            }
+        };
+
+        // --- ROW MANAGEMENT ---
         window.addNewRow = function() {
+            const hRow = document.getElementById("headerRow");
+            const colCount = hRow.querySelectorAll("th:not(.manage-col)").length;
             const tbody = document.getElementById("tbody");
             const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td contenteditable="true">NEW TARGET</td>
-                <td contenteditable="true">0%</td>
-                <td contenteditable="true">STABLE</td>
-                <td class="admin-only-col" style="display:table-cell"><button class="del-btn" onclick="removeRow(this)">REMOVE</button></td>
-            `;
+            
+            for(let i=0; i<colCount; i++) {
+                const td = document.createElement("td");
+                td.innerText = "DATA";
+                tr.appendChild(td);
+            }
+            
+            const manageTd = document.createElement("td");
+            manageTd.className = "manage-col";
+            manageTd.innerHTML = `<button class="del-row-btn" onclick="removeRow(this)">DEL</button>`;
+            tr.appendChild(manageTd);
+            
             tbody.appendChild(tr);
             saveData();
         };
 
         window.removeRow = function(btn) {
-            if(confirm("Confirm Deletion?")) {
+            if(confirm("Remove this row?")) {
                 btn.closest("tr").remove();
                 saveData();
             }
@@ -220,35 +232,32 @@
 
         function saveData() {
             if(!auth.currentUser) return;
-            db.ref("log").set({ 
+            // Clean contentEditable artifacts before saving
+            db.ref("log").update({ 
                 title: document.getElementById("title").innerText, 
-                desc: document.getElementById("desc").innerHTML, 
-                table: document.getElementById("tbody").innerHTML,
-                h1: document.getElementById("h1").innerText,
-                h2: document.getElementById("h2").innerText,
-                h3: document.getElementById("h3").innerText
+                desc: document.getElementById("desc").innerHTML,
+                fullHead: document.getElementById("headerRow").innerHTML,
+                fullBody: document.getElementById("tbody").innerHTML
             });
         }
 
-        ["title", "desc", "tbody", "h1", "h2", "h3"].forEach(id => {
-            document.getElementById(id).addEventListener("blur", saveData);
-        });
+        document.addEventListener("blur", (e) => {
+            if(e.target.contentEditable === "true") saveData();
+        }, true);
 
+        // --- LOGS & AUTH ---
         function loadLogs() {
-            db.ref("visits").orderByChild("ts").on("value", snap => {
+            db.ref("visits").limitToLast(10).on("value", snap => {
                 const tBody = document.getElementById("trafficBody");
                 tBody.innerHTML = "";
                 snap.forEach(child => {
                     const log = child.val();
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `<td>${log.time}</td><td style="color:var(--accent)">${log.ip}</td><td>${log.city}</td><td><button class="del-btn" onclick="deleteLog('${child.key}')">DEL</button></td>`;
-                    tBody.prepend(tr);
+                    tBody.innerHTML = `<tr><td>${log.time}</td><td>${log.ip}</td><td>${log.city}</td><td><button class="del-row-btn" onclick="db.ref('visits/${child.key}').remove()">X</button></td></tr>` + tBody.innerHTML;
                 });
             });
         }
 
-        window.deleteLog = (key) => { if(confirm("Erase log?")) db.ref("visits/" + key).remove(); };
-        document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert("Unauthorized"));
+        document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(() => alert("Denied"));
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
