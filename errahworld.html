@@ -18,6 +18,7 @@
             --text-secondary: #cbd5e1;
             --border-glass: rgba(255, 255, 255, 0.12);
             --shadow-xl: 0 30px 90px rgba(0, 0, 0, 0.5);
+            --danger: #ef4444;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,7 +35,18 @@
 
         .container { width: 100%; max-width: 920px; }
 
-        /* Navigation - Fixed to errahworld.html */
+        /* Visitor Counter Header */
+        .visitor-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-secondary);
+            text-align: center;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* Navigation */
         .nav-bar { 
             display: flex; gap: 6px; margin-bottom: 50px; background: var(--bg-panel);
             padding: 8px; border-radius: 20px; border: 1px solid var(--border-glass);
@@ -61,10 +73,11 @@
         th { color: var(--accent-primary); padding: 20px; font-size: 0.75rem; text-transform: uppercase; font-family: 'JetBrains Mono'; }
         td { padding: 20px; text-align: center; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-        /* Admin Access Log Section */
+        /* Traffic Log Section */
         #trafficSection { margin-top: 60px; display: none; width: 100%; }
+        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .purge-btn { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 8px 16px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
         .log-ip { color: var(--accent-secondary); font-weight: 600; }
-        .log-meta { font-size: 10px; color: var(--text-secondary); opacity: 0.6; }
 
         #authBox { display: flex; gap: 10px; margin-top: 40px; justify-content: center; flex-wrap: wrap; }
         input { background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; padding: 12px; border-radius: 12px; outline: none; }
@@ -76,6 +89,8 @@
 <body>
 
     <div class="container">
+        <div class="visitor-counter">Total Encounters: <span id="v-count">---</span></div>
+
         <nav class="nav-bar">
             <a href="errahworld.html" class="nav-btn active-nav">Project Atlas</a>
             <a href="updates.html" class="nav-btn">Updates</a>
@@ -99,7 +114,10 @@
         </div>
 
         <div id="trafficSection">
-            <h2 style="font-family: 'JetBrains Mono'; margin-bottom: 20px; color: var(--accent-primary); font-size: 1.2rem; text-align: center;">VITAL ACCESS LOGS</h2>
+            <div class="log-header">
+                <h2 style="font-family: 'JetBrains Mono'; color: var(--accent-primary); font-size: 1.2rem;">ACCESS LOGS</h2>
+                <button class="purge-btn" id="purgeBtn">PURGE DATABASE</button>
+            </div>
             <div class="table-container">
                 <table>
                     <thead>
@@ -127,7 +145,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // FIREBASE SETUP
         const firebaseConfig = {
             apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain: "strenght-a9f37.firebaseapp.com",
@@ -141,9 +158,15 @@
         const titleEl = document.getElementById("title");
         const descEl = document.getElementById("desc");
         const tbody = document.getElementById("tbody");
+        const vCountEl = document.getElementById("v-count");
 
-        // VISITOR TRACKING (Using your specific IPinfo token)
+        // TRACK VISITOR & LOAD VISITOR COUNT
         async function trackVisitor() {
+            // Publicly listen for total visits
+            db.ref("visits").on("value", snap => {
+                vCountEl.innerText = snap.numChildren();
+            });
+
             if (sessionStorage.getItem('tracked')) return;
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
@@ -172,7 +195,6 @@
 
         // ADMIN CONTROLS
         auth.onAuthStateChanged(user => {
-            // Check specifically for your UID
             const isAdmin = user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
             
             document.getElementById("trafficSection").style.display = isAdmin ? "block" : "none";
@@ -188,7 +210,7 @@
         });
 
         function loadTrafficLogs() {
-            db.ref("visits").orderByChild("ts").limitToLast(25).on("value", snap => {
+            db.ref("visits").orderByChild("ts").limitToLast(50).on("value", snap => {
                 const tBody = document.getElementById("trafficBody");
                 tBody.innerHTML = "";
                 const data = snap.val() || {};
@@ -196,13 +218,20 @@
                     tBody.insertAdjacentHTML('beforeend', `
                         <tr>
                             <td style="white-space:nowrap">${log.time}</td>
-                            <td><span class="log-ip">${log.ip}</span><br><span class="log-meta">${log.org || ''}</span></td>
+                            <td><span class="log-ip">${log.ip}</span><br><span style="font-size:10px;opacity:0.6;">${log.org || ''}</span></td>
                             <td>${log.city || '??'}, ${log.country || ''}</td>
                         </tr>
                     `);
                 });
             });
         }
+
+        // PURGE LOGS LOGIC
+        document.getElementById("purgeBtn").onclick = () => {
+            if(confirm("Are you sure you want to delete all visitor history? This cannot be undone.")) {
+                db.ref("visits").remove();
+            }
+        };
 
         document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value);
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
