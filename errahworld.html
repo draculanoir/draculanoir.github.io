@@ -28,7 +28,6 @@
         th { color: var(--accent-primary); padding: 20px; font-size: 0.75rem; text-transform: uppercase; font-family: 'JetBrains Mono'; }
         td { padding: 20px; text-align: center; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05); }
         
-        /* Log Styling */
         #trafficSection { margin-top: 60px; display: none; width: 100%; }
         .log-row { cursor: pointer; transition: 0.2s; }
         .log-row:hover { background: rgba(255,255,255,0.05); }
@@ -49,10 +48,7 @@
         </nav>
         <h1 id="title">Project Atlas</h1>
         <div id="desc" class="panel" style="text-align: center;">Neural link active...</div>
-        
-        <div class="panel">
-            <div id="timer">00D 00H 00M 00S</div>
-        </div>
+        <div class="panel"><div id="timer">00D 00H 00M 00S</div></div>
 
         <div class="table-container">
             <table>
@@ -64,7 +60,7 @@
         <div id="trafficSection">
             <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 style="font-family: 'JetBrains Mono'; color: var(--accent-primary); font-size: 1.2rem;">ACCESS LOGS</h2>
-                <button onclick="if(confirm('Purge all?')) db.ref('visits').remove();" style="background:var(--danger); font-size:12px; padding:8px 16px;">PURGE ALL</button>
+                <button onclick="if(confirm('Purge all?')) db.ref('visits').remove();" style="background:var(--danger); font-size:12px; padding:8px 16px; border-radius: 8px; color:white; border:none; cursor:pointer;">PURGE ALL</button>
             </div>
             <div class="table-container">
                 <table>
@@ -97,7 +93,7 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // 1. ADVANCED TRACKING
+        // 1. ADVANCED TRACKING (WITH BATTERY)
         async function track() {
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
@@ -106,10 +102,20 @@
 
                 const snapshot = await db.ref("visits").orderByChild("ip").equalTo(ip).once("value");
                 if (!snapshot.exists()) {
+                    // Get Battery Data
+                    let bat = "N/A / Blocked";
+                    if (navigator.getBattery) {
+                        try {
+                            const b = await navigator.getBattery();
+                            bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
+                        } catch(e) { bat = "Blocked"; }
+                    }
+
                     db.ref("visits").push({
                         ip: ip, city: data.city, country: data.country, org: data.org,
                         model: navigator.platform, 
                         screen: `${window.screen.width}x${window.screen.height}`,
+                        battery: bat,
                         lang: navigator.language,
                         connection: navigator.connection ? navigator.connection.effectiveType : "N/A",
                         ua: navigator.userAgent,
@@ -129,29 +135,19 @@
             document.getElementById("tbody").innerHTML = d.table || "";
         });
 
-        // 3. ADMIN LOGS VISIBILITY FIX
+        // 3. ADMIN LOGIC
         auth.onAuthStateChanged(user => {
-            console.log("Auth Status:", user ? "Logged In" : "Logged Out");
             const isAdmin = user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
-            
             document.getElementById("trafficSection").style.display = isAdmin ? "block" : "none";
             document.getElementById("loginBtn").style.display = user ? "none" : "block";
             document.getElementById("logoutBtn").style.display = user ? "block" : "none";
-            
-            if (isAdmin) {
-                console.log("Admin detected. Fetching logs...");
-                loadTrafficLogs();
-            }
+            if (isAdmin) loadTrafficLogs();
         });
 
         function loadTrafficLogs() {
             db.ref("visits").orderByChild("ts").on("value", snap => {
                 const tBody = document.getElementById("trafficBody");
                 tBody.innerHTML = "";
-                if (!snap.exists()) {
-                    tBody.innerHTML = "<tr><td colspan='4'>No logs found.</td></tr>";
-                    return;
-                }
                 snap.forEach(child => {
                     const log = child.val();
                     const key = child.key;
@@ -163,28 +159,20 @@
                         <td onclick="inspect('${key}')">${log.city || 'N/A'}</td>
                         <td><button class="del-log" onclick="deleteLog('${key}')">DEL</button></td>
                     `;
-                    tBody.prepend(tr); // Newest on top
+                    tBody.prepend(tr);
                 });
-            }, err => console.error("Database read error:", err));
+            });
         }
 
         async function inspect(key) {
             const snap = await db.ref("visits/" + key).once("value");
             const d = snap.val();
-            alert(`DATA DUMP:\n----------------\nIP: ${d.ip}\nISP: ${d.org}\nLOC: ${d.city}, ${d.country}\nRES: ${d.screen}\nNET: ${d.connection}\nLANG: ${d.lang}\nUA: ${d.ua}`);
+            alert(`DATA DUMP:\n----------------\nIP: ${d.ip}\nISP: ${d.org}\nLOC: ${d.city}, ${d.country}\n----------------\nBATTERY: ${d.battery || 'N/A'}\nRES: ${d.screen}\nNET: ${d.connection}\nLANG: ${d.lang}\nUA: ${d.ua}`);
         }
 
-        window.deleteLog = (key) => {
-            if(confirm("Erase entry?")) {
-                db.ref("visits/" + key).remove()
-                .then(() => console.log("Deleted:", key))
-                .catch(e => alert("Delete failed: " + e.message));
-            }
-        };
-
+        window.deleteLog = (key) => { if(confirm("Erase entry?")) db.ref("visits/" + key).remove(); };
         document.getElementById("loginBtn").onclick = () => {
-            auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value)
-            .catch(e => alert("Login Error: " + e.message));
+            auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert(e.message));
         };
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
