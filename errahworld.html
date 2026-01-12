@@ -2,84 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>ErrahWorld | Project Atlas</title>
+    <title>ErrahWorld | OSINT Uplink</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
         
         :root {
-            --bg-main: #05070a; --bg-secondary: #0a0f1a; --bg-panel: rgba(10, 15, 26, 0.9);
-            --accent: #6366f1; --accent-dim: rgba(99, 102, 241, 0.2);
-            --text-main: #f8fafc; --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.1);
-            --danger: #ef4444; --success: #22c55e;
+            --bg: #05070a; --panel: rgba(15, 20, 30, 0.95);
+            --accent: #6366f1; --text: #f8fafc; --text-dim: #64748b;
+            --border: rgba(255, 255, 255, 0.08); --danger: #ef4444;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
-        .container { width: 100%; max-width: 1000px; }
-        h1 { font-size: clamp(2.5rem, 10vw, 4rem); text-align: center; font-weight: 900; margin-bottom: 30px; letter-spacing: -2px; }
-        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(20px); text-align: center; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; }
+        .container { width: 100%; max-width: 900px; margin: auto; }
         
-        /* Data Table Styles */
-        .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); }
-        table { width: 100%; border-collapse: collapse; }
-        th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; border-bottom: 1px solid var(--border); }
-        td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 30px; margin-bottom: 25px; backdrop-filter: blur(10px); }
+        #timer { font-family: 'JetBrains Mono'; font-size: 2.5rem; color: var(--accent); text-align: center; font-weight: 700; }
 
-        #trafficSection { margin-top: 50px; display: none; width: 100%; }
-        
-        /* Specialized Buttons */
-        .btn-tri { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-family: 'JetBrains Mono'; margin-top: 5px; transition: 0.2s; }
-        .btn-tri:hover { background: var(--accent); color: white; }
-        .btn-inspect { color: var(--text-main); background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; }
-        .del-log { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; padding: 4px 8px; border-radius: 5px; cursor: pointer; }
+        .table-container { overflow-x: auto; border-radius: 15px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { color: var(--accent); padding: 15px; font-family: 'JetBrains Mono'; text-transform: uppercase; font-size: 0.7rem; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.02); color: var(--text-dim); }
 
-        /* Triangulation Radar Overlay */
-        #triOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; }
-        .radar-circle { width: 180px; height: 180px; border: 2px solid var(--accent); border-radius: 50%; position: relative; margin-bottom: 20px; box-shadow: 0 0 30px var(--accent-dim); }
-        .radar-circle::before { content: ''; position: absolute; top: 50%; left: 50%; width: 50%; height: 2px; background: var(--accent); transform-origin: left; animation: scan 2s linear infinite; }
-        @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        #trafficSection { display: none; margin-top: 50px; }
+        .log-row { cursor: pointer; transition: 0.2s; }
+        .log-row:hover { background: rgba(99, 102, 241, 0.1); }
         
-        #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; }
+        /* Floating Controls */
+        #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
+        #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #0f172a; border: 1px solid var(--border); padding: 30px; border-radius: 20px; width: 320px; display: flex; flex-direction: column; gap: 15px; }
+        .modal-content input { background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; outline: none; }
+        .modal-content button { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1 id="title">Project Atlas</h1>
-        <div id="desc" class="panel">System Online. Tracking active.</div>
+        <h1 style="text-align:center; font-weight:900; letter-spacing:-2px; margin-bottom:30px;">PROJECT ATLAS</h1>
+        <div id="desc" class="panel" style="text-align:center;">Analyzing Signal...</div>
+        
+        <div class="panel">
+            <div id="timer">00D 00H 00M 00S</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Node</th><th>Load</th><th>Status</th></tr></thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
 
         <div id="trafficSection">
-            <h2 style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.9rem; margin-bottom: 15px;">NETWORK TERMINALS</h2>
+            <h2 style="font-family:'JetBrains Mono'; color:var(--accent); font-size:0.8rem; margin-bottom:15px;">OSINT TRAFFIC LOGS</h2>
             <div class="table-container">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Signal Time</th>
-                            <th>Node Identity</th>
-                            <th>Diagnostics</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trafficBody" style="font-family: 'JetBrains Mono';"></tbody>
+                    <thead><tr><th>Timestamp</th><th>Signal Origin</th><th>Local Hop</th><th>Manage</th></tr></thead>
+                    <tbody id="trafficBody" style="font-family:'JetBrains Mono'; font-size:11px;"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div id="triOverlay">
-        <div class="radar-circle"></div>
-        <div id="triStatus" style="font-family: 'JetBrains Mono'; color: var(--accent); text-align: center;">UPLINKING TO SATELLITE...</div>
-    </div>
-
     <button id="adminToggle">Admin Access</button>
+    <button id="logoutBtn" style="display:none; position:fixed; bottom:20px; right:20px; background:var(--danger); color:#fff; border:none; padding:10px 20px; border-radius:30px; font-size:0.75rem; z-index:1001; cursor:pointer;">Logout</button>
+
+    <div id="loginModal">
+        <div class="modal-content">
+            <input id="email" placeholder="Admin ID">
+            <input id="password" type="password" placeholder="Keyphrase">
+            <button id="loginBtn">Authorize</button>
+            <p onclick="document.getElementById('loginModal').style.display='none'" style="text-align:center; color:var(--text-dim); cursor:pointer; font-size:11px;">CLOSE</p>
+        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // Firebase Configuration (Using your credentials)
         const firebaseConfig = {
             apiKey: "AIzaSyBoePuKarSCVgvxQQBGvkMKq16DvKmBYBE",
             authDomain: "strenght-a9f37.firebaseapp.com",
@@ -87,29 +89,19 @@
             projectId: "strenght-a9f37"
         };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
         const auth = firebase.auth();
+        const db = firebase.database();
 
-        // 1. Passive Diagnostic Tracking
-        async function runDiagnostics() {
+        // Passive Signal Capture
+        async function captureUplink() {
             try {
                 const res = await fetch(`https://ipinfo.io/json?token=513ac66672e1f9`);
                 const data = await res.json();
-                const snapshot = await db.ref("visits").orderByChild("ip").equalTo(data.ip).once("value");
                 
-                if (!snapshot.exists()) {
-                    const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
-                    const driftData = await driftRes.json();
-                    const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
-                    
-                    let bat = "N/A";
-                    if(navigator.getBattery) {
-                        const b = await navigator.getBattery();
-                        bat = `${Math.round(b.level * 100)}%`;
-                    }
-
-                    let localIP = "Secure";
-                    const pc = new RTCPeerConnection({iceServers:[]});
+                const snap = await db.ref("visits").orderByChild("ip").equalTo(data.ip).once("value");
+                if (!snap.exists()) {
+                    let localIP = "Hidden";
+                    const pc = new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
                     pc.createDataChannel("");
                     pc.createOffer().then(o => pc.setLocalDescription(o));
                     pc.onicecandidate = (e) => {
@@ -121,13 +113,14 @@
 
                     setTimeout(() => {
                         db.ref("visits").push({
-                            ip: data.ip, local_ip: localIP, city: data.city, isp: data.isp,
+                            ip: data.ip, local_ip: localIP,
+                            city: data.city, isp: data.org,
                             cpu: navigator.hardwareConcurrency, ram: navigator.deviceMemory,
                             gpu: getGPU(), res: `${screen.width}x${screen.height}`,
-                            battery: bat, drift: clockDrift + "ms", ts: Date.now(),
-                            time: new Date().toLocaleTimeString()
+                            ua: navigator.userAgent, ts: Date.now(),
+                            time: new Date().toLocaleString()
                         });
-                    }, 1000);
+                    }, 1500);
                 }
             } catch (e) {}
         }
@@ -135,17 +128,18 @@
             try {
                 const gl = document.createElement('canvas').getContext('webgl');
                 const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-                return gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL).split('/').pop();
+                return gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
             } catch(e) { return "N/A"; }
         }
-        runDiagnostics();
+        captureUplink();
 
-        // 2. Admin Logic
+        // UI & Auth Logic
         auth.onAuthStateChanged(user => {
-            if (user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22') {
-                document.getElementById("trafficSection").style.display = "block";
-                loadLogs();
-            }
+            const isAdmin = user && user.uid === 'Td0yoO3ygYZxbeMZjYtFAj9etA22';
+            document.getElementById("trafficSection").style.display = isAdmin ? "block" : "none";
+            document.getElementById("logoutBtn").style.display = isAdmin ? "block" : "none";
+            document.getElementById("adminToggle").style.display = isAdmin ? "none" : "block";
+            if (isAdmin) loadLogs();
         });
 
         function loadLogs() {
@@ -153,52 +147,46 @@
                 const tBody = document.getElementById("trafficBody");
                 tBody.innerHTML = "";
                 snap.forEach(child => {
-                    const d = child.val();
+                    const log = child.val();
                     const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${d.time}</td>
-                        <td style="text-align:left;">
-                            <b style="color:var(--text-main)">${d.ip}</b><br>
-                            <span style="font-size:10px;">LOC: ${d.local_ip}</span><br>
-                            <button class="btn-tri" onclick="triangulate('${child.key}')">TRIANGULATE</button>
-                        </td>
-                        <td>
-                            <button class="btn-inspect" onclick="inspect('${child.key}')">SPECS</button>
-                        </td>
-                        <td><button class="del-log" onclick="db.ref('visits/${child.key}').remove()">DEL</button></td>
-                    `;
+                    tr.className = "log-row";
+                    tr.innerHTML = `<td onclick="inspect('${child.key}')">${log.time}</td>
+                        <td onclick="inspect('${child.key}')" style="color:var(--accent)">${log.ip}</td>
+                        <td onclick="inspect('${child.key}')">${log.local_ip}</td>
+                        <td><button onclick="db.ref('visits/${child.key}').remove()" style="color:var(--danger); background:none; border:none; cursor:pointer;">✖</button></td>`;
                     tBody.prepend(tr);
                 });
             });
         }
 
-        // 3. Separate Functions for Specs vs Triangulation
         async function inspect(key) {
             const d = (await db.ref("visits/" + key).once("value")).val();
-            alert(`HARDWARE SPECS:\n----------------\nGPU: ${d.gpu}\nCPU: ${d.cpu} Cores\nRAM: ${d.ram}GB\nRES: ${d.res}\nBATTERY: ${d.battery}\nDRIFT: ${d.drift}`);
-        }
-
-        async function triangulate(key) {
-            const d = (await db.ref("visits/" + key).once("value")).val();
-            const overlay = document.getElementById('triOverlay');
-            overlay.style.display = 'flex';
+            const osintUrl = `https://criminalip.io/en/asset/report/${d.ip}`;
             
-            setTimeout(() => {
-                document.getElementById('triStatus').innerHTML = "LATENCY MATCHED.<br>TRIANGULATING NODE...";
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    if(confirm(`TRIANGULATION COMPLETE\nRadius: ${(parseInt(d.drift)*0.4).toFixed(1)}km\nTarget: ${d.city}\n\nOpen Satellite OSINT?`)) {
-                        window.open(`https://www.google.com/maps/search/${d.city}+${d.isp}/@?api=1&maptype=satellite`, '_blank');
-                    }
-                }, 1500);
-            }, 1500);
+            let msg = `SIGNAL ANALYSIS:\nIP: ${d.ip}\nLOCAL: ${d.local_ip}\nISP: ${d.isp}\nCITY: ${d.city}\n----------------\nCORES: ${d.cpu} | RAM: ${d.ram}GB\nGPU: ${d.gpu}\n----------------\nACTION: Press OK to run OSINT Map Trace.`;
+            
+            if(confirm(msg)) {
+                window.open(osintUrl, '_blank');
+            }
         }
 
-        document.getElementById('adminToggle').onclick = () => {
-            const email = prompt("Admin ID:");
-            const pass = prompt("Keyphrase:");
-            auth.signInWithEmailAndPassword(email, pass);
-        };
+        document.getElementById('adminToggle').onclick = () => document.getElementById('loginModal').style.display = 'flex';
+        document.getElementById('loginBtn').onclick = () => auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('password').value).catch(() => alert("Access Denied"));
+        document.getElementById('logoutBtn').onclick = () => auth.signOut();
+
+        // Timer and Content Sync (Existing logic)
+        db.ref("log").on("value", s => {
+            const d = s.val() || {};
+            document.getElementById("title").innerText = d.title || "Project Atlas";
+            document.getElementById("desc").innerHTML = d.desc || "Active...";
+            document.getElementById("tbody").innerHTML = d.table || "";
+        });
+        const target = new Date("February 3, 2026 00:00:00").getTime();
+        setInterval(() => {
+            const diff = target - Date.now();
+            const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+            document.getElementById("timer").textContent = `${d}D ${h}H ${m}M ${s}S`;
+        }, 1000);
     </script>
 </body>
 </html>
