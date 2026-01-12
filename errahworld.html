@@ -8,79 +8,46 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
         
         :root {
-            --bg-main: #030508; --bg-secondary: #070b14; --bg-panel: rgba(10, 15, 26, 0.85);
-            --accent: #6366f1; --accent-glow: rgba(99, 102, 241, 0.4);
-            --text-main: #f8fafc; --text-dim: #94a3b8; --border: rgba(99, 102, 241, 0.2);
+            --bg-main: #05070a; --bg-secondary: #0a0f1a; --bg-panel: rgba(10, 15, 26, 0.9);
+            --accent: #6366f1; --accent-dim: rgba(99, 102, 241, 0.2);
+            --text-main: #f8fafc; --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.1);
             --danger: #ef4444;
         }
 
-        /* Animated Grid Background */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-main);
             min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
-            overflow-x: hidden;
-            background-image: 
-                linear-gradient(var(--border) 1px, transparent 1px),
-                linear-gradient(90deg, var(--border) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: backgroundScroll 20s linear infinite;
         }
 
-        @keyframes backgroundScroll {
-            from { background-position: 0 0; }
-            to { background-position: 0 50px; }
-        }
-
-        .container { width: 100%; max-width: 900px; position: relative; z-index: 1; }
-        
-        /* Nav Glassmorphism */
-        .nav-bar { display: flex; gap: 8px; margin-bottom: 40px; background: var(--bg-panel); padding: 6px; border-radius: 14px; border: 1px solid var(--border); width: fit-content; margin-inline: auto; backdrop-filter: blur(10px); }
+        .container { width: 100%; max-width: 900px; }
+        .nav-bar { display: flex; gap: 8px; margin-bottom: 40px; background: var(--bg-panel); padding: 6px; border-radius: 14px; border: 1px solid var(--border); width: fit-content; margin-inline: auto; }
         .nav-btn { padding: 10px 22px; border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); transition: 0.3s; }
-        .active-nav { color: #fff; background: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+        .active-nav { color: #fff; background: var(--accent); }
         
-        /* Glitch Effect Header */
-        h1 { font-size: clamp(2.5rem, 10vw, 4rem); text-align: center; font-weight: 900; margin-bottom: 10px; letter-spacing: -2px; text-transform: uppercase; color: #fff; text-shadow: 2px 2px var(--accent-glow); }
+        h1 { font-size: clamp(2.5rem, 10vw, 4rem); text-align: center; font-weight: 900; margin-bottom: 10px; letter-spacing: -2px; }
+        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(20px); text-align: center; }
+        #timer { font-size: clamp(1.5rem, 6vw, 3rem); font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 700; }
 
-        .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(20px); text-align: center; position: relative; overflow: hidden; }
-        
-        /* Scanning line effect */
-        .panel::after {
-            content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent, var(--accent-glow), transparent);
-            animation: scan 4s linear infinite; opacity: 0.2; pointer-events: none;
-        }
-        @keyframes scan { 0% { top: -100%; } 100% { top: 100%; } }
-
-        #timer { font-size: clamp(1.5rem, 6vw, 3rem); font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 700; text-shadow: 0 0 20px var(--accent-glow); animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-
-        /* Description Styling */
-        #desc { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; line-height: 1.6; color: var(--text-dim); }
-
-        .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.6); margin-bottom: 20px; backdrop-filter: blur(5px); }
+        .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
-        th { color: var(--accent); padding: 18px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); letter-spacing: 1px; }
-        td { padding: 18px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(99, 102, 241, 0.1); transition: 0.3s; }
-        tr:hover td { color: #fff; background: rgba(99, 102, 241, 0.05); }
+        th { color: var(--accent); padding: 18px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); min-width: 100px; }
+        td { padding: 18px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
-        /* Admin Action Buttons */
-        .admin-controls { padding: 20px; display: none; gap: 10px; justify-content: center; border-top: 1px solid var(--border); }
-        .btn-adm { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.7rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .btn-adm:hover { transform: translateY(-2px); box-shadow: 0 0 15px var(--accent); }
+        .admin-controls { padding: 20px; display: none; gap: 10px; justify-content: center; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .btn-adm { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.7rem; }
         .btn-adm.danger { background: var(--danger); }
         .del-row-btn { color: var(--danger); background: none; border: 1px solid var(--danger); font-size: 9px; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
 
         #trafficSection { margin-top: 50px; display: none; width: 100%; }
-        #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; backdrop-filter: blur(10px); }
+        #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
         #logoutBtn { display:none; position: fixed; bottom: 20px; right: 20px; background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; z-index: 1001; }
-        
-        /* Modal Glass */
-        #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
-        .modal-content { background: var(--bg-secondary); border: 1px solid var(--accent); padding: 30px; border-radius: 20px; width: 320px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 0 30px var(--accent-glow); }
-        .modal-content input { background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; outline: none; font-family: 'JetBrains Mono'; }
-        .modal-content button { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); padding: 25px; border-radius: 20px; width: 300px; display: flex; flex-direction: column; gap: 12px; }
+        .modal-content input { background: #000; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; outline: none; }
+        .modal-content button { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
 
-        .admin-editable { outline: 1px dashed var(--accent); cursor: text; background: rgba(99, 102, 241, 0.05); }
+        .admin-editable { outline: 1px dashed var(--accent); cursor: text; }
         .manage-col { width: 90px; display: none; }
     </style>
 </head>
@@ -93,12 +60,9 @@
         </nav>
 
         <h1 id="title">Project Atlas</h1>
-        <div class="panel">
-            <div id="desc">ESTABLISHING ENCRYPTED UPLINK...</div>
-        </div>
+        <div id="desc" class="panel">Connecting to Uplink...</div>
         
         <div class="panel">
-            <div style="font-size: 0.6rem; color: var(--accent); margin-bottom: 10px; font-weight: bold; font-family: 'JetBrains Mono'; letter-spacing: 3px;">TIME UNTIL RECOVERY PHASE</div>
             <div id="timer">00D 00H 00M 00S</div>
         </div>
 
@@ -113,18 +77,18 @@
                 <tbody id="tbody"></tbody>
             </table>
             <div id="adminControls" class="admin-controls">
-                <button class="btn-adm" onclick="addNewRow()">+ Add Row</button>
-                <button class="btn-adm" onclick="addColumn()">+ Add Col</button>
-                <button class="btn-adm danger" onclick="removeColumn()">- Last Col</button>
+                <button class="btn-adm" onclick="addNewRow()">+ Row</button>
+                <button class="btn-adm" onclick="addColumn()">+ Column</button>
+                <button class="btn-adm danger" onclick="removeColumn()">- Column</button>
             </div>
         </div>
 
         <div id="trafficSection">
-            <h2 style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.8rem; margin-bottom: 15px; letter-spacing: 2px;">ACCESS LOGS</h2>
+            <h2 style="font-family: 'JetBrains Mono'; color: var(--accent); font-size: 0.9rem; margin-bottom: 15px;">UPLINK DIAGNOSTICS</h2>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Time</th><th>IP Address</th><th>Location</th><th>Action</th></tr></thead>
-                    <tbody id="trafficBody" style="font-family: 'JetBrains Mono'; font-size: 10px;"></tbody>
+                    <thead><tr><th>Timestamp</th><th>IP</th><th>Location</th><th>Manage</th></tr></thead>
+                    <tbody id="trafficBody" style="font-family: 'JetBrains Mono'; font-size: 11px;"></tbody>
                 </table>
             </div>
         </div>
@@ -135,11 +99,10 @@
 
     <div id="loginModal">
         <div class="modal-content">
-            <div style="color:var(--accent); font-family:'JetBrains Mono'; font-size: 0.8rem; text-align:center; margin-bottom:10px;">AUTHORIZATION REQUIRED</div>
             <input id="email" placeholder="Admin ID">
             <input id="password" type="password" placeholder="Keyphrase">
             <button id="loginBtn">Authorize</button>
-            <span onclick="document.getElementById('loginModal').style.display='none'" style="cursor: pointer; color: var(--text-dim); font-size: 10px; text-align: center; margin-top:10px;">TERMINATE CONNECTION</span>
+            <span onclick="document.getElementById('loginModal').style.display='none'" style="cursor: pointer; color: var(--text-dim); font-size: 10px; text-align: center;">CLOSE</span>
         </div>
     </div>
 
@@ -175,18 +138,13 @@
         }
         runDiagnostics();
 
-        // --- SYNC ---
+        // --- CORE SYNC ---
         db.ref("log").on("value", snap => {
             const d = snap.val();
             if(!d || !d.headers) return repairDatabase();
 
             document.getElementById("title").innerText = d.title || "Project Atlas";
-            
-            // Description animation (only if it actually changed)
-            const descEl = document.getElementById("desc");
-            if(descEl.innerHTML !== d.desc) {
-                descEl.innerHTML = d.desc || "Active...";
-            }
+            document.getElementById("desc").innerHTML = d.desc || "Active...";
             
             let hHtml = "";
             d.headers.forEach(h => hHtml += `<th>${h}</th>`);
@@ -207,9 +165,9 @@
 
         function repairDatabase() {
             db.ref("log").set({
-                title: "Project Atlas", desc: "SYSTEMS OPERATIONAL // MONITORING DATA STREAMS",
+                title: "Project Atlas", desc: "Uplink Secure...",
                 headers: ["Target", "Load", "Status"],
-                rows: [["Node-01", "---", "Searching..."]]
+                rows: [["Node-01", "Online", "Stable"]]
             });
         }
 
@@ -257,12 +215,12 @@
             db.ref("log").once("value", snap => {
                 const d = snap.val();
                 const currentRows = d.rows || [];
-                currentRows.push(Array(d.headers.length).fill("REPLACE ME"));
+                currentRows.push(Array(d.headers.length).fill("DATA"));
                 db.ref("log/rows").set(currentRows);
             });
         };
 
-        window.removeRow = (i) => { if(confirm("Terminate row data?")) {
+        window.removeRow = (i) => { if(confirm("Delete row?")) {
             db.ref("log/rows").once("value", snap => {
                 const r = snap.val() || []; r.splice(i, 1); db.ref("log/rows").set(r);
             });
@@ -271,7 +229,7 @@
         window.addColumn = () => {
             db.ref("log").once("value", snap => {
                 const d = snap.val();
-                d.headers.push("NEW_COL");
+                d.headers.push("NEW COL");
                 if(d.rows) d.rows.forEach(r => r.push("---"));
                 db.ref("log").set(d);
             });
@@ -280,7 +238,7 @@
         window.removeColumn = () => {
             db.ref("log").once("value", snap => {
                 const d = snap.val();
-                if(d.headers.length > 1 && confirm("Wipe last column?")) {
+                if(d.headers.length > 1 && confirm("Delete last column?")) {
                     d.headers.pop(); if(d.rows) d.rows.forEach(r => r.pop());
                     db.ref("log").set(d);
                 }
@@ -293,7 +251,9 @@
                 tBody.innerHTML = "";
                 snap.forEach(child => {
                     const log = child.val();
-                    tBody.innerHTML = `<tr><td>${log.time}</td><td style="color:var(--accent)">${log.ip}</td><td>${log.city}</td><td><button class="del-row-btn" onclick="db.ref('visits/${child.key}').remove()">X</button></td></tr>` + tBody.innerHTML;
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `<td>${log.time}</td><td style="color:var(--accent)">${log.ip}</td><td>${log.city}</td><td><button class="del-row-btn" onclick="db.ref('visits/${child.key}').remove()">X</button></td>`;
+                    tBody.prepend(tr);
                 });
             });
         }
@@ -302,7 +262,7 @@
         document.getElementById("loginBtn").onclick = () => {
             auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value)
                 .then(() => document.getElementById("loginModal").style.display = "none")
-                .catch(() => alert("ACCESS DENIED"));
+                .catch(() => alert("Denied"));
         };
         auth.onAuthStateChanged(() => checkAdminPrivileges());
 
