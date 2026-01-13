@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERRAH - Personal Assistant</title>
+    <style>
+        :root {
+            --glow-color: #00d4ff;
+            --bg-dark: #0a0a0c;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .orb-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+        }
+        .orb {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+            box-shadow: 0 0 50px var(--glow-color);
+            transition: transform 0.3s ease;
+        }
+        .orb.listening {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 80px var(--glow-color); }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: var(--glow-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        #transcript {
+            margin-top: 10px;
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="orb-container" onclick="startAssistant()">
+        <div id="errah-orb" class="orb"></div>
+    </div>
+    
+    <div class="status" id="status-text">Click Errah to Speak</div>
+    <div id="transcript">"Hey Errah..."</div>
+
+    <script>
+        const API_KEY = "AIzaSyB9lgOeKKW3DQBZU0-HiOP_Lv-izoeZ6cY";
+        const orb = document.getElementById('errah-orb');
+        const statusText = document.getElementById('status-text');
+        const transcriptText = document.getElementById('transcript');
+
+        // Initial setup for Speech
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        const synth = window.speechSynthesis;
+        recognition.lang = 'en-US';
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            // Setup a "friendly" voice
+            const voices = synth.getVoices();
+            utterance.voice = voices.find(v => v.name.includes('Google') || v.name.includes('Female')) || voices[0];
+            utterance.pitch = 1.1; // Slightly higher for friendliness
+            utterance.rate = 1.0;
+            synth.speak(utterance);
+        }
+
+        async function askGemini(prompt) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: `You are Errah, a friendly, witty, and loyal Jarvis-like personal assistant. 
+                            Stay concise, helpful, and act like a close friend. The user says: ${prompt}`
+                        }]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        function startAssistant() {
+            recognition.start();
+            orb.classList.add('listening');
+            statusText.innerText = "Listening...";
+        }
+
+        recognition.onresult = async (event) => {
+            const userText = event.results[0][0].transcript;
+            transcriptText.innerText = `"${userText}"`;
+            statusText.innerText = "Thinking...";
+            orb.classList.remove('listening');
+
+            try {
+                const aiResponse = await askGemini(userText);
+                statusText.innerText = "Errah is speaking...";
+                speak(aiResponse);
+            } catch (error) {
+                console.error(error);
+                speak("I'm sorry, I had a bit of a glitch connecting to my brain.");
+            }
+        };
+
+        recognition.onspeechend = () => {
+            recognition.stop();
+            orb.classList.remove('listening');
+        };
+    </script>
+</body>
+</html>
