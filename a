@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pistol Squat Calculator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060606;color:#eee;font-family:'Courier New',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 60px}
+h1{font-size:19px;font-weight:700;letter-spacing:-0.5px}
+.label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#444}
+.accent{color:#e8ff3c}
+.card{background:#0c0c0c;border:1px solid #141414;border-radius:16px;padding:20px 22px;margin-bottom:12px;width:100%;max-width:500px}
+.header{margin-bottom:28px;border-bottom:1px solid #111;padding-bottom:16px;width:100%;max-width:500px}
+.row{display:flex;justify-content:space-between;align-items:center}
+/* Sliders */
+.slider-wrap{margin-bottom:20px}
+.slider-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px}
+.slider-val{font-size:26px;font-weight:700;font-family:'Courier New',monospace;line-height:1}
+.slider-unit{font-size:10px;color:#333;margin-left:3px}
+.track{position:relative;height:4px;background:#181818;border-radius:99px;cursor:pointer}
+.track-fill{position:absolute;left:0;top:0;height:100%;border-radius:99px;pointer-events:none}
+.track-thumb{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;border:2px solid #060606;transform:translate(-50%,-50%);pointer-events:none}
+input[type=range]{position:absolute;width:100%;height:24px;top:50%;transform:translateY(-50%);opacity:0;cursor:pointer;margin:0;-webkit-appearance:none}
+/* Arc gauge */
+#gauge-wrap{display:flex;align-items:center;gap:20px;margin-bottom:18px}
+#gauge-info{flex:1}
+#gauge-info .big{font-size:20px;font-weight:700;margin-bottom:12px}
+/* Status */
+.status-bar{display:flex;justify-content:space-between;align-items:center;background:#111;border-radius:10px;padding:10px 14px;margin-bottom:18px}
+.status-label{font-size:13px;font-weight:700;letter-spacing:1px}
+/* Progress bar */
+.prog-wrap{margin-top:6px}
+.prog-label{display:flex;justify-content:space-between;font-size:9px;color:#2e2e2e;margin-bottom:5px;letter-spacing:2px}
+.prog-track{background:#111;border-radius:99px;height:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width 0.15s}
+/* Target vert */
+.target-big{font-size:24px;font-weight:700;color:#e8ff3c}
+.circle-btn{width:38px;height:38px;border-radius:50%;border:1px solid #222;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-family:monospace}
+/* Graph */
+#graph-canvas{display:block;width:100%}
+/* Data point chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:flex;align-items:center;gap:5px;background:#111;border:1px solid #1e1e1e;border-radius:20px;padding:5px 10px 5px 8px;font-size:10px;color:#888;cursor:default}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:#e8ff3c;flex-shrink:0}
+.chip-load{color:#fff;font-weight:700}
+.chip-btn{background:none;border:none;cursor:pointer;font-size:12px;padding:0 0 0 2px;line-height:1;font-family:monospace;color:#333;transition:color 0.15s}
+.chip-btn:hover{color:#e8ff3c}
+.chip-btn.remove:hover{color:#ff4d4d}
+.chip.selected{background:#1a1a0a;border-color:#e8ff3c33}
+.chip.selected .chip-v{color:#e8ff3c}
+/* Add/edit panel */
+.panel{margin-top:12px;background:#111;border:1px solid #1e1e1e;border-radius:12px;padding:14px 16px}
+.panel-row{display:flex;gap:10px;margin-bottom:12px}
+.num-wrap{flex:1}
+.num-label{font-size:9px;color:#333;letter-spacing:2px;margin-bottom:6px}
+.num-input{width:100%;background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:8px 10px;font-size:16px;font-family:monospace;font-weight:700;outline:none;color:#fff}
+.num-input.green{color:#e8ff3c}
+.btn-primary{flex:1;background:#e8ff3c;border:none;border-radius:8px;padding:10px;color:#000;font-size:11px;font-family:monospace;font-weight:700;letter-spacing:2px;cursor:pointer;text-transform:uppercase}
+.btn-cancel{background:#161616;border:1px solid #222;border-radius:8px;padding:10px 16px;color:#555;font-size:11px;font-family:monospace;cursor:pointer}
+.btn-remove{background:none;border:none;color:#333;cursor:pointer;font-size:10px;font-family:monospace;letter-spacing:1px}
+.btn-remove:hover{color:#ff4d4d}
+/* Bottom stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;width:100%;max-width:500px}
+.stat-card{background:#0c0c0c;border:1px solid #141414;border-radius:10px;padding:12px 14px}
+.stat-lbl{font-size:8px;color:#2a2a2a;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
+.stat-val{font-size:13px;font-weight:700}
+/* Save indicator */
+#save-ind{font-size:9px;color:transparent;transition:color 0.3s;text-align:right;line-height:1.8}
+/* CF sub label */
+.cf-sub{font-size:9px;color:#333;margin-top:2px}
+
+/* ── Simulation ──────────────────────────────────────────────────────── */
+#sim-canvas{display:block;width:100%;border-radius:0}
+.sim-header{padding:14px 18px 10px;display:flex;justify-content:space-between;align-items:center}
+.play-btn{padding:8px 18px;border-radius:8px;cursor:pointer;font-size:10px;font-family:monospace;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:all 0.2s}
+.plates-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 16px}
+.plate-card{background:#111;border:1px solid #1a1a1a;border-radius:10px;padding:10px 12px}
+.plate-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.plate-name{font-size:13px;font-weight:700;color:#fff}
+.plate-thick{font-size:9px;color:#333;margin-left:6px}
+.plate-count{font-size:12px;font-weight:700;color:#e8ff3c}
+.plate-btns{display:flex;gap:6px}
+.plate-btn{flex:1;height:30px;border-radius:6px;cursor:pointer;font-size:16px;font-family:monospace;border:1px solid #222;background:#161616;color:#666;transition:all 0.15s}
+.plate-btn.plus{background:#222;border-color:#2a2a2a;color:#aaa;font-weight:700}
+.plate-btn:active{opacity:0.6}
+.stack-info{margin:0 16px 14px;padding:8px 12px;background:#111;border:1px solid #1a1a1a;border-radius:8px;font-size:10px}
+
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button{display:none}
+</style>
+
+</head>
+<body>
+
+<!-- Header -->
+
+<div class="header">
+  <div class="label accent" style="margin-bottom:6px">Load–Velocity Profile</div>
+  <div class="row">
+    <h1>Pistol Squat Calculator</h1>
+    <div style="font-size:9px;color:#2a2a2a;text-align:right;line-height:2">
+      <div id="hdr-k">k = —</div>
+      <div id="hdr-r2">R² = —</div>
+      <div id="save-ind">·</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main calc card -->
+
+<div class="card">
+  <!-- Gauge row -->
+  <div id="gauge-wrap">
+    <svg id="gauge-svg" width="160" height="150" viewBox="0 0 160 150" style="flex-shrink:0"></svg>
+    <div id="gauge-info">
+      <div class="label" style="margin-bottom:4px">ADJ V₀</div>
+      <div class="big" id="adj-v0">— m/s</div>
+      <div class="label" style="margin-bottom:4px" id="need-label">NEED @ —LB → —"</div>
+      <div class="big" id="need-val" style="color:#ff4d4d">— m/s</div>
+      <div style="font-size:10px;color:#666;margin-top:3px" id="gap-label">—</div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+
+  <div class="status-bar" id="status-bar">
+    <div class="label">Pistol Vert Status</div>
+    <div class="status-label" id="status-label">—</div>
+  </div>
+
+  <!-- Plate weight slider -->
+
+  <div class="slider-wrap">
+    <div class="slider-top">
+      <span class="label">Plate Weight</span>
+      <span class="slider-val" style="color:#888" id="load-val">35<span class="slider-unit">lb</span></span>
+    </div>
+    <div class="track" id="load-track">
+      <div class="track-fill" id="load-fill" style="background:#666"></div>
+      <div class="track-thumb" id="load-thumb" style="background:#888;border-color:#060606"></div>
+      <input type="range" id="load-slider" min="5" max="200" step="5" value="35"/>
+    </div>
+  </div>
+
+  <!-- Peak velocity slider -->
+
+  <div class="slider-wrap">
+    <div class="slider-top">
+      <span class="label">Peak Velocity</span>
+      <span class="slider-val accent" id="speed-val">1.28<span class="slider-unit">m/s</span></span>
+    </div>
+    <div class="track" id="speed-track">
+      <div class="track-fill" id="speed-fill" style="background:#e8ff3c"></div>
+      <div class="track-thumb" id="speed-thumb" style="background:#e8ff3c;border-color:#060606"></div>
+      <input type="range" id="speed-slider" min="0.3" max="4.5" step="0.01" value="1.28"/>
+    </div>
+  </div>
+
+  <!-- Speed to target bar -->
+
+  <div class="prog-wrap">
+    <div class="prog-label"><span>SPEED TO TARGET</span><span id="speed-pct">0%</span></div>
+    <div class="prog-track"><div class="prog-fill" id="speed-prog" style="background:linear-gradient(90deg,#ff4d4d,#ff8c00);width:0%"></div></div>
+  </div>
+
+  <!-- CF slider -->
+
+  <div class="slider-wrap" style="margin-top:20px">
+    <div class="slider-top">
+      <div>
+        <span class="label">Correction Factor</span>
+        <div class="cf-sub" id="cf-sub">Counterbalance</div>
+      </div>
+      <span class="slider-val" style="color:#888" id="cf-val">0.87</span>
+    </div>
+    <div class="track">
+      <div class="track-fill" id="cf-fill" style="background:linear-gradient(90deg,#e8ff3c,#39ff9f)"></div>
+      <div class="track-thumb" id="cf-thumb" style="background:#888;border-color:#060606"></div>
+      <input type="range" id="cf-slider" min="0.80" max="0.97" step="0.01" value="0.87"/>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:8px;color:#2a2a2a;margin-top:4px">
+      <span>0.80 full CB</span><span>0.97 no CB</span>
+    </div>
+  </div>
+</div>
+
+<!-- Target vert card -->
+
+<div class="card">
+  <div class="row">
+    <div>
+      <div class="label" style="margin-bottom:4px">Target Vert</div>
+      <div><span class="target-big" id="target-display">25</span><span style="font-size:11px;color:#333"> " vertical</span></div>
+    </div>
+    <button class="circle-btn" id="target-toggle" style="background:#161616;color:#555">+</button>
+  </div>
+  <div id="target-panel" style="display:none;margin-top:16px">
+    <div class="slider-wrap" style="margin-bottom:0">
+      <div class="slider-top">
+        <span class="label">Set Target Vert</span>
+        <span class="slider-val accent" id="target-val">25<span class="slider-unit">"</span></span>
+      </div>
+      <div class="track">
+        <div class="track-fill" id="target-fill" style="background:#e8ff3c"></div>
+        <div class="track-thumb" id="target-thumb" style="background:#e8ff3c;border-color:#060606"></div>
+        <input type="range" id="target-slider" min="2" max="50" step="1" value="25"/>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Graph card -->
+
+<div class="card" style="padding:20px 6px 16px 2px">
+  <div class="row" style="padding:0 14px;margin-bottom:8px">
+    <div>
+      <div class="label" style="letter-spacing:4px">Load — Velocity Curve</div>
+      <div style="font-size:9px;color:#2a2a2a;margin-top:3px" id="graph-eq">v = — − — × load</div>
+    </div>
+    <div style="font-size:9px;color:#2a2a2a" id="graph-r2">R² —</div>
+  </div>
+  <canvas id="graph-canvas" height="230"></canvas>
+
+  <!-- Data points -->
+
+  <div style="padding:10px 14px 0">
+    <div class="label" style="margin-bottom:8px">Data Points</div>
+    <div class="chips" id="chips-container"></div>
+    <!-- Add/Edit panel -->
+    <div class="panel" id="data-panel" style="display:none">
+      <div class="row" style="margin-bottom:12px">
+        <div class="label" id="panel-title">New Test Point</div>
+        <button class="btn-remove" id="panel-remove" style="display:none">remove point</button>
+      </div>
+      <div class="panel-row">
+        <div class="num-wrap" id="load-input-wrap">
+          <div class="num-label">LOAD (LB)</div>
+          <input type="number" class="num-input" id="panel-load" value="45" step="5" min="5"/>
+        </div>
+        <div class="num-wrap">
+          <div class="num-label">PEAK SPEED (M/S)</div>
+          <input type="number" class="num-input green" id="panel-speed" value="1.0" step="0.01" min="0.1"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-primary" id="panel-confirm">Add Point</button>
+        <button class="btn-cancel" id="panel-cancel">cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Simulation card ────────────────────────────────────────────────────── -->
+
+<div class="card" style="padding:0;overflow:hidden">
+  <div class="sim-header">
+    <div>
+      <div class="label accent" style="margin-bottom:3px">Jump Simulation</div>
+      <div style="font-size:11px;color:#333">171cm · predicted <span id="sim-vert-label">—</span>" vert</div>
+    </div>
+    <button class="play-btn" id="play-btn" style="background:#e8ff3c;border:1px solid #e8ff3c;color:#000">▶ PLAY</button>
+  </div>
+  <canvas id="sim-canvas" height="560"></canvas>
+  <!-- Plates -->
+  <div class="plates-grid" id="plates-grid"></div>
+  <div class="stack-info" id="stack-info" style="display:none"></div>
+</div>
+
+<!-- Stats -->
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="stat-lbl">Slope k</div><div class="stat-val" id="stat-k">—</div></div>
+  <div class="stat-card"><div class="stat-lbl">Raw v₀</div><div class="stat-val" id="stat-v0">—</div></div>
+  <div class="stat-card"><div class="stat-lbl">CF</div><div class="stat-val" id="stat-cf">—</div></div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let state = {
+  dataPoints: [{id:1,load:25,v:1.5},{id:2,load:55,v:0.76}],
+  load: 35, speed: 1.28, targetVert: 25, cf: 0.87, nextId: 10,
+  plateStacks: [{weight:45,count:0},{weight:35,count:0},{weight:25,count:0},{weight:10,count:0}],
+  // panel: null | 'add' | {id,load,v}
+  panel: null, editId: null,
+};
+const PLATE_SPECS = {
+  45:{thickIn:3.5,  widthPx:54,label:"45"},
+  35:{thickIn:2.75, widthPx:50,label:"35"},
+  25:{thickIn:2.125,widthPx:46,label:"25"},
+  10:{thickIn:1.0,  widthPx:38,label:"10"},
+};
+
+// Load from localStorage
+let isReturningUser = false;
+try {
+  const saved = JSON.parse(localStorage.getItem('pistol-data')||'{}');
+  if(saved.dataPoints?.length>=2) state.dataPoints=saved.dataPoints;
+  if(saved.load!=null)        state.load=saved.load;
+  if(saved.speed!=null)       state.speed=saved.speed;
+  if(saved.targetVert!=null)  state.targetVert=saved.targetVert;
+  if(saved.cf!=null)          state.cf=saved.cf;
+  if(saved.nextId!=null)      state.nextId=saved.nextId;
+  if(saved.plateStacks)       state.plateStacks=saved.plateStacks;
+  if(saved.targetOpen!=null)  state.targetOpen=saved.targetOpen;
+  isReturningUser = !!saved.dataPoints;
+} catch(e){}
+
+// Sync slider HTML values from state immediately
+function initSliderValues(){
+  document.getElementById('load-slider').value   = state.load;
+  document.getElementById('speed-slider').value  = state.speed;
+  document.getElementById('cf-slider').value     = state.cf;
+  document.getElementById('target-slider').value = state.targetVert;
+}
+initSliderValues();
+
+let saveTimer=null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{
+      localStorage.setItem('pistol-data',JSON.stringify({
+        dataPoints:state.dataPoints, load:state.load, speed:state.speed,
+        targetVert:state.targetVert, cf:state.cf, nextId:state.nextId,
+        plateStacks:state.plateStacks,
+        targetOpen: document.getElementById('target-panel').style.display==='block',
+      }));
+      const el=document.getElementById('save-ind');
+      el.style.color='#e8ff3c'; el.textContent='✓ saved';
+      setTimeout(()=>{el.style.color='transparent';el.textContent='·';},1500);
+    }catch(e){}
+  },600);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATH
+// ─────────────────────────────────────────────────────────────────────────────
+function linReg(pts){
+  const n=pts.length; if(n<2)return null;
+  const sx=pts.reduce((a,p)=>a+p.load,0), sy=pts.reduce((a,p)=>a+p.v,0);
+  const sxy=pts.reduce((a,p)=>a+p.load*p.v,0), sx2=pts.reduce((a,p)=>a+p.load*p.load,0);
+  const kRaw=(n*sxy-sx*sy)/(n*sx2-sx*sx), v0=(sy-kRaw*sx)/n;
+  const ym=sy/n, sst=pts.reduce((a,p)=>a+(p.v-ym)**2,0);
+  const ssr=pts.reduce((a,p)=>a+(p.v-(v0+kRaw*p.load))**2,0);
+  return {k:-kRaw, v0, r2:sst===0?1:1-ssr/sst};
+}
+function vertFromAdj(va){ return Math.max(0,(va*va/19.62)*39.37); }
+function needSpeed(vertIn,k,load,cf){
+  const v0n=Math.sqrt((vertIn/39.37)*19.62)/cf;
+  return Math.max(0,v0n-k*load);
+}
+function getStatus(vert){
+  if(vert< 4)return{label:"Beginner",   color:"#ff4d4d"};
+  if(vert< 8)return{label:"Developing", color:"#ff8c00"};
+  if(vert<14)return{label:"Intermediate",color:"#ffcc00"};
+  if(vert<20)return{label:"Advanced",   color:"#e8ff3c"};
+  if(vert<26)return{label:"Elite",      color:"#39ff9f"};
+  return            {label:"World Class",color:"#00cfff"};
+}
+function getCfLabel(cf){
+  if(cf<=0.83)return"Full counterbalance";
+  if(cf<=0.89)return"Counterbalance";
+  if(cf<=0.93)return"Light counterbalance";
+  return"No counterbalance";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SLIDER HELPER
+// ─────────────────────────────────────────────────────────────────────────────
+function syncSlider(inputEl, fillEl, thumbEl, min, max){
+  const pct=((parseFloat(inputEl.value)-min)/(max-min))*100;
+  fillEl.style.width=pct+'%';
+  thumbEl.style.left=pct+'%';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ARC GAUGE
+// ─────────────────────────────────────────────────────────────────────────────
+function drawGauge(vert, targetVert, color){
+  const svg=document.getElementById('gauge-svg');
+  const pct=Math.min(1,vert/targetVert);
+  const r=64,cx=80,cy=84;
+  const toRad=d=>d*Math.PI/180;
+  const pt=a=>({x:cx+r*Math.cos(toRad(a)),y:cy+r*Math.sin(toRad(a))});
+  const s=pt(215), bg=pt(505);
+  const endA=215+290*pct, e=pt(endA), large=endA-215>180?1:0;
+  let arc=pct>0.01?`<path d="M${s.x},${s.y} A${r},${r} 0 ${large} 1 ${e.x},${e.y}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round"/>`:'';
+  svg.innerHTML=`
+    <path d="M${s.x},${s.y} A${r},${r} 0 1 1 ${bg.x},${bg.y}" fill="none" stroke="#161616" stroke-width="9" stroke-linecap="round"/>
+    ${arc}
+    <text x="${cx}" y="${cy-6}" text-anchor="middle" fill="#fff" font-size="30" font-weight="700" font-family="'Courier New',monospace">${vert.toFixed(1)}"</text>
+    <text x="${cx}" y="${cy+18}" text-anchor="middle" fill="#383838" font-size="9" font-family="'Courier New',monospace" letter-spacing="3">VERT</text>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GRAPH CANVAS
+// ─────────────────────────────────────────────────────────────────────────────
+const graphCanvas=document.getElementById('graph-canvas');
+graphCanvas.width=graphCanvas.parentElement.clientWidth||500;
+let graphW=graphCanvas.width, graphH=230;
+let graphHoverLoad = null;
+const PAD={top:14,right:56,bottom:28,left:32};
+let reg=null;
+
+function graphToCanvas(load,vel){
+  const pw=graphW-PAD.left-PAD.right, ph=graphH-PAD.top-PAD.bottom;
+  const maxLoad=Math.max(100,reg?Math.ceil(reg.v0/reg.k/10)*10+10:100);
+  const maxVel=Math.max(4,reg?Math.ceil(reg.v0*1.15):4);
+  return{
+    x:PAD.left+load/maxLoad*pw,
+    y:PAD.top+ph-(vel/maxVel*ph),
+    maxLoad,maxVel,pw,ph
+  };
+}
+
+function drawGraph(){
+  const ctx=graphCanvas.getContext('2d');
+  ctx.fillStyle='#060606'; ctx.fillRect(0,0,graphW,graphH);
+  if(!reg)return;
+  const {k,v0,r2}=reg;
+  const maxLoad=Math.max(100,Math.ceil(v0/k/10)*10+10);
+  const maxVel=Math.max(4,Math.ceil(v0*1.15));
+  const pw=graphW-PAD.left-PAD.right, ph=graphH-PAD.top-PAD.bottom;
+  const cx=(load,vel)=>({
+    x:PAD.left+load/maxLoad*pw,
+    y:PAD.top+ph-vel/maxVel*ph
+  });
+
+  // Grid
+  ctx.strokeStyle='#0f0f0f'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=PAD.top+i*(ph/4);ctx.beginPath();ctx.moveTo(PAD.left,y);ctx.lineTo(graphW-PAD.right,y);ctx.stroke();}
+  for(let i=0;i<=5;i++){const x=PAD.left+i*(pw/5);ctx.beginPath();ctx.moveTo(x,PAD.top);ctx.lineTo(x,PAD.top+ph);ctx.stroke();}
+
+  // Axes labels
+  ctx.fillStyle='#2e2e2e'; ctx.font='10px monospace'; ctx.textAlign='center';
+  for(let v=0;v<=maxLoad;v+=Math.ceil(maxLoad/5)){
+    const x=PAD.left+v/maxLoad*pw;
+    ctx.fillText(v,x,graphH-PAD.bottom+14);
+  }
+  ctx.textAlign='right';
+  for(let v=0;v<=maxVel;v+=1){
+    const y=PAD.top+ph-v/maxVel*ph;
+    ctx.fillText(v.toFixed(0),PAD.left-4,y+3);
+  }
+  // Axis labels
+  ctx.fillStyle='#2a2a2a'; ctx.font='9px monospace'; ctx.textAlign='center';
+  ctx.fillText('plate weight (lb)',PAD.left+pw/2,graphH-2);
+  ctx.save(); ctx.translate(10,PAD.top+ph/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('peak velocity (m/s)',0,0); ctx.restore();
+
+  // Gradient fill area under curve
+  const curvePoints=[];
+  for(let i=0;i<=maxLoad;i++){
+    const vel=v0-k*i; if(vel<=0){curvePoints.push({load:v0/k,vel:0});break;}
+    curvePoints.push({load:i,vel});
+  }
+  if(curvePoints.length>1){
+    const grad=ctx.createLinearGradient(0,PAD.top,0,PAD.top+ph);
+    grad.addColorStop(0,'rgba(232,255,60,0.1)');
+    grad.addColorStop(1,'rgba(232,255,60,0)');
+    ctx.beginPath();
+    const first=cx(curvePoints[0].load,curvePoints[0].vel);
+    ctx.moveTo(first.x,first.y);
+    for(let i=1;i<curvePoints.length;i++){const p=cx(curvePoints[i].load,curvePoints[i].vel);ctx.lineTo(p.x,p.y);}
+    const last=cx(curvePoints[curvePoints.length-1].load,0);
+    ctx.lineTo(last.x,PAD.top+ph);
+    ctx.lineTo(first.x,PAD.top+ph);
+    ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+    // Curve line
+    ctx.beginPath(); ctx.moveTo(first.x,first.y);
+    for(let i=1;i<curvePoints.length;i++){const p=cx(curvePoints[i].load,curvePoints[i].vel);ctx.lineTo(p.x,p.y);}
+    ctx.strokeStyle='#e8ff3c'; ctx.lineWidth=2; ctx.stroke();
+  }
+
+  // Current slider crosshair
+  const cf=state.cf;
+  const sliderVel=state.speed;
+  const sliderLoad=state.load;
+  const curPt=cx(sliderLoad,sliderVel);
+  ctx.strokeStyle='rgba(232,255,60,0.4)'; ctx.lineWidth=1; ctx.setLineDash([3,6]);
+  ctx.beginPath(); ctx.moveTo(curPt.x,PAD.top); ctx.lineTo(curPt.x,PAD.top+ph); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD.left,curPt.y); ctx.lineTo(graphW-PAD.right,curPt.y); ctx.stroke();
+  ctx.setLineDash([]);
+  // label
+  ctx.fillStyle='#e8ff3c'; ctx.font='9px monospace'; ctx.textAlign='left';
+  ctx.fillText(sliderVel.toFixed(2)+' m/s',graphW-PAD.right+3,curPt.y+3);
+
+  // Target v0 line
+  const targetVert=state.targetVert;
+  const tV0adj=Math.sqrt((targetVert/39.37)*19.62)/cf;
+  const tPt=cx(0,tV0adj);
+  if(tPt.y>PAD.top && tPt.y<PAD.top+ph){
+    ctx.strokeStyle='rgba(255,77,77,0.5)'; ctx.lineWidth=1; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(PAD.left,tPt.y); ctx.lineTo(graphW-PAD.right,tPt.y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,77,77,0.7)'; ctx.font='9px monospace'; ctx.textAlign='left';
+    ctx.fillText(targetVert+'" target',graphW-PAD.right+3,tPt.y+3);
+  }
+
+  // Data point dots
+  ctx.fillStyle='#e8ff3c';
+  for(const pt of state.dataPoints){
+    const p=cx(pt.load,pt.v);
+    ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2);
+    ctx.fillStyle='#e8ff3c'; ctx.fill();
+    ctx.strokeStyle='#060606'; ctx.lineWidth=2; ctx.stroke();
+  }
+
+  // Hover crosshair dot on curve
+  if(graphHoverLoad !== null){
+    const hv = Math.max(0, v0 - k*graphHoverLoad);
+    if(hv > 0){
+      const hp = cx(graphHoverLoad, hv);
+      // vertical dashed line snapped to curve
+      ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=1; ctx.setLineDash([2,4]);
+      ctx.beginPath(); ctx.moveTo(hp.x, PAD.top); ctx.lineTo(hp.x, PAD.top+ph); ctx.stroke();
+      ctx.setLineDash([]);
+      // dot on curve
+      ctx.beginPath(); ctx.arc(hp.x, hp.y, 5, 0, Math.PI*2);
+      ctx.fillStyle='#fff'; ctx.fill();
+      ctx.strokeStyle='#e8ff3c'; ctx.lineWidth=2; ctx.stroke();
+    }
+  }
+} // end drawGraph
+
+graphCanvas.addEventListener('click',e=>{
+  if(!reg)return;
+  const rect=graphCanvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(graphCanvas.width/rect.width);
+  const my=(e.clientY-rect.top)*(graphCanvas.height/rect.height);
+  const maxLoad=Math.max(100,Math.ceil(reg.v0/reg.k/10)*10+10);
+  const maxVel=Math.max(4,Math.ceil(reg.v0*1.15));
+  const pw=graphW-PAD.left-PAD.right, ph=graphH-PAD.top-PAD.bottom;
+  for(const pt of state.dataPoints){
+    const px=PAD.left+pt.load/maxLoad*pw;
+    const py=PAD.top+ph-pt.v/maxVel*ph;
+    if(Math.hypot(mx-px,my-py)<18){ openEdit(pt.id); return; }
+  }
+});
+
+// ── Graph hover tooltip ───────────────────────────────────────────────────────
+const graphTooltip = document.createElement('div');
+graphTooltip.style.cssText=`
+  position:fixed; display:none; pointer-events:none; z-index:999;
+  background:#0a0a0a; border:1px solid #222; border-radius:8px;
+  padding:10px 14px; font-family:'Courier New',monospace; font-size:11px;
+  color:#eee; min-width:130px; line-height:1.8;
+  box-shadow:0 4px 24px rgba(0,0,0,0.6);
+`;
+document.body.appendChild(graphTooltip);
+
+graphCanvas.addEventListener('mousemove', e=>{
+  if(!reg) return;
+  const rect = graphCanvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (graphCanvas.width / rect.width);
+  const my = (e.clientY - rect.top)  * (graphCanvas.height / rect.height);
+  const maxLoad = Math.max(100, Math.ceil(reg.v0/reg.k/10)*10+10);
+  const maxVel  = Math.max(4, Math.ceil(reg.v0*1.15));
+  const pw = graphW - PAD.left - PAD.right;
+  const ph = graphH - PAD.top  - PAD.bottom;
+
+  // Only show inside plot area
+  if(mx < PAD.left || mx > graphW-PAD.right || my < PAD.top || my > PAD.top+ph){
+    graphTooltip.style.display='none'; return;
+  }
+
+  // Convert mouse x → load, then snap vel to curve at that load
+  const hoverLoad = Math.max(0, ((mx - PAD.left) / pw) * maxLoad);
+  const hoverVel  = Math.max(0, reg.v0 - reg.k * hoverLoad);
+  if(hoverVel <= 0){ graphTooltip.style.display='none'; return; }
+
+  // ── Correct extrapolation: treat (hoverLoad, hoverVel) as a test point
+  // and extrapolate to zero-load using the existing slope k
+  // v0_estimated = hoverVel + k * hoverLoad
+  // For points ON the curve this always = reg.v0
+  // For visual clarity we show vert varying with mouse position freely
+  const mouseVel = Math.max(0, maxVel - ((my - PAD.top) / ph) * maxVel);
+  const v0estimated = mouseVel + reg.k * hoverLoad;
+  const predVert = vertFromAdj(Math.max(0, v0estimated) * state.cf);
+
+  // Also show what curve says at this load
+  const curveVert = vertFromAdj(reg.v0 * state.cf);
+
+  // Check if hovering near a data point dot
+  let dotLabel = '';
+  for(const pt of state.dataPoints){
+    const dpx = PAD.left + pt.load/maxLoad*pw;
+    const dpy = PAD.top  + ph - pt.v/maxVel*ph;
+    if(Math.hypot(mx-dpx, my-dpy) < 18){
+      dotLabel = `<div style="color:#e8ff3c;font-weight:700;margin-bottom:4px">● ${pt.load}lb test point</div>`;
+      break;
+    }
+  }
+
+  graphTooltip.innerHTML = `
+    ${dotLabel}
+    <div style="color:#555">Load <span style="color:#fff;float:right;margin-left:20px">${hoverLoad.toFixed(0)} lb</span></div>
+    <div style="color:#555">Curve speed <span style="color:#fff;float:right;margin-left:20px">${hoverVel.toFixed(3)} m/s</span></div>
+    <div style="border-top:1px solid #1a1a1a;margin-top:6px;padding-top:6px">
+      <div style="color:#555">BW pred vert <span style="color:#e8ff3c;float:right;margin-left:20px;font-weight:700">${curveVert.toFixed(1)}"</span></div>
+      <div style="color:#333;font-size:9px;margin-top:3px">from LV profile zero-load v₀</div>
+    </div>
+  `;
+
+  graphHoverLoad = hoverLoad;
+  drawGraph();
+
+  // Position tooltip near cursor, keep in viewport
+  const tx = e.clientX + 14;
+  const ty = e.clientY - 10;
+  const tw = 175, th = 100;
+  graphTooltip.style.left = (tx + tw > window.innerWidth ? e.clientX - tw - 14 : tx) + 'px';
+  graphTooltip.style.top  = (ty + th > window.innerHeight ? e.clientY - th : ty) + 'px';
+  graphTooltip.style.display = 'block';
+});
+
+graphCanvas.addEventListener('mouseleave', ()=>{
+  graphTooltip.style.display='none';
+  graphHoverLoad = null;
+  drawGraph();
+});
+// Touch support
+graphCanvas.addEventListener('touchmove', e=>{
+  e.preventDefault();
+  const touch = e.touches[0];
+  graphCanvas.dispatchEvent(new MouseEvent('mousemove',{clientX:touch.clientX,clientY:touch.clientY}));
+},{passive:false});
+graphCanvas.addEventListener('touchend', ()=>{ graphTooltip.style.display='none'; });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+function renderChips(){
+  const cont=document.getElementById('chips-container');
+  cont.innerHTML='';
+  const sorted=[...state.dataPoints].sort((a,b)=>a.load-b.load);
+  for(const pt of sorted){
+    const isSel=state.panel==='edit'&&state.editId===pt.id;
+    const chip=document.createElement('div');
+    chip.className='chip'+(isSel?' selected':'');
+    chip.innerHTML=`<div class="chip-dot"></div>
+      <span class="chip-load">${pt.load}lb</span>
+      <span style="color:#555">·</span>
+      <span class="chip-v" style="${isSel?'color:#e8ff3c':''}">${pt.v.toFixed(2)} m/s</span>
+      <button class="chip-btn edit-btn" data-id="${pt.id}" title="edit">✎</button>
+      ${state.dataPoints.length>2?`<button class="chip-btn remove remove-btn" data-id="${pt.id}" title="remove">×</button>`:''}`;
+    cont.appendChild(chip);
+  }
+  // Add button
+  const addBtn=document.createElement('button');
+  addBtn.style.cssText='background:#111;border:1px solid #222;border-radius:20px;padding:5px 12px;font-size:10px;color:#444;cursor:pointer;font-family:monospace;transition:all 0.2s';
+  addBtn.textContent=state.panel==='add'?'cancel':'+ add';
+  if(state.panel==='add'){addBtn.style.background='#e8ff3c';addBtn.style.color='#000';addBtn.style.borderColor='#e8ff3c';}
+  addBtn.onclick=()=>{
+    if(state.panel==='add'){state.panel=null;}
+    else{state.panel='add';state.editId=null;}
+    document.getElementById('panel-load').value=45;
+    document.getElementById('panel-speed').value=1.0;
+    renderAll();
+  };
+  cont.appendChild(addBtn);
+
+  // Wire chip buttons
+  cont.querySelectorAll('.edit-btn').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation(); openEdit(parseInt(b.dataset.id));
+  }));
+  cont.querySelectorAll('.remove-btn').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation(); removePoint(parseInt(b.dataset.id));
+  }));
+
+  // Panel
+  const panel=document.getElementById('data-panel');
+  const ptitle=document.getElementById('panel-title');
+  const premove=document.getElementById('panel-remove');
+  const pconfirm=document.getElementById('panel-confirm');
+  const loadWrap=document.getElementById('load-input-wrap');
+  if(state.panel==='add'){
+    panel.style.display='block'; ptitle.textContent='New Test Point';
+    premove.style.display='none'; pconfirm.textContent='Add Point';
+    loadWrap.style.display='block';
+  } else if(state.panel==='edit'){
+    panel.style.display='block';
+    const pt=state.dataPoints.find(p=>p.id===state.editId);
+    ptitle.textContent=`Update ${pt?pt.load:0}lb Point`;
+    premove.style.display=state.dataPoints.length>2?'block':'none';
+    pconfirm.textContent='Update'; loadWrap.style.display='none';
+  } else {
+    panel.style.display='none';
+  }
+}
+
+function openEdit(id){
+  const pt=state.dataPoints.find(p=>p.id===id); if(!pt)return;
+  state.panel='edit'; state.editId=id;
+  document.getElementById('panel-speed').value=pt.v;
+  renderAll();
+}
+function removePoint(id){
+  if(state.dataPoints.length<=2)return;
+  state.dataPoints=state.dataPoints.filter(p=>p.id!==id);
+  if(state.editId===id){state.panel=null;state.editId=null;}
+  renderAll(); save();
+}
+
+document.getElementById('panel-confirm').onclick=()=>{
+  const speedVal=parseFloat(document.getElementById('panel-speed').value)||0;
+  if(state.panel==='add'){
+    const loadVal=parseFloat(document.getElementById('panel-load').value)||0;
+    const exists=state.dataPoints.find(p=>p.load===loadVal);
+    if(exists){exists.v=speedVal;}
+    else{state.dataPoints.push({id:state.nextId++,load:loadVal,v:speedVal});}
+  } else if(state.panel==='edit'){
+    const pt=state.dataPoints.find(p=>p.id===state.editId);
+    if(pt)pt.v=speedVal;
+  }
+  state.panel=null; state.editId=null;
+  renderAll(); save();
+};
+document.getElementById('panel-cancel').onclick=()=>{state.panel=null;state.editId=null;renderAll();};
+document.getElementById('panel-remove').onclick=()=>{removePoint(state.editId);};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIMULATION
+// ─────────────────────────────────────────────────────────────────────────────
+const SC=4.0, SW=500, SH=560, GY=510, FX=110, PX=380;
+const simCanvas=document.getElementById('sim-canvas');
+simCanvas.width=SW; simCanvas.height=SH;
+
+const BP={head:18,neck:10,torso:76,thigh:62,shin:54,foot:14};
+const mk=(x,y)=>({x,y});
+
+const P_STAND={
+  foot:mk(FX,GY), ankle:mk(FX,GY-BP.foot), knee:mk(FX,GY-BP.foot-BP.shin),
+  hip:mk(FX,GY-BP.foot-BP.shin-BP.thigh), sh:mk(FX,GY-BP.foot-BP.shin-BP.thigh-BP.torso),
+  neck:mk(FX,GY-BP.foot-BP.shin-BP.thigh-BP.torso-BP.neck),
+  head:mk(FX,GY-BP.foot-BP.shin-BP.thigh-BP.torso-BP.neck-BP.head),
+  fknee:mk(FX,GY-BP.foot-BP.shin), fankle:mk(FX,GY-BP.foot), ffoot:mk(FX,GY),
+  elL:mk(FX-14,GY-BP.foot-BP.shin-BP.thigh-BP.torso+38),
+  haL:mk(FX-16,GY-BP.foot-BP.shin-BP.thigh-BP.torso+78),
+  elR:mk(FX+14,GY-BP.foot-BP.shin-BP.thigh-BP.torso+38),
+  haR:mk(FX+16,GY-BP.foot-BP.shin-BP.thigh-BP.torso+78),
+};
+const hipY=GY-34;
+const P_SQUAT={
+  foot:mk(FX,GY), ankle:mk(FX,GY-10), knee:mk(FX+44,GY-28), hip:mk(FX+2,hipY),
+  sh:mk(FX+4,hipY-80), neck:mk(FX+4,hipY-92), head:mk(FX+5,hipY-110),
+  fknee:mk(FX+78,hipY-8), fankle:mk(FX+148,GY-16), ffoot:mk(FX+164,GY-8),
+  elL:mk(FX-12,hipY-58), haL:mk(FX-8,hipY-36),
+  elR:mk(FX+20,hipY-58), haR:mk(FX+16,hipY-36),
+};
+const P_LAND={
+  foot:mk(FX,GY), ankle:mk(FX,GY-12), knee:mk(FX+10,GY-58), hip:mk(FX+4,GY-114),
+  sh:mk(FX+3,GY-192), neck:mk(FX+3,GY-204), head:mk(FX+3,GY-222),
+  fknee:mk(FX+10,GY-58), fankle:mk(FX+6,GY-12), ffoot:mk(FX+6,GY),
+  elL:mk(FX-16,GY-158), haL:mk(FX-22,GY-122),
+  elR:mk(FX+22,GY-158), haR:mk(FX+28,GY-122),
+};
+
+function makeAirPose(vertIn){
+  const lift=vertIn*SC;
+  const up=(p,dx=0,dy=0)=>mk(p.x+dx,p.y-lift+dy);
+  return{
+    foot:up(P_STAND.foot), ankle:up(P_STAND.ankle,0,8), knee:up(P_STAND.knee,4,16),
+    hip:up(P_STAND.hip), sh:up(P_STAND.sh), neck:up(P_STAND.neck), head:up(P_STAND.head),
+    fknee:up(P_STAND.fknee,4,16), fankle:up(P_STAND.fankle,3,8), ffoot:up(P_STAND.ffoot,3),
+    elL:up(P_STAND.elL,-4,-14), haL:up(P_STAND.haL,-6,-26),
+    elR:up(P_STAND.elR,4,-14), haR:up(P_STAND.haR,6,-26),
+  };
+}
+
+function lerpPose(a,b,t){
+  const r={};
+  for(const k of Object.keys(a)) r[k]={x:a[k].x+(b[k].x-a[k].x)*t, y:a[k].y+(b[k].y-a[k].y)*t};
+  return r;
+}
+const eio=t=>t<0.5?2*t*t:-1+(4-2*t)*t;
+const eo=t=>1-(1-t)*(1-t);
+
+function getSimPose(t, airPose){
+  if(t<0.20) return P_SQUAT;
+  if(t<0.42) return lerpPose(P_SQUAT,P_STAND,eio((t-0.20)/0.22));
+  if(t<0.55) return lerpPose(P_STAND,airPose,eo((t-0.42)/0.13));
+  if(t<0.68) return lerpPose(airPose,P_STAND,eio((t-0.55)/0.13));
+  if(t<0.80) return lerpPose(P_STAND,P_LAND,eo((t-0.68)/0.12));
+  return lerpPose(P_LAND,P_SQUAT,eio((t-0.80)/0.20));
+}
+
+let simPlaying=false, simT=0, simLast=null, simRaf=null;
+
+function drawSim(t){
+  const ctx=simCanvas.getContext('2d');
+  const cw=simCanvas.width;
+  const PL=cw-72; // dynamic plate center - always 72px from right edge
+  ctx.fillStyle='#060606'; ctx.fillRect(0,0,cw,SH);
+
+  // Ground
+  ctx.strokeStyle='#1e1e1e'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,GY+1); ctx.lineTo(cw,GY+1); ctx.stroke();
+  ctx.strokeStyle='#111'; ctx.lineWidth=1;
+  for(let x=-10;x<cw+10;x+=14){ctx.beginPath();ctx.moveTo(x,GY+1);ctx.lineTo(x-12,GY+14);ctx.stroke();}
+
+  // Height scale (right edge)
+  for(let i=6;i<=60;i+=6){
+    const y=GY-i*SC; if(y<30)break;
+    ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cw-10,y);ctx.lineTo(cw-4,y);ctx.stroke();
+    if(i%12===0){ctx.fillStyle='#1e1e1e';ctx.font='7px monospace';ctx.textAlign='right';ctx.fillText(i+'"',cw-12,y+3);}
+  }
+
+  // Predicted vert from formula (zero-load LV profile × CF)
+  const vertIn = reg ? vertFromAdj(reg.v0 * state.cf) : 0;
+
+  // Predicted vert label top left
+  ctx.fillStyle='rgba(232,255,60,0.35)'; ctx.font='8px monospace'; ctx.textAlign='left';
+  ctx.fillText('PREDICTED VERT: '+vertIn.toFixed(1)+'"', 32, 18);
+
+  // Vert dashed line
+  if(vertIn>0){
+    const vy=GY-vertIn*SC;
+    if(vy>26){
+      ctx.strokeStyle='rgba(232,255,60,0.25)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(32,vy); ctx.lineTo(cw-16,vy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='rgba(232,255,60,0.6)'; ctx.font='8px monospace'; ctx.textAlign='left';
+      ctx.fillText(vertIn.toFixed(1)+'"',34,vy-3);
+    }
+  }
+
+  // Height bracket (left)
+  ctx.strokeStyle='#181818'; ctx.lineWidth=1;
+  const figH=BP.foot+BP.shin+BP.thigh+BP.torso+BP.neck+BP.head*2;
+  ctx.beginPath(); ctx.moveTo(22,GY); ctx.lineTo(22,GY-figH); ctx.stroke();
+  ctx.beginPath();ctx.moveTo(19,GY);ctx.lineTo(25,GY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(19,GY-figH);ctx.lineTo(25,GY-figH);ctx.stroke();
+  ctx.save(); ctx.translate(14,GY-figH/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle='#1a1a1a'; ctx.font='7px monospace'; ctx.textAlign='center';
+  ctx.fillText("171cm / 5'7\"",0,0); ctx.restore();
+
+  // PLATES — stacked next to figure, all within canvas
+  let plateY=GY;
+  const allZero=state.plateStacks.every(s=>s.count===0);
+  if(!allZero){
+    for(const {weight,count} of state.plateStacks){
+      if(count===0)continue;
+      const spec=PLATE_SPECS[weight];
+      const thPx=spec.thickIn*SC;
+      const halfW=spec.widthPx/2;
+      // Clamp so plate never goes out of canvas
+      const px=Math.min(PL, cw-halfW-4);
+      for(let i=0;i<count;i++){
+        const py=plateY-thPx;
+        const g=ctx.createLinearGradient(px-halfW,py,px+halfW,py);
+        g.addColorStop(0,'#1e1e1e'); g.addColorStop(0.5,'#2c2c2c'); g.addColorStop(1,'#181818');
+        ctx.fillStyle=g;
+        ctx.beginPath(); ctx.roundRect(px-halfW,py+0.5,spec.widthPx,thPx-1,2); ctx.fill();
+        ctx.strokeStyle='#333'; ctx.lineWidth=0.5;
+        ctx.strokeRect(px-halfW,py+0.5,spec.widthPx,thPx-1);
+        const fs=Math.max(6,thPx*0.5);
+        ctx.fillStyle='#3a3a3a'; ctx.font=`bold ${fs}px monospace`; ctx.textAlign='center';
+        ctx.fillText(spec.label,px,py+thPx/2+fs*0.35);
+        plateY=py;
+      }
+    }
+    const totalH=GY-plateY;
+    if(totalH>0){
+      const px=Math.min(PL, cw-PLATE_SPECS[45].widthPx/2-4);
+      ctx.fillStyle='#444'; ctx.font='9px monospace'; ctx.textAlign='center';
+      ctx.fillText((totalH/SC).toFixed(2)+'"',px,plateY-7);
+      const clearance=vertIn*SC-totalH;
+      ctx.fillStyle=clearance>=0?'rgba(57,255,159,0.8)':'rgba(255,77,77,0.8)';
+      ctx.font='8px monospace';
+      ctx.fillText(clearance>=0?'+'+((clearance/SC).toFixed(1))+'" clear':((clearance/SC).toFixed(1))+'" short',px,plateY-18);
+      // vertical bracket
+      const bx=px-PLATE_SPECS[45].widthPx/2-8;
+      ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(bx,GY); ctx.lineTo(bx,plateY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bx-3,GY); ctx.lineTo(bx+3,GY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bx-3,plateY); ctx.lineTo(bx+3,plateY); ctx.stroke();
+    }
+  }
+
+  // FIGURE — uses formula zero-load vert
+  const airPose=makeAirPose(vertIn);
+  const pose=getSimPose(t,airPose);
+  const ln=(a,b,w=2.5)=>{ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineWidth=w;ctx.stroke();};
+
+  ctx.strokeStyle='#e8ff3c'; ctx.fillStyle='#e8ff3c'; ctx.lineCap='round'; ctx.lineJoin='round';
+
+  if(pose.foot.y>GY-22){
+    ctx.globalAlpha=0.1; ctx.beginPath();ctx.ellipse(pose.foot.x,GY+3,18,4,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  }
+
+  ctx.strokeStyle='#e8ff3c';
+  ctx.beginPath();ctx.moveTo(pose.foot.x-11,pose.foot.y);ctx.lineTo(pose.foot.x+6,pose.foot.y);ctx.lineWidth=2.5;ctx.stroke();
+  ln(pose.foot,pose.ankle); ln(pose.ankle,pose.knee); ln(pose.knee,pose.hip);
+
+  ctx.globalAlpha=0.75;
+  ln(pose.hip,pose.fknee); ln(pose.fknee,pose.fankle); ln(pose.fankle,pose.ffoot);
+  ctx.globalAlpha=1;
+
+  ln(pose.hip,pose.sh); ln(pose.sh,pose.neck,2);
+
+  const shL={x:pose.sh.x-10,y:pose.sh.y}, shR={x:pose.sh.x+10,y:pose.sh.y};
+  ln(shL,pose.elL,2); ln(pose.elL,pose.haL,2);
+  ln(shR,pose.elR,2); ln(pose.elR,pose.haR,2);
+
+  ctx.beginPath();ctx.arc(pose.head.x,pose.head.y,18,0,Math.PI*2);ctx.lineWidth=2.5;ctx.stroke();
+
+  ctx.fillStyle='#e8ff3c';
+  for(const p of [pose.knee,pose.hip,pose.sh]){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();}
+
+  if(simPlaying){
+    const phase=t<0.20?"FULL DEPTH":t<0.42?"DRIVE":t<0.55?"AIRBORNE ↑":t<0.68?"AIRBORNE ↓":t<0.80?"LANDING":"ABSORB";
+    ctx.fillStyle='rgba(232,255,60,0.4)'; ctx.font='8px monospace'; ctx.textAlign='center';
+    ctx.fillText(phase,FX+60,28);
+  }
+}
+
+// helper for plate hw
+function hw(w){return (PLATE_SPECS[w]||{widthPx:50}).widthPx/2;}
+
+function simAnimate(ts){
+  if(!simPlaying)return;
+  if(!simLast)simLast=ts;
+  const dt=(ts-simLast)/1000; simLast=ts;
+  simT=(simT+dt/2.8)%1;
+  drawSim(simT);
+  simRaf=requestAnimationFrame(simAnimate);
+}
+
+const playBtn=document.getElementById('play-btn');
+playBtn.onclick=()=>{
+  simPlaying=!simPlaying;
+  if(simPlaying){
+    playBtn.textContent='⏸ PAUSE';
+    playBtn.style.background='#1a1a0a'; playBtn.style.color='#e8ff3c';
+    playBtn.style.borderColor='rgba(232,255,60,0.3)';
+    simLast=null; simRaf=requestAnimationFrame(simAnimate);
+  } else {
+    playBtn.textContent='▶ PLAY';
+    playBtn.style.background='#e8ff3c'; playBtn.style.color='#000';
+    playBtn.style.borderColor='#e8ff3c';
+    cancelAnimationFrame(simRaf);
+  }
+};
+
+// Build plate controls
+function buildPlateControls(){
+  const grid=document.getElementById('plates-grid');
+  grid.innerHTML='';
+  for(let i=0;i<state.plateStacks.length;i++){
+    const {weight,count}=state.plateStacks[i];
+    const spec=PLATE_SPECS[weight];
+    const card=document.createElement('div'); card.className='plate-card';
+    card.innerHTML=`
+      <div class="plate-card-top">
+        <div><span class="plate-name">${weight}lb</span><span class="plate-thick">${spec.thickIn}"ea</span></div>
+        <span class="plate-count" id="pc-${weight}">${count}</span>
+      </div>
+      <div class="plate-btns">
+        <button class="plate-btn" id="pm-${weight}">−</button>
+        <button class="plate-btn plus" id="pp-${weight}">+</button>
+      </div>`;
+    grid.appendChild(card);
+    document.getElementById('pm-'+weight).onclick=()=>{
+      state.plateStacks[i].count=Math.max(0,state.plateStacks[i].count-1);
+      document.getElementById('pc-'+weight).textContent=state.plateStacks[i].count;
+      updateStackInfo(); if(!simPlaying)drawSim(simT); save();
+    };
+    document.getElementById('pp-'+weight).onclick=()=>{
+      state.plateStacks[i].count=Math.min(12,state.plateStacks[i].count+1);
+      document.getElementById('pc-'+weight).textContent=state.plateStacks[i].count;
+      updateStackInfo(); if(!simPlaying)drawSim(simT); save();
+    };
+  }
+}
+
+function updateStackInfo(){
+  const totalH=state.plateStacks.reduce((a,{weight,count})=>a+(PLATE_SPECS[weight].thickIn*count),0);
+  const info=document.getElementById('stack-info');
+  const vert=computedVert();
+  if(totalH===0){info.style.display='none';return;}
+  info.style.display='block';
+  const diff=vert-totalH;
+  info.innerHTML=`<span style="color:#444">Stack: </span><span style="color:#fff">${totalH.toFixed(2)}"</span>
+    <span style="color:#333;margin:0 8px">·</span>
+    ${diff>=0
+      ?`<span style="color:#39ff9f">✓ clears by ${diff.toFixed(2)}"</span>`
+      :`<span style="color:#ff4d4d">✗ ${Math.abs(diff).toFixed(2)}" short</span>`}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPUTED
+// ─────────────────────────────────────────────────────────────────────────────
+function computedVert(){
+  if(!reg)return 0;
+  // True predicted BW vert = zero-load v0 from regression × CF
+  return vertFromAdj(reg.v0*state.cf);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER ALL
+// ─────────────────────────────────────────────────────────────────────────────
+function renderAll(){
+  reg=linReg(state.dataPoints);
+  if(!reg)return;
+  const {k,v0,r2}=reg;
+
+  const v0user=state.speed+k*state.load;
+  const vert=vertFromAdj(v0user*state.cf);
+  const needed=needSpeed(state.targetVert,k,state.load,state.cf);
+  const gap=Math.max(0,needed-state.speed);
+  const vertPct=Math.min(100,(vert/state.targetVert)*100);
+  const speedPct=Math.min(100,(state.speed/needed)*100);
+  const vertColor=vertPct<40?'#ff4d4d':vertPct<75?'#ff8c00':'#e8ff3c';
+  const status=getStatus(vert);
+
+  // Gauge
+  drawGauge(vert,state.targetVert,vertColor);
+
+  // Gauge info
+  document.getElementById('adj-v0').textContent=(v0user*state.cf).toFixed(3)+' m/s';
+  document.getElementById('need-label').textContent=`NEED @ ${state.load}LB → ${state.targetVert}"`;
+  const needEl=document.getElementById('need-val');
+  needEl.textContent=needed.toFixed(2)+' m/s';
+  needEl.style.color=gap===0?'#39ff9f':'#ff4d4d';
+  const gapEl=document.getElementById('gap-label');
+  gapEl.textContent=gap===0?'✓ target hit':`+${gap.toFixed(2)} m/s gap`;
+  gapEl.style.color=gap===0?'#39ff9f':'#666';
+
+  // Status
+  document.getElementById('status-label').textContent=status.label;
+  document.getElementById('status-label').style.color=status.color;
+
+  // Sliders sync
+  syncSlider(document.getElementById('load-slider'),document.getElementById('load-fill'),document.getElementById('load-thumb'),5,200);
+  syncSlider(document.getElementById('speed-slider'),document.getElementById('speed-fill'),document.getElementById('speed-thumb'),0.3,4.5);
+  syncSlider(document.getElementById('cf-slider'),document.getElementById('cf-fill'),document.getElementById('cf-thumb'),0.80,0.97);
+  syncSlider(document.getElementById('target-slider'),document.getElementById('target-fill'),document.getElementById('target-thumb'),2,50);
+  document.getElementById('load-val').innerHTML=state.load+'<span class="slider-unit">lb</span>';
+  document.getElementById('speed-val').innerHTML=state.speed.toFixed(2)+'<span class="slider-unit">m/s</span>';
+  document.getElementById('cf-val').textContent=state.cf.toFixed(2);
+  document.getElementById('cf-sub').textContent=getCfLabel(state.cf);
+  document.getElementById('target-val').innerHTML=state.targetVert+'<span class="slider-unit">"</span>';
+  document.getElementById('target-display').textContent=state.targetVert;
+
+  // Progress bar
+  document.getElementById('speed-pct').textContent=speedPct.toFixed(0)+'%';
+  const prog=document.getElementById('speed-prog');
+  prog.style.width=speedPct+'%';
+  prog.style.background=gap===0?'#e8ff3c':'linear-gradient(90deg,#ff4d4d,#ff8c00)';
+
+  // Stats
+  document.getElementById('hdr-k').textContent='k = '+k.toFixed(4);
+  document.getElementById('hdr-r2').textContent='R² = '+r2.toFixed(3);
+  document.getElementById('stat-k').textContent=k.toFixed(4);
+  document.getElementById('stat-v0').textContent=v0.toFixed(3)+' m/s';
+  document.getElementById('stat-cf').textContent=state.cf.toFixed(2);
+  document.getElementById('graph-eq').textContent=`v = ${v0.toFixed(3)} − ${k.toFixed(4)} × load`;
+  document.getElementById('graph-r2').textContent='R² '+r2.toFixed(3);
+
+  // Sim label — show zero-load predicted vert
+  document.getElementById('sim-vert-label').textContent=reg?vertFromAdj(reg.v0*state.cf).toFixed(1):'—';
+
+  // Graph
+  drawGraph();
+
+  // Chips
+  renderChips();
+
+  // Stack info
+  updateStackInfo();
+
+  // Sim (static)
+  if(!simPlaying) drawSim(simT);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WIRE INPUTS
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('load-slider').oninput=e=>{state.load=parseFloat(e.target.value);renderAll();save();};
+document.getElementById('speed-slider').oninput=e=>{state.speed=parseFloat(e.target.value);renderAll();save();};
+document.getElementById('cf-slider').oninput=e=>{state.cf=parseFloat(e.target.value);renderAll();save();};
+document.getElementById('target-slider').oninput=e=>{state.targetVert=parseInt(e.target.value);renderAll();save();};
+
+const targetToggle=document.getElementById('target-toggle');
+const targetPanel=document.getElementById('target-panel');
+targetToggle.onclick=()=>{
+  const open=targetPanel.style.display==='block';
+  targetPanel.style.display=open?'none':'block';
+  targetToggle.textContent=open?'+':'−';
+  targetToggle.style.background=open?'#161616':'#e8ff3c';
+  targetToggle.style.color=open?'#555':'#000';
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CANVAS RESIZE
+// ─────────────────────────────────────────────────────────────────────────────
+function resizeCanvases(){
+  const cardW=Math.min(500,window.innerWidth-32);
+  graphCanvas.width=cardW-0;
+  graphW=graphCanvas.width;
+  simCanvas.width=cardW;
+  renderAll();
+}
+window.addEventListener('resize',()=>resizeCanvases());
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+buildPlateControls();
+resizeCanvases();
+
+// Restore target panel open state
+if(state.targetOpen){
+  document.getElementById('target-panel').style.display='block';
+  const btn=document.getElementById('target-toggle');
+  btn.textContent='−'; btn.style.background='#e8ff3c'; btn.style.color='#000';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WELCOME VOICE
+// ─────────────────────────────────────────────────────────────────────────────
+function speakWelcome(){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  const vert = reg ? vertFromAdj(reg.v0*state.cf) : 0;
+  const status = reg ? getStatus(vert) : null;
+
+  const msg = isReturningUser
+    ? `Welcome back. Your load velocity profile is loaded. Current predicted pistol vert is ${vert.toFixed(1)} inches. Status: ${status?.label || 'unknown'}.`
+    : `Welcome to the Pistol Squat Calculator. Add your test data points to build your load velocity profile and predict your vertical.`;
+
+  const utter = new SpeechSynthesisUtterance(msg);
+  utter.rate  = 0.92;
+  utter.pitch = 0.88;
+  utter.volume= 1.0;
+
+  // Pick a good voice — prefer a deep English one
+  function speak(voices){
+    const preferred = [
+      'Google UK English Male',
+      'Microsoft David Desktop',
+      'Alex',
+      'Daniel',
+      'Google US English',
+    ];
+    const found = preferred.reduce((best, name) => {
+      const v = voices.find(v => v.name === name);
+      return (!best && v) ? v : best;
+    }, null) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    if(found) utter.voice = found;
+    window.speechSynthesis.speak(utter);
+  }
+
+  const voices = window.speechSynthesis.getVoices();
+  if(voices.length > 0){
+    speak(voices);
+  } else {
+    // Voices not loaded yet — wait for them
+    window.speechSynthesis.onvoiceschanged = () => {
+      speak(window.speechSynthesis.getVoices());
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }
+}
+
+// Small delay so page renders first, then voice fires
+setTimeout(speakWelcome, 800);
+</script>
+
+</body>
+</html>
