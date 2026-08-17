@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Workout</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#14161A;
+    --panel:#1C1F25;
+    --panel-2:#20242B;
+    --paper:#F5F3EE;
+    --paper-dim:#B9B6AC;
+    --signal:#FF4E2A;
+    --signal-dim:#C93E22;
+    --steel:#6B7684;
+    --line:#2A2E36;
+    --go:#59C97A;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{ background:var(--signal); color:var(--ink); }
+  a{ color:inherit; }
+  :focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+
+  .wrap{
+    max-width:720px;
+    margin:0 auto;
+    padding:32px 20px 80px;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:20px;
+  }
+  .btn-new{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--paper-dim);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:500;
+    padding:9px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .btn-new:hover{ border-color:var(--steel); color:var(--paper); }
+
+  /* ---------- section labels ---------- */
+  .section-label{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--steel);
+    margin:0 0 12px;
+  }
+
+  /* ---------- meta form ---------- */
+  .meta-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  @media (max-width:520px){ .meta-grid{ grid-template-columns:1fr; } }
+
+  label.field-label{
+    display:block;
+    font-size:12px;
+    color:var(--steel);
+    margin-bottom:6px;
+    font-weight:500;
+  }
+
+  input[type=text], input[type=url], textarea{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:10px 12px;
+    border-radius:6px;
+    transition:border-color .15s ease;
+  }
+  input[type=text]::placeholder, input[type=url]::placeholder, textarea::placeholder{ color:#565C66; }
+  input:focus, textarea:focus{ border-color:var(--signal); }
+  textarea{ resize:vertical; min-height:44px; font-family:'Inter',sans-serif; }
+
+  .msg-block{ margin-bottom:24px; }
+
+  /* ---------- exercise list ---------- */
+  .ex-list{ list-style:none; margin:0 0 20px; padding:0; }
+  .ex-row{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    padding:16px 0;
+    border-bottom:1px dashed var(--line);
+    flex-wrap:wrap;
+  }
+  .ex-num{
+    font-family:'Space Mono',monospace;
+    font-size:13px;
+    color:var(--signal);
+    width:24px;
+    flex-shrink:0;
+    padding-top:2px;
+  }
+  .ex-main{ flex:1; min-width:200px; }
+  .ex-name{ font-size:16px; font-weight:600; margin:0 0 3px; word-break:break-word; }
+  .ex-notes{ font-size:13px; color:var(--steel); margin:0; word-break:break-word; }
+  .ex-sr{
+    font-family:'Space Mono',monospace;
+    font-weight:700;
+    font-size:20px;
+    color:var(--paper);
+    flex-shrink:0;
+    text-align:right;
+    min-width:56px;
+    padding-top:2px;
+  }
+  .ex-actions{ display:flex; gap:4px; flex-shrink:0; padding-top:2px; }
+  .icon-btn{
+    background:transparent;
+    border:none;
+    color:var(--steel);
+    width:28px;
+    height:28px;
+    border-radius:5px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .15s ease, color .15s ease;
+  }
+  .icon-btn:hover{ background:var(--panel-2); color:var(--paper); }
+  .icon-btn svg{ width:15px; height:15px; }
+
+  .video-embed{
+    width:100%;
+    max-width:360px;
+    aspect-ratio:16/9;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    background:#000;
+    margin-top:10px;
+  }
+  .video-embed iframe{ width:100%; height:100%; border:0; display:block; }
+  .video-warning{
+    font-size:12px;
+    color:var(--signal);
+    margin:8px 0 0;
+    max-width:360px;
+  }
+
+  .empty-state{
+    padding:32px 0;
+    text-align:center;
+    color:var(--steel);
+    font-size:14px;
+    border-bottom:1px dashed var(--line);
+    margin-bottom:20px;
+  }
+
+  /* ---------- add exercise form ---------- */
+  .add-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+    margin-bottom:28px;
+  }
+  .add-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  @media (max-width:520px){ .add-grid{ grid-template-columns:1fr; } }
+  .add-grid-2{ display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:14px; }
+  .add-actions{ display:flex; gap:10px; align-items:center; }
+
+  button.primary{
+    background:var(--signal);
+    color:var(--ink);
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    padding:11px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:background .15s ease, transform .05s ease;
+  }
+  button.primary:hover{ background:var(--signal-dim); }
+  button.primary:active{ transform:scale(0.98); }
+
+  button.ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--paper-dim);
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    font-size:14px;
+    padding:10px 16px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  button.ghost:hover{ border-color:var(--steel); }
+
+  .field-error{ color:#FF7A66; font-size:12px; margin-top:6px; }
+
+  /* ---------- save / share ---------- */
+  .save-bar{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+
+  .share-box{
+    background:var(--panel);
+    border:1px solid var(--signal);
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:32px;
+  }
+  .share-box .share-label{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--signal);
+    margin:0 0 10px;
+  }
+  .share-link-row{ display:flex; gap:8px; align-items:center; }
+  .share-link-row input{ flex:1; font-family:'Space Mono',monospace; font-size:12px; background:var(--ink); }
+  .share-note{ font-size:12px; color:var(--steel); margin:10px 0 0; line-height:1.5; }
+
+  /* ---------- templates list ---------- */
+  .tpl-list{ list-style:none; margin:0; padding:0; }
+  .tpl-row{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+  .tpl-main{ flex:1; min-width:0; }
+  .tpl-title{ font-size:14px; font-weight:600; margin:0 0 2px; word-break:break-word; }
+  .tpl-sub{ font-size:12px; color:var(--steel); margin:0; }
+  .tpl-actions{ display:flex; gap:6px; flex-shrink:0; }
+  .tpl-actions button{
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    font-weight:500;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--paper-dim);
+    padding:6px 10px;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .tpl-actions button:hover{ border-color:var(--steel); color:var(--paper); }
+
+  /* ---------- client view ---------- */
+  .client-header{ margin-bottom:8px; }
+  .client-header h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:44px;
+    line-height:1;
+    margin:0 0 6px;
+  }
+  .client-header .for-line{ font-size:14px; color:var(--steel); margin:0 0 20px; }
+  .trainer-msg{
+    background:var(--panel);
+    border-left:3px solid var(--signal);
+    border-radius:0 8px 8px 0;
+    padding:12px 16px;
+    font-size:14px;
+    color:var(--paper-dim);
+    margin-bottom:28px;
+    line-height:1.5;
+  }
+
+  .cex-row{
+    display:flex;
+    gap:14px;
+    padding:18px 0;
+    border-bottom:1px dashed var(--line);
+    align-items:flex-start;
+    flex-wrap:wrap;
+  }
+  .cex-check{
+    flex-shrink:0;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:1px solid var(--steel);
+    background:transparent;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:transparent;
+    transition:all .15s ease;
+    margin-top:2px;
+  }
+  .cex-check svg{ width:14px; height:14px; }
+  .cex-row.done .cex-check{ background:var(--go); border-color:var(--go); color:var(--ink); }
+  .cex-row.done .cex-name{ color:var(--paper-dim); }
+  .cex-main{ flex:1; min-width:220px; }
+  .cex-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .cex-name{ font-size:17px; font-weight:600; margin:0; }
+  .cex-sr{ font-family:'Space Mono',monospace; font-weight:700; font-size:22px; flex-shrink:0; }
+  .cex-notes{ font-size:13px; color:var(--steel); margin:4px 0 0; }
+
+  .client-footer{
+    margin-top:36px;
+    padding-top:16px;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:var(--steel);
+  }
+  .client-footer button{
+    background:none; border:none; color:var(--steel);
+    text-decoration:underline; cursor:pointer; font-size:12px; padding:0;
+  }
+
+  .not-found{ text-align:center; padding:60px 20px; }
+  .not-found h1{ font-family:'Bebas Neue',sans-serif; font-size:32px; margin:0 0 10px; }
+  .not-found p{ color:var(--steel); font-size:14px; }
+
+  .toast{
+    position:fixed; bottom:20px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--paper); color:var(--ink);
+    font-size:13px; font-weight:600;
+    padding:10px 18px; border-radius:8px;
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+  var state = {
+    mode: 'builder',
+    id: null,
+    title: '',
+    clientName: '',
+    message: '',
+    exercises: [],
+    editingIndex: null,
+    templates: [],
+    shareVisible: false,
+    shareLink: '',
+    clientWorkout: null,
+    clientError: null,
+    checked: {},
+    formError: ''
+  };
+
+  var form = { name:'', sets:'', reps:'', notes:'', youtube:'' };
+
+  function escapeHtml(str){
+    if(str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#39;');
+  }
+
+  function genId(){
+    var chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+    var out = '';
+    for(var i=0;i<6;i++){ out += chars[Math.floor(Math.random()*chars.length)]; }
+    return out;
+  }
+
+  function extractYouTubeId(url){
+    if(!url) return null;
+    url = url.trim();
+    var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if(m) return m[1];
+    if(/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+    return null;
+  }
+
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+
+  /* -------- local storage (device-only) -------- */
+  function lsGet(key){
+    try{ return localStorage.getItem(key); }catch(e){ return null; }
+  }
+  function lsSet(key, value){
+    try{ localStorage.setItem(key, value); return true; }catch(e){ return false; }
+  }
+  function lsRemove(key){
+    try{ localStorage.removeItem(key); }catch(e){}
+  }
+
+  /* -------- encode/decode workout data into a URL-safe string -------- */
+  function encodeData(obj){
+    var json = JSON.stringify(obj);
+    var b64 = btoa(unescape(encodeURIComponent(json)));
+    return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  function decodeData(str){
+    var b64 = str.replace(/-/g,'+').replace(/_/g,'/');
+    while(b64.length % 4){ b64 += '='; }
+    var json = decodeURIComponent(escape(atob(b64)));
+    return JSON.parse(json);
+  }
+
+  var ICONS = {
+    up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>'
+  };
+
+  function renderVideoEmbed(url){
+    if(!url) return '';
+    var vid = extractYouTubeId(url);
+    if(!vid){
+      return '<p class="video-warning">That doesn\'t look like a full YouTube link — paste the whole URL, e.g. https://youtube.com/watch?v=VIDEOID</p>';
+    }
+    return '<div class="video-embed"><iframe src="https://www.youtube.com/embed/'+encodeURIComponent(vid)+'" title="Exercise demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
+  }
+
+  function render(){
+    var app = document.getElementById('app');
+    app.innerHTML = state.mode === 'client' ? renderClient() : renderBuilder();
+    bindEvents();
+  }
+
+  function renderBuilder(){
+    var html = '';
+    html += '<div class="topbar"><button class="btn-new" data-action="new-workout">New workout</button></div>';
+
+    html += '<div class="section-label">Details</div>';
+    html += '<div class="meta-grid">';
+    html += '<div><label class="field-label">Workout title</label><input type="text" id="f-title" placeholder="Upper body — week 3" value="'+escapeHtml(state.title)+'"></div>';
+    html += '<div><label class="field-label">Client name (optional)</label><input type="text" id="f-client" placeholder="Jordan" value="'+escapeHtml(state.clientName)+'"></div>';
+    html += '</div>';
+    html += '<div class="msg-block"><label class="field-label">Note to client (optional)</label><textarea id="f-message" placeholder="Warm up 5 min before starting. Focus on form over speed.">'+escapeHtml(state.message)+'</textarea></div>';
+
+    html += '<div class="section-label">Exercises</div>';
+
+    if(state.exercises.length === 0){
+      html += '<div class="empty-state">No exercises yet — add the first move below.</div>';
+    } else {
+      html += '<ul class="ex-list">';
+      state.exercises.forEach(function(ex, i){
+        html += '<li class="ex-row">';
+        html += '<div class="ex-num">'+String(i+1).padStart(2,'0')+'</div>';
+        html += '<div class="ex-main"><p class="ex-name">'+escapeHtml(ex.name)+'</p>';
+        if(ex.notes){ html += '<p class="ex-notes">'+escapeHtml(ex.notes)+'</p>'; }
+        html += renderVideoEmbed(ex.youtube);
+        html += '</div>';
+        html += '<div class="ex-sr">'+escapeHtml(ex.sets)+'&times;'+escapeHtml(ex.reps)+'</div>';
+        html += '<div class="ex-actions">';
+        html += '<button class="icon-btn" data-action="move-up" data-idx="'+i+'" title="Move up">'+ICONS.up+'</button>';
+        html += '<button class="icon-btn" data-action="move-down" data-idx="'+i+'" title="Move down">'+ICONS.down+'</button>';
+        html += '<button class="icon-btn" data-action="edit-ex" data-idx="'+i+'" title="Edit">'+ICONS.edit+'</button>';
+        html += '<button class="icon-btn" data-action="delete-ex" data-idx="'+i+'" title="Delete">'+ICONS.trash+'</button>';
+        html += '</div>';
+        html += '</li>';
+      });
+      html += '</ul>';
+    }
+
+    html += '<div class="add-card">';
+    html += '<div class="section-label">'+(state.editingIndex !== null ? 'Editing exercise' : 'Add an exercise')+'</div>';
+    html += '<div class="add-grid">';
+    html += '<div><label class="field-label">Exercise name</label><input type="text" id="f-ex-name" placeholder="Barbell squat" value="'+escapeHtml(form.name)+'"></div>';
+    html += '<div><label class="field-label">Sets</label><input type="text" id="f-ex-sets" placeholder="3" value="'+escapeHtml(form.sets)+'"></div>';
+    html += '<div><label class="field-label">Reps</label><input type="text" id="f-ex-reps" placeholder="10" value="'+escapeHtml(form.reps)+'"></div>';
+    html += '</div>';
+    html += '<div class="add-grid-2">';
+    html += '<div><label class="field-label">YouTube demo link (optional)</label><input type="url" id="f-ex-yt" placeholder="https://youtube.com/watch?v=..." value="'+escapeHtml(form.youtube)+'"></div>';
+    html += '<div><label class="field-label">Notes (optional)</label><input type="text" id="f-ex-notes" placeholder="RPE 8, 90s rest" value="'+escapeHtml(form.notes)+'"></div>';
+    html += '</div>';
+    if(state.formError){ html += '<div class="field-error">'+escapeHtml(state.formError)+'</div>'; }
+    html += '<div class="add-actions" style="margin-top:12px;">';
+    html += '<button class="primary" data-action="submit-ex">'+(state.editingIndex !== null ? 'Save changes' : 'Add exercise')+'</button>';
+    if(state.editingIndex !== null){ html += '<button class="ghost" data-action="cancel-edit">Cancel</button>'; }
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="section-label">Share</div>';
+    html += '<div class="save-bar">';
+    html += '<button class="primary" data-action="get-link">Get shareable link</button>';
+    html += '<button class="ghost" data-action="save-tpl">Save to my workouts</button>';
+    if(state.exercises.length > 0){ html += '<button class="ghost" data-action="preview-client">Preview as client</button>'; }
+    html += '</div>';
+
+    if(state.shareVisible && state.shareLink){
+      html += '<div class="share-box">';
+      html += '<p class="share-label">Share link</p>';
+      html += '<div class="share-link-row"><input type="text" readonly id="share-link-input" value="'+escapeHtml(state.shareLink)+'"><button class="ghost" data-action="copy-link">'+ICONS.copy+'</button></div>';
+      html += '<p class="share-note">The workout data lives inside this link, so it works for anyone you send it to. If you change the workout afterward, generate a new link and resend it.</p>';
+      html += '</div>';
+    }
+
+    if(state.templates.length > 0){
+      html += '<div class="section-label">Your saved workouts</div>';
+      html += '<ul class="tpl-list">';
+      state.templates.forEach(function(t){
+        html += '<li class="tpl-row">';
+        html += '<div class="tpl-main"><p class="tpl-title">'+escapeHtml(t.title || 'Untitled workout')+'</p>';
+        html += '<p class="tpl-sub">'+(t.clientName ? escapeHtml(t.clientName) : 'no client set')+'</p></div>';
+        html += '<div class="tpl-actions">';
+        html += '<button data-action="load-tpl" data-id="'+escapeHtml(t.id)+'">Load</button>';
+        html += '<button data-action="delete-tpl" data-id="'+escapeHtml(t.id)+'">Delete</button>';
+        html += '</div>';
+        html += '</li>';
+      });
+      html += '</ul>';
+    }
+
+    return html;
+  }
+
+  function renderClient(){
+    if(state.clientError){
+      return '<div class="not-found"><h1>Workout not found</h1><p>This link looks incomplete or damaged.</p></div>';
+    }
+    var w = state.clientWorkout;
+    if(!w) return '<div class="not-found"><h1>Loading&hellip;</h1></div>';
+
+    var html = '';
+    html += '<div class="client-header">';
+    html += '<h1>'+escapeHtml(w.title || 'Workout')+'</h1>';
+    if(w.clientName){ html += '<p class="for-line">Prepared for '+escapeHtml(w.clientName)+'</p>'; }
+    html += '</div>';
+
+    if(w.message){ html += '<div class="trainer-msg">'+escapeHtml(w.message)+'</div>'; }
+
+    (w.exercises || []).forEach(function(ex, i){
+      var isDone = !!state.checked[i];
+      html += '<div class="cex-row'+(isDone?' done':'')+'">';
+      html += '<button class="cex-check" data-action="toggle-check" data-idx="'+i+'">'+ICONS.check+'</button>';
+      html += '<div class="cex-main">';
+      html += '<div class="cex-top"><p class="cex-name">'+(i+1)+'. '+escapeHtml(ex.name)+'</p><div class="cex-sr">'+escapeHtml(ex.sets)+'&times;'+escapeHtml(ex.reps)+'</div></div>';
+      if(ex.notes){ html += '<p class="cex-notes">'+escapeHtml(ex.notes)+'</p>'; }
+      html += renderVideoEmbed(ex.youtube);
+      html += '</div></div>';
+    });
+
+    html += '<div class="client-footer"><button data-action="back-to-builder">Open workout builder</button></div>';
+    return html;
+  }
+
+  function bindEvents(){
+    var app = document.getElementById('app');
+
+    var titleEl = document.getElementById('f-title');
+    if(titleEl) titleEl.addEventListener('input', function(e){ state.title = e.target.value; });
+    var clientEl = document.getElementById('f-client');
+    if(clientEl) clientEl.addEventListener('input', function(e){ state.clientName = e.target.value; });
+    var msgEl = document.getElementById('f-message');
+    if(msgEl) msgEl.addEventListener('input', function(e){ state.message = e.target.value; });
+
+    ['f-ex-name','f-ex-sets','f-ex-reps','f-ex-notes','f-ex-yt'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('input', function(e){
+        var map = { 'f-ex-name':'name', 'f-ex-sets':'sets', 'f-ex-reps':'reps', 'f-ex-notes':'notes', 'f-ex-yt':'youtube' };
+        form[map[id]] = e.target.value;
+      });
+    });
+
+    app.addEventListener('click', onAppClick);
+  }
+
+  function onAppClick(e){
+    var btn = e.target.closest('[data-action]');
+    if(!btn) return;
+    var action = btn.getAttribute('data-action');
+    var idx = btn.getAttribute('data-idx');
+    var id = btn.getAttribute('data-id');
+
+    if(action === 'submit-ex'){ submitExercise(); }
+    else if(action === 'cancel-edit'){ state.editingIndex = null; form = {name:'',sets:'',reps:'',notes:'',youtube:''}; state.formError=''; render(); }
+    else if(action === 'edit-ex'){ startEdit(parseInt(idx,10)); }
+    else if(action === 'delete-ex'){ deleteExercise(parseInt(idx,10)); }
+    else if(action === 'move-up'){ moveExercise(parseInt(idx,10), -1); }
+    else if(action === 'move-down'){ moveExercise(parseInt(idx,10), 1); }
+    else if(action === 'get-link'){ getShareLink(); }
+    else if(action === 'save-tpl'){ saveTemplate(); }
+    else if(action === 'copy-link'){ copyLink(); }
+    else if(action === 'preview-client'){ previewAsClient(); }
+    else if(action === 'back-to-builder'){ backToBuilder(); }
+    else if(action === 'new-workout'){ newWorkout(); }
+    else if(action === 'load-tpl'){ loadTemplate(id); }
+    else if(action === 'delete-tpl'){ deleteTemplate(id); }
+    else if(action === 'toggle-check'){ toggleCheck(parseInt(idx,10)); }
+  }
+
+  function submitExercise(){
+    var name = form.name.trim();
+    var sets = form.sets.trim();
+    var reps = form.reps.trim();
+    if(!name || !sets || !reps){
+      state.formError = 'Name, sets, and reps are required.';
+      render();
+      return;
+    }
+    var entry = { name:name, sets:sets, reps:reps, notes:form.notes.trim(), youtube:form.youtube.trim() };
+    if(state.editingIndex !== null){
+      state.exercises[state.editingIndex] = entry;
+      state.editingIndex = null;
+    } else {
+      state.exercises.push(entry);
+    }
+    form = { name:'', sets:'', reps:'', notes:'', youtube:'' };
+    state.formError = '';
+    state.shareVisible = false;
+    render();
+  }
+
+  function startEdit(idx){
+    var ex = state.exercises[idx];
+    form = { name:ex.name, sets:ex.sets, reps:ex.reps, notes:ex.notes||'', youtube:ex.youtube||'' };
+    state.editingIndex = idx;
+    state.formError = '';
+    render();
+    var el = document.getElementById('f-ex-name');
+    if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function deleteExercise(idx){
+    state.exercises.splice(idx,1);
+    if(state.editingIndex === idx){ state.editingIndex = null; form = {name:'',sets:'',reps:'',notes:'',youtube:''}; }
+    state.shareVisible = false;
+    render();
+  }
+
+  function moveExercise(idx, dir){
+    var newIdx = idx + dir;
+    if(newIdx < 0 || newIdx >= state.exercises.length) return;
+    var tmp = state.exercises[idx];
+    state.exercises[idx] = state.exercises[newIdx];
+    state.exercises[newIdx] = tmp;
+    render();
+  }
+
+  function currentPayload(){
+    if(!state.id){ state.id = genId(); }
+    return {
+      id: state.id,
+      title: state.title.trim() || 'Untitled workout',
+      clientName: state.clientName.trim(),
+      message: state.message.trim(),
+      exercises: state.exercises
+    };
+  }
+
+  function getShareLink(){
+    if(state.exercises.length === 0){
+      showToast('Add at least one exercise first');
+      return;
+    }
+    var payload = currentPayload();
+    var encoded = encodeData(payload);
+    var base = window.location.href.split('#')[0];
+    state.shareLink = base + '#w=' + encoded;
+    state.shareVisible = true;
+    render();
+  }
+
+  function copyLink(){
+    var input = document.getElementById('share-link-input');
+    if(!input) return;
+    var text = input.value;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ showToast('Link copied'); }).catch(function(){ fallbackCopy(input); });
+    } else {
+      fallbackCopy(input);
+    }
+  }
+  function fallbackCopy(input){
+    input.select();
+    try{ document.execCommand('copy'); showToast('Link copied'); }catch(e){ showToast('Copy failed — select and copy manually'); }
+  }
+
+  function saveTemplate(){
+    if(state.exercises.length === 0){
+      showToast('Add at least one exercise first');
+      return;
+    }
+    var payload = currentPayload();
+    var list = state.templates.filter(function(t){ return t.id !== payload.id; });
+    list.unshift(payload);
+    state.templates = list;
+    lsSet('wb_templates', JSON.stringify(list));
+    showToast('Saved to your workouts');
+    render();
+  }
+
+  function previewAsClient(){
+    var payload = currentPayload();
+    state.clientWorkout = payload;
+    state.checked = {};
+    state.clientError = null;
+    state.mode = 'client';
+    try{ history.replaceState(null, '', '#w='+encodeData(payload)); }catch(e){}
+    render();
+  }
+
+  function backToBuilder(){
+    state.mode = 'builder';
+    try{ history.replaceState(null, '', window.location.pathname); }catch(e){}
+    render();
+  }
+
+  function newWorkout(){
+    state.id = null;
+    state.title = '';
+    state.clientName = '';
+    state.message = '';
+    state.exercises = [];
+    state.editingIndex = null;
+    state.shareVisible = false;
+    state.shareLink = '';
+    form = { name:'', sets:'', reps:'', notes:'', youtube:'' };
+    render();
+  }
+
+  function loadTemplate(id){
+    var t = state.templates.find(function(x){ return x.id === id; });
+    if(!t){ showToast('Could not find that workout'); return; }
+    state.id = t.id;
+    state.title = t.title || '';
+    state.clientName = t.clientName || '';
+    state.message = t.message || '';
+    state.exercises = t.exercises || [];
+    state.editingIndex = null;
+    state.shareVisible = false;
+    render();
+  }
+
+  function deleteTemplate(id){
+    state.templates = state.templates.filter(function(t){ return t.id !== id; });
+    lsSet('wb_templates', JSON.stringify(state.templates));
+    if(state.id === id){ newWorkout(); } else { render(); }
+  }
+
+  function toggleCheck(idx){
+    state.checked[idx] = !state.checked[idx];
+    if(state.clientWorkout && state.clientWorkout.id){
+      lsSet('wb_progress_'+state.clientWorkout.id, JSON.stringify(state.checked));
+    }
+    render();
+  }
+
+  function init(){
+    var hash = window.location.hash || '';
+    var m = hash.match(/w=([A-Za-z0-9\-_]+)/);
+    if(m){
+      state.mode = 'client';
+      try{
+        var payload = decodeData(m[1]);
+        state.clientWorkout = payload;
+        var savedProgress = payload.id ? lsGet('wb_progress_'+payload.id) : null;
+        if(savedProgress){ try{ state.checked = JSON.parse(savedProgress); }catch(e){ state.checked = {}; } }
+      }catch(e){
+        state.clientError = true;
+      }
+      render();
+      return;
+    }
+
+    var rawTpls = lsGet('wb_templates');
+    if(rawTpls){
+      try{ state.templates = JSON.parse(rawTpls); }catch(e){ state.templates = []; }
+    }
+    render();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
