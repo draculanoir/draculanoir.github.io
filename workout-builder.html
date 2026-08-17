@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Workout</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -34,285 +37,118 @@
   a{ color:inherit; }
   :focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
 
-  .wrap{
-    max-width:720px;
-    margin:0 auto;
-    padding:32px 20px 80px;
-  }
+  .wrap{ max-width:720px; margin:0 auto; padding:32px 20px 80px; }
 
-  /* ---------- top bar ---------- */
-  .topbar{
-    display:flex;
-    justify-content:flex-end;
-    margin-bottom:20px;
-  }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:10px; flex-wrap:wrap; }
+  .topbar .who{ font-size:12px; color:var(--steel); }
+  .topbar .who strong{ color:var(--paper-dim); font-weight:500; }
+  .topbar-actions{ display:flex; gap:8px; }
+
   .btn-new{
-    background:transparent;
-    border:1px solid var(--line);
-    color:var(--paper-dim);
-    font-family:'Inter',sans-serif;
-    font-size:13px;
-    font-weight:500;
-    padding:9px 14px;
-    border-radius:6px;
-    cursor:pointer;
-    white-space:nowrap;
+    background:transparent; border:1px solid var(--line); color:var(--paper-dim);
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+    padding:9px 14px; border-radius:6px; cursor:pointer; white-space:nowrap;
     transition:border-color .15s ease, color .15s ease;
   }
   .btn-new:hover{ border-color:var(--steel); color:var(--paper); }
 
-  /* ---------- section labels ---------- */
   .section-label{
-    font-family:'Space Mono',monospace;
-    font-size:11px;
-    letter-spacing:1.5px;
-    text-transform:uppercase;
-    color:var(--steel);
-    margin:0 0 12px;
+    font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px;
+    text-transform:uppercase; color:var(--steel); margin:0 0 12px;
   }
 
-  /* ---------- meta form ---------- */
-  .meta-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-    margin-bottom:14px;
-  }
+  .meta-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
   @media (max-width:520px){ .meta-grid{ grid-template-columns:1fr; } }
 
-  label.field-label{
-    display:block;
-    font-size:12px;
-    color:var(--steel);
-    margin-bottom:6px;
-    font-weight:500;
-  }
+  label.field-label{ display:block; font-size:12px; color:var(--steel); margin-bottom:6px; font-weight:500; }
 
-  input[type=text], input[type=url], textarea{
-    width:100%;
-    background:var(--panel);
-    border:1px solid var(--line);
-    color:var(--paper);
-    font-family:'Inter',sans-serif;
-    font-size:14px;
-    padding:10px 12px;
-    border-radius:6px;
+  input[type=text], input[type=url], input[type=email], input[type=password], textarea{
+    width:100%; background:var(--panel); border:1px solid var(--line); color:var(--paper);
+    font-family:'Inter',sans-serif; font-size:14px; padding:10px 12px; border-radius:6px;
     transition:border-color .15s ease;
   }
-  input[type=text]::placeholder, input[type=url]::placeholder, textarea::placeholder{ color:#565C66; }
+  input::placeholder, textarea::placeholder{ color:#565C66; }
   input:focus, textarea:focus{ border-color:var(--signal); }
   textarea{ resize:vertical; min-height:44px; font-family:'Inter',sans-serif; }
 
   .msg-block{ margin-bottom:24px; }
 
-  /* ---------- exercise list ---------- */
   .ex-list{ list-style:none; margin:0 0 20px; padding:0; }
-  .ex-row{
-    display:flex;
-    align-items:flex-start;
-    gap:14px;
-    padding:16px 0;
-    border-bottom:1px dashed var(--line);
-    flex-wrap:wrap;
-  }
-  .ex-num{
-    font-family:'Space Mono',monospace;
-    font-size:13px;
-    color:var(--signal);
-    width:24px;
-    flex-shrink:0;
-    padding-top:2px;
-  }
+  .ex-row{ display:flex; align-items:flex-start; gap:14px; padding:16px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
+  .ex-num{ font-family:'Space Mono',monospace; font-size:13px; color:var(--signal); width:24px; flex-shrink:0; padding-top:2px; }
   .ex-main{ flex:1; min-width:200px; }
   .ex-name{ font-size:16px; font-weight:600; margin:0 0 3px; word-break:break-word; }
   .ex-notes{ font-size:13px; color:var(--steel); margin:0; word-break:break-word; }
-  .ex-sr{
-    font-family:'Space Mono',monospace;
-    font-weight:700;
-    font-size:20px;
-    color:var(--paper);
-    flex-shrink:0;
-    text-align:right;
-    min-width:56px;
-    padding-top:2px;
-  }
+  .ex-sr{ font-family:'Space Mono',monospace; font-weight:700; font-size:20px; color:var(--paper); flex-shrink:0; text-align:right; min-width:56px; padding-top:2px; }
   .ex-actions{ display:flex; gap:4px; flex-shrink:0; padding-top:2px; }
   .icon-btn{
-    background:transparent;
-    border:none;
-    color:var(--steel);
-    width:28px;
-    height:28px;
-    border-radius:5px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    background:transparent; border:none; color:var(--steel); width:28px; height:28px;
+    border-radius:5px; cursor:pointer; display:flex; align-items:center; justify-content:center;
     transition:background .15s ease, color .15s ease;
   }
   .icon-btn:hover{ background:var(--panel-2); color:var(--paper); }
   .icon-btn svg{ width:15px; height:15px; }
 
-  .video-embed{
-    width:100%;
-    max-width:360px;
-    aspect-ratio:16/9;
-    border-radius:8px;
-    overflow:hidden;
-    border:1px solid var(--line);
-    background:#000;
-    margin-top:10px;
-  }
+  .video-embed{ width:100%; max-width:360px; aspect-ratio:16/9; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:#000; margin-top:10px; }
   .video-embed iframe{ width:100%; height:100%; border:0; display:block; }
-  .video-warning{
-    font-size:12px;
-    color:var(--signal);
-    margin:8px 0 0;
-    max-width:360px;
-  }
+  .video-warning{ font-size:12px; color:var(--signal); margin:8px 0 0; max-width:360px; }
 
-  .empty-state{
-    padding:32px 0;
-    text-align:center;
-    color:var(--steel);
-    font-size:14px;
-    border-bottom:1px dashed var(--line);
-    margin-bottom:20px;
-  }
+  .empty-state{ padding:32px 0; text-align:center; color:var(--steel); font-size:14px; border-bottom:1px dashed var(--line); margin-bottom:20px; }
 
-  /* ---------- add exercise form ---------- */
-  .add-card{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:18px;
-    margin-bottom:28px;
-  }
-  .add-grid{
-    display:grid;
-    grid-template-columns:2fr 1fr 1fr;
-    gap:10px;
-    margin-bottom:10px;
-  }
+  .add-card{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; margin-bottom:28px; }
+  .add-grid{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:10px; }
   @media (max-width:520px){ .add-grid{ grid-template-columns:1fr; } }
   .add-grid-2{ display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:14px; }
   .add-actions{ display:flex; gap:10px; align-items:center; }
 
   button.primary{
-    background:var(--signal);
-    color:var(--ink);
-    border:none;
-    font-family:'Inter',sans-serif;
-    font-weight:700;
-    font-size:14px;
-    padding:11px 18px;
-    border-radius:6px;
-    cursor:pointer;
+    background:var(--signal); color:var(--ink); border:none; font-family:'Inter',sans-serif;
+    font-weight:700; font-size:14px; padding:11px 18px; border-radius:6px; cursor:pointer;
     transition:background .15s ease, transform .05s ease;
   }
   button.primary:hover{ background:var(--signal-dim); }
   button.primary:active{ transform:scale(0.98); }
+  button.primary:disabled{ opacity:0.5; cursor:not-allowed; }
 
   button.ghost{
-    background:transparent;
-    border:1px solid var(--line);
-    color:var(--paper-dim);
-    font-family:'Inter',sans-serif;
-    font-weight:500;
-    font-size:14px;
-    padding:10px 16px;
-    border-radius:6px;
-    cursor:pointer;
-    transition:border-color .15s ease;
+    background:transparent; border:1px solid var(--line); color:var(--paper-dim);
+    font-family:'Inter',sans-serif; font-weight:500; font-size:14px; padding:10px 16px;
+    border-radius:6px; cursor:pointer; transition:border-color .15s ease;
   }
   button.ghost:hover{ border-color:var(--steel); }
 
   .field-error{ color:#FF7A66; font-size:12px; margin-top:6px; }
 
-  /* ---------- save / share ---------- */
   .save-bar{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
 
-  .share-box{
-    background:var(--panel);
-    border:1px solid var(--signal);
-    border-radius:10px;
-    padding:16px 18px;
-    margin-bottom:32px;
-  }
-  .share-box .share-label{
-    font-family:'Space Mono',monospace;
-    font-size:11px;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    color:var(--signal);
-    margin:0 0 10px;
-  }
+  .share-box{ background:var(--panel); border:1px solid var(--signal); border-radius:10px; padding:16px 18px; margin-bottom:32px; }
+  .share-box .share-label{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--signal); margin:0 0 10px; }
   .share-link-row{ display:flex; gap:8px; align-items:center; }
   .share-link-row input{ flex:1; font-family:'Space Mono',monospace; font-size:12px; background:var(--ink); }
   .share-note{ font-size:12px; color:var(--steel); margin:10px 0 0; line-height:1.5; }
 
-  /* ---------- templates list ---------- */
   .tpl-list{ list-style:none; margin:0; padding:0; }
   .tpl-row{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
   .tpl-main{ flex:1; min-width:0; }
   .tpl-title{ font-size:14px; font-weight:600; margin:0 0 2px; word-break:break-word; }
   .tpl-sub{ font-size:12px; color:var(--steel); margin:0; }
-  .tpl-actions{ display:flex; gap:6px; flex-shrink:0; }
+  .tpl-actions{ display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; }
   .tpl-actions button{
-    font-family:'Inter',sans-serif;
-    font-size:12px;
-    font-weight:500;
-    background:transparent;
-    border:1px solid var(--line);
-    color:var(--paper-dim);
-    padding:6px 10px;
-    border-radius:5px;
-    cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:12px; font-weight:500; background:transparent;
+    border:1px solid var(--line); color:var(--paper-dim); padding:6px 10px; border-radius:5px; cursor:pointer;
   }
   .tpl-actions button:hover{ border-color:var(--steel); color:var(--paper); }
 
-  /* ---------- client view ---------- */
   .client-header{ margin-bottom:8px; }
-  .client-header h1{
-    font-family:'Bebas Neue',sans-serif;
-    font-size:44px;
-    line-height:1;
-    margin:0 0 6px;
-  }
+  .client-header h1{ font-family:'Bebas Neue',sans-serif; font-size:44px; line-height:1; margin:0 0 6px; }
   .client-header .for-line{ font-size:14px; color:var(--steel); margin:0 0 20px; }
-  .trainer-msg{
-    background:var(--panel);
-    border-left:3px solid var(--signal);
-    border-radius:0 8px 8px 0;
-    padding:12px 16px;
-    font-size:14px;
-    color:var(--paper-dim);
-    margin-bottom:28px;
-    line-height:1.5;
-  }
+  .trainer-msg{ background:var(--panel); border-left:3px solid var(--signal); border-radius:0 8px 8px 0; padding:12px 16px; font-size:14px; color:var(--paper-dim); margin-bottom:28px; line-height:1.5; }
 
-  .cex-row{
-    display:flex;
-    gap:14px;
-    padding:18px 0;
-    border-bottom:1px dashed var(--line);
-    align-items:flex-start;
-    flex-wrap:wrap;
-  }
+  .cex-row{ display:flex; gap:14px; padding:18px 0; border-bottom:1px dashed var(--line); align-items:flex-start; flex-wrap:wrap; }
   .cex-check{
-    flex-shrink:0;
-    width:26px;
-    height:26px;
-    border-radius:50%;
-    border:1px solid var(--steel);
-    background:transparent;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:transparent;
-    transition:all .15s ease;
-    margin-top:2px;
+    flex-shrink:0; width:26px; height:26px; border-radius:50%; border:1px solid var(--steel);
+    background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    color:transparent; transition:all .15s ease; margin-top:2px;
   }
   .cex-check svg{ width:14px; height:14px; }
   .cex-row.done .cex-check{ background:var(--go); border-color:var(--go); color:var(--ink); }
@@ -323,29 +159,27 @@
   .cex-sr{ font-family:'Space Mono',monospace; font-weight:700; font-size:22px; flex-shrink:0; }
   .cex-notes{ font-size:13px; color:var(--steel); margin:4px 0 0; }
 
-  .client-footer{
-    margin-top:36px;
-    padding-top:16px;
-    border-top:1px solid var(--line);
-    font-size:12px;
-    color:var(--steel);
-  }
-  .client-footer button{
-    background:none; border:none; color:var(--steel);
-    text-decoration:underline; cursor:pointer; font-size:12px; padding:0;
-  }
-
   .not-found{ text-align:center; padding:60px 20px; }
   .not-found h1{ font-family:'Bebas Neue',sans-serif; font-size:32px; margin:0 0 10px; }
   .not-found p{ color:var(--steel); font-size:14px; }
 
+  .login-card{
+    max-width:340px; margin:80px auto 0; background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; padding:24px;
+  }
+  .login-card .field{ margin-bottom:14px; }
+  .login-card button{ width:100%; }
+
+  .setup-banner{
+    background:var(--panel); border:1px solid var(--signal); border-radius:8px;
+    padding:14px 16px; font-size:13px; color:var(--paper-dim); line-height:1.6; margin-bottom:20px;
+  }
+  .setup-banner code{ background:var(--ink); padding:1px 5px; border-radius:4px; font-family:'Space Mono',monospace; font-size:12px; }
+
   .toast{
-    position:fixed; bottom:20px; left:50%;
-    transform:translateX(-50%) translateY(20px);
-    background:var(--paper); color:var(--ink);
-    font-size:13px; font-weight:600;
-    padding:10px 18px; border-radius:8px;
-    opacity:0; pointer-events:none;
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--paper); color:var(--ink); font-size:13px; font-weight:600;
+    padding:10px 18px; border-radius:8px; opacity:0; pointer-events:none;
     transition:opacity .2s ease, transform .2s ease;
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
@@ -356,35 +190,55 @@
 <div class="toast" id="toast"></div>
 
 <script>
+
+var firebaseConfig = {
+  apiKey: "AIzaSyBOGC0OtOCuk70ksp4uDuHu-W6JiBRj3a4",
+  authDomain: "dracula-473a5.firebaseapp.com",
+  projectId: "dracula-473a5",
+  storageBucket: "dracula-473a5.firebasestorage.app",
+  messagingSenderId: "783617660077",
+  appId: "1:783617660077:web:4af14ae89bb03ed99be224"
+};
+
+
 (function(){
 
+  var CONFIG_MISSING = firebaseConfig.apiKey === "AIzaSyBOGC0OtOCuk70ksp4uDuHu-W6JiBRj3a4";
+  var auth, db;
+  if(!CONFIG_MISSING){
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+  }
+
   var state = {
-    mode: 'builder',
+    mode: 'blank',
     id: null,
     title: '',
     clientName: '',
     message: '',
     exercises: [],
     editingIndex: null,
-    templates: [],
+    workoutsList: [],
     shareVisible: false,
     shareLink: '',
     clientWorkout: null,
     clientError: null,
     checked: {},
-    formError: ''
+    formError: '',
+    loginError: '',
+    authUser: null,
+    previewing: false
   };
 
   var form = { name:'', sets:'', reps:'', notes:'', youtube:'' };
+  var unsubClient = null;
 
   function escapeHtml(str){
     if(str === null || str === undefined) return '';
     return String(str)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/'/g,'&#39;');
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
   function genId(){
@@ -410,29 +264,8 @@
     setTimeout(function(){ t.classList.remove('show'); }, 1800);
   }
 
-  /* -------- local storage (device-only) -------- */
-  function lsGet(key){
-    try{ return localStorage.getItem(key); }catch(e){ return null; }
-  }
-  function lsSet(key, value){
-    try{ localStorage.setItem(key, value); return true; }catch(e){ return false; }
-  }
-  function lsRemove(key){
-    try{ localStorage.removeItem(key); }catch(e){}
-  }
-
-  /* -------- encode/decode workout data into a URL-safe string -------- */
-  function encodeData(obj){
-    var json = JSON.stringify(obj);
-    var b64 = btoa(unescape(encodeURIComponent(json)));
-    return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  }
-  function decodeData(str){
-    var b64 = str.replace(/-/g,'+').replace(/_/g,'/');
-    while(b64.length % 4){ b64 += '='; }
-    var json = decodeURIComponent(escape(atob(b64)));
-    return JSON.parse(json);
-  }
+  function lsGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+  function lsSet(key, value){ try{ localStorage.setItem(key, value); return true; }catch(e){ return false; } }
 
   var ICONS = {
     up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>',
@@ -447,20 +280,46 @@
     if(!url) return '';
     var vid = extractYouTubeId(url);
     if(!vid){
-      return '<p class="video-warning">That doesn\'t look like a full YouTube link — paste the whole URL, e.g. https://youtube.com/watch?v=VIDEOID</p>';
+      return '<p class="video-warning">That doesn\'t look like a full YouTube link \u2014 paste the whole URL, e.g. https://youtube.com/watch?v=VIDEOID</p>';
     }
     return '<div class="video-embed"><iframe src="https://www.youtube.com/embed/'+encodeURIComponent(vid)+'" title="Exercise demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
   }
 
+  /* ---------------- render ---------------- */
   function render(){
     var app = document.getElementById('app');
-    app.innerHTML = state.mode === 'client' ? renderClient() : renderBuilder();
+    if(CONFIG_MISSING){
+      app.innerHTML = '<div class="setup-banner">Firebase isn\'t configured yet. Open this file and paste your Firebase project config into the <code>firebaseConfig</code> object near the top of the script.</div>';
+      return;
+    }
+    if(state.mode === 'client'){ app.innerHTML = renderClient(); }
+    else if(state.mode === 'login'){ app.innerHTML = renderLogin(); }
+    else if(state.mode === 'builder'){ app.innerHTML = renderBuilder(); }
+    else { app.innerHTML = renderBlank(); }
     bindEvents();
+  }
+
+  function renderBlank(){
+    return '<div class="not-found"><h1>&nbsp;</h1></div>';
+  }
+
+  function renderLogin(){
+    var html = '<div class="login-card">';
+    html += '<div class="section-label">Admin log in</div>';
+    html += '<div class="field"><label class="field-label">Email</label><input type="email" id="f-login-email" placeholder="you@example.com"></div>';
+    html += '<div class="field"><label class="field-label">Password</label><input type="password" id="f-login-pass" placeholder="Enter your password"></div>';
+    if(state.loginError){ html += '<div class="field-error">'+escapeHtml(state.loginError)+'</div>'; }
+    html += '<button class="primary" data-action="do-login" style="margin-top:6px;">Log in</button>';
+    html += '</div>';
+    return html;
   }
 
   function renderBuilder(){
     var html = '';
-    html += '<div class="topbar"><button class="btn-new" data-action="new-workout">New workout</button></div>';
+    html += '<div class="topbar">';
+    html += '<div class="who">Signed in as <strong>'+escapeHtml(state.authUser ? state.authUser.email : '')+'</strong></div>';
+    html += '<div class="topbar-actions"><button class="btn-new" data-action="new-workout">New workout</button><button class="btn-new" data-action="do-logout">Log out</button></div>';
+    html += '</div>';
 
     html += '<div class="section-label">Details</div>';
     html += '<div class="meta-grid">';
@@ -470,7 +329,6 @@
     html += '<div class="msg-block"><label class="field-label">Note to client (optional)</label><textarea id="f-message" placeholder="Warm up 5 min before starting. Focus on form over speed.">'+escapeHtml(state.message)+'</textarea></div>';
 
     html += '<div class="section-label">Exercises</div>';
-
     if(state.exercises.length === 0){
       html += '<div class="empty-state">No exercises yet — add the first move below.</div>';
     } else {
@@ -512,10 +370,9 @@
     html += '</div>';
     html += '</div>';
 
-    html += '<div class="section-label">Share</div>';
+    html += '<div class="section-label">Save & share</div>';
     html += '<div class="save-bar">';
-    html += '<button class="primary" data-action="get-link">Get shareable link</button>';
-    html += '<button class="ghost" data-action="save-tpl">Save to my workouts</button>';
+    html += '<button class="primary" data-action="save-workout">Save workout</button>';
     if(state.exercises.length > 0){ html += '<button class="ghost" data-action="preview-client">Preview as client</button>'; }
     html += '</div>';
 
@@ -523,19 +380,22 @@
       html += '<div class="share-box">';
       html += '<p class="share-label">Share link</p>';
       html += '<div class="share-link-row"><input type="text" readonly id="share-link-input" value="'+escapeHtml(state.shareLink)+'"><button class="ghost" data-action="copy-link">'+ICONS.copy+'</button></div>';
-      html += '<p class="share-note">The workout data lives inside this link, so it works for anyone you send it to. If you change the workout afterward, generate a new link and resend it.</p>';
+      html += '<p class="share-note">This link stays live \u2014 any edits you save here update it instantly for whoever has it open.</p>';
       html += '</div>';
     }
 
-    if(state.templates.length > 0){
-      html += '<div class="section-label">Your saved workouts</div>';
+    html += '<div class="section-label">Your workouts</div>';
+    if(state.workoutsList.length === 0){
+      html += '<p style="font-size:13px;color:var(--steel);">Nothing saved yet.</p>';
+    } else {
       html += '<ul class="tpl-list">';
-      state.templates.forEach(function(t){
+      state.workoutsList.forEach(function(t){
         html += '<li class="tpl-row">';
         html += '<div class="tpl-main"><p class="tpl-title">'+escapeHtml(t.title || 'Untitled workout')+'</p>';
         html += '<p class="tpl-sub">'+(t.clientName ? escapeHtml(t.clientName) : 'no client set')+'</p></div>';
         html += '<div class="tpl-actions">';
         html += '<button data-action="load-tpl" data-id="'+escapeHtml(t.id)+'">Load</button>';
+        html += '<button data-action="copy-link-list" data-id="'+escapeHtml(t.id)+'">Copy link</button>';
         html += '<button data-action="delete-tpl" data-id="'+escapeHtml(t.id)+'">Delete</button>';
         html += '</div>';
         html += '</li>';
@@ -548,7 +408,7 @@
 
   function renderClient(){
     if(state.clientError){
-      return '<div class="not-found"><h1>Workout not found</h1><p>This link looks incomplete or damaged.</p></div>';
+      return '<div class="not-found"><h1>Workout not found</h1><p>This link may be out of date, or the workout was removed.</p></div>';
     }
     var w = state.clientWorkout;
     if(!w) return '<div class="not-found"><h1>Loading&hellip;</h1></div>';
@@ -572,10 +432,13 @@
       html += '</div></div>';
     });
 
-    html += '<div class="client-footer"><button data-action="back-to-builder">Open workout builder</button></div>';
+    if(state.previewing){
+      html += '<div style="margin-top:32px;"><button class="ghost" data-action="back-to-builder">Back to builder</button></div>';
+    }
     return html;
   }
 
+  /* ---------------- events ---------------- */
   function bindEvents(){
     var app = document.getElementById('app');
 
@@ -605,21 +468,34 @@
     var idx = btn.getAttribute('data-idx');
     var id = btn.getAttribute('data-id');
 
-    if(action === 'submit-ex'){ submitExercise(); }
+    if(action === 'do-login'){ doLogin(); }
+    else if(action === 'do-logout'){ auth.signOut().then(function(){ window.location.hash=''; }); }
+    else if(action === 'submit-ex'){ submitExercise(); }
     else if(action === 'cancel-edit'){ state.editingIndex = null; form = {name:'',sets:'',reps:'',notes:'',youtube:''}; state.formError=''; render(); }
     else if(action === 'edit-ex'){ startEdit(parseInt(idx,10)); }
     else if(action === 'delete-ex'){ deleteExercise(parseInt(idx,10)); }
     else if(action === 'move-up'){ moveExercise(parseInt(idx,10), -1); }
     else if(action === 'move-down'){ moveExercise(parseInt(idx,10), 1); }
-    else if(action === 'get-link'){ getShareLink(); }
-    else if(action === 'save-tpl'){ saveTemplate(); }
-    else if(action === 'copy-link'){ copyLink(); }
+    else if(action === 'save-workout'){ saveWorkout(); }
+    else if(action === 'copy-link'){ copyLink(document.getElementById('share-link-input').value); }
+    else if(action === 'copy-link-list'){ copyLink(window.location.origin+window.location.pathname+'#w='+id); }
     else if(action === 'preview-client'){ previewAsClient(); }
     else if(action === 'back-to-builder'){ backToBuilder(); }
     else if(action === 'new-workout'){ newWorkout(); }
-    else if(action === 'load-tpl'){ loadTemplate(id); }
-    else if(action === 'delete-tpl'){ deleteTemplate(id); }
+    else if(action === 'load-tpl'){ loadWorkout(id); }
+    else if(action === 'delete-tpl'){ deleteWorkout(id); }
     else if(action === 'toggle-check'){ toggleCheck(parseInt(idx,10)); }
+  }
+
+  function doLogin(){
+    var email = document.getElementById('f-login-email').value.trim();
+    var pass = document.getElementById('f-login-pass').value;
+    if(!email || !pass){ state.loginError = 'Enter your email and password.'; render(); return; }
+    state.loginError = '';
+    auth.signInWithEmailAndPassword(email, pass).catch(function(err){
+      state.loginError = 'Could not log in \u2014 check your email and password.';
+      render();
+    });
   }
 
   function submitExercise(){
@@ -640,7 +516,6 @@
     }
     form = { name:'', sets:'', reps:'', notes:'', youtube:'' };
     state.formError = '';
-    state.shareVisible = false;
     render();
   }
 
@@ -657,7 +532,6 @@
   function deleteExercise(idx){
     state.exercises.splice(idx,1);
     if(state.editingIndex === idx){ state.editingIndex = null; form = {name:'',sets:'',reps:'',notes:'',youtube:''}; }
-    state.shareVisible = false;
     render();
   }
 
@@ -681,46 +555,35 @@
     };
   }
 
-  function getShareLink(){
+  function saveWorkout(){
     if(state.exercises.length === 0){
       showToast('Add at least one exercise first');
       return;
     }
     var payload = currentPayload();
-    var encoded = encodeData(payload);
-    var base = window.location.href.split('#')[0];
-    state.shareLink = base + '#w=' + encoded;
-    state.shareVisible = true;
-    render();
+    db.collection('workouts').doc(payload.id).set({
+      title: payload.title,
+      clientName: payload.clientName,
+      message: payload.message,
+      exercises: payload.exercises,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true }).then(function(){
+      state.shareLink = window.location.origin + window.location.pathname + '#w=' + payload.id;
+      state.shareVisible = true;
+      showToast('Saved');
+      loadWorkoutsList();
+      render();
+    }).catch(function(err){
+      showToast('Could not save: ' + err.message);
+    });
   }
 
-  function copyLink(){
-    var input = document.getElementById('share-link-input');
-    if(!input) return;
-    var text = input.value;
+  function copyLink(text){
     if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(function(){ showToast('Link copied'); }).catch(function(){ fallbackCopy(input); });
+      navigator.clipboard.writeText(text).then(function(){ showToast('Link copied'); }).catch(function(){ showToast('Copy failed'); });
     } else {
-      fallbackCopy(input);
+      showToast('Copy failed \u2014 copy manually');
     }
-  }
-  function fallbackCopy(input){
-    input.select();
-    try{ document.execCommand('copy'); showToast('Link copied'); }catch(e){ showToast('Copy failed — select and copy manually'); }
-  }
-
-  function saveTemplate(){
-    if(state.exercises.length === 0){
-      showToast('Add at least one exercise first');
-      return;
-    }
-    var payload = currentPayload();
-    var list = state.templates.filter(function(t){ return t.id !== payload.id; });
-    list.unshift(payload);
-    state.templates = list;
-    lsSet('wb_templates', JSON.stringify(list));
-    showToast('Saved to your workouts');
-    render();
   }
 
   function previewAsClient(){
@@ -728,14 +591,14 @@
     state.clientWorkout = payload;
     state.checked = {};
     state.clientError = null;
+    state.previewing = true;
     state.mode = 'client';
-    try{ history.replaceState(null, '', '#w='+encodeData(payload)); }catch(e){}
     render();
   }
 
   function backToBuilder(){
+    state.previewing = false;
     state.mode = 'builder';
-    try{ history.replaceState(null, '', window.location.pathname); }catch(e){}
     render();
   }
 
@@ -752,23 +615,36 @@
     render();
   }
 
-  function loadTemplate(id){
-    var t = state.templates.find(function(x){ return x.id === id; });
-    if(!t){ showToast('Could not find that workout'); return; }
-    state.id = t.id;
-    state.title = t.title || '';
-    state.clientName = t.clientName || '';
-    state.message = t.message || '';
-    state.exercises = t.exercises || [];
-    state.editingIndex = null;
-    state.shareVisible = false;
-    render();
+  function loadWorkoutsList(){
+    db.collection('workouts').orderBy('updatedAt','desc').get().then(function(snap){
+      state.workoutsList = snap.docs.map(function(d){ var data = d.data(); data.id = d.id; return data; });
+      render();
+    }).catch(function(err){
+      state.workoutsList = [];
+    });
   }
 
-  function deleteTemplate(id){
-    state.templates = state.templates.filter(function(t){ return t.id !== id; });
-    lsSet('wb_templates', JSON.stringify(state.templates));
-    if(state.id === id){ newWorkout(); } else { render(); }
+  function loadWorkout(id){
+    db.collection('workouts').doc(id).get().then(function(doc){
+      if(!doc.exists){ showToast('Could not find that workout'); return; }
+      var d = doc.data();
+      state.id = id;
+      state.title = d.title || '';
+      state.clientName = d.clientName || '';
+      state.message = d.message || '';
+      state.exercises = d.exercises || [];
+      state.editingIndex = null;
+      state.shareVisible = true;
+      state.shareLink = window.location.origin + window.location.pathname + '#w=' + id;
+      render();
+    }).catch(function(err){ showToast('Could not load that workout'); });
+  }
+
+  function deleteWorkout(id){
+    db.collection('workouts').doc(id).delete().then(function(){
+      state.workoutsList = state.workoutsList.filter(function(t){ return t.id !== id; });
+      if(state.id === id){ newWorkout(); } else { render(); }
+    }).catch(function(err){ showToast('Could not delete: ' + err.message); });
   }
 
   function toggleCheck(idx){
@@ -779,31 +655,66 @@
     render();
   }
 
-  function init(){
-    var hash = window.location.hash || '';
-    var m = hash.match(/w=([A-Za-z0-9\-_]+)/);
-    if(m){
-      state.mode = 'client';
-      try{
-        var payload = decodeData(m[1]);
-        state.clientWorkout = payload;
-        var savedProgress = payload.id ? lsGet('wb_progress_'+payload.id) : null;
-        if(savedProgress){ try{ state.checked = JSON.parse(savedProgress); }catch(e){ state.checked = {}; } }
-      }catch(e){
+  /* ---------------- routing ---------------- */
+  function enterClientView(id){
+    if(unsubClient){ unsubClient(); unsubClient = null; }
+    state.mode = 'client';
+    state.previewing = false;
+    state.clientWorkout = null;
+    state.clientError = null;
+    render();
+    unsubClient = db.collection('workouts').doc(id).onSnapshot(function(doc){
+      if(doc.exists){
+        var data = doc.data();
+        data.id = doc.id;
+        state.clientWorkout = data;
+        state.clientError = null;
+        var saved = lsGet('wb_progress_'+id);
+        if(saved){ try{ state.checked = JSON.parse(saved); }catch(e){ state.checked = {}; } }
+        render();
+      } else {
         state.clientError = true;
+        state.clientWorkout = null;
+        render();
+      }
+    }, function(err){
+      state.clientError = true;
+      render();
+    });
+  }
+
+  function route(){
+    if(CONFIG_MISSING){ render(); return; }
+    var hash = window.location.hash || '';
+    var mw = hash.match(/^#w=(.+)$/);
+    if(mw){
+      enterClientView(decodeURIComponent(mw[1]));
+      return;
+    }
+    if(unsubClient){ unsubClient(); unsubClient = null; }
+    if(hash === '#admin'){
+      if(state.authUser){
+        state.mode = 'builder';
+        loadWorkoutsList();
+      } else {
+        state.mode = 'login';
       }
       render();
       return;
     }
-
-    var rawTpls = lsGet('wb_templates');
-    if(rawTpls){
-      try{ state.templates = JSON.parse(rawTpls); }catch(e){ state.templates = []; }
-    }
+    state.mode = 'blank';
     render();
   }
 
-  init();
+  if(!CONFIG_MISSING){
+    auth.onAuthStateChanged(function(user){
+      state.authUser = user;
+      route();
+    });
+    window.addEventListener('hashchange', route);
+  } else {
+    render();
+  }
 })();
 </script>
 </body>
